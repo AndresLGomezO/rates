@@ -1,6 +1,6 @@
 /**
  * Example usage of @rates/firebase-client
- * 
+ *
  * This file demonstrates how to use the Firebase client package
  * in your application. Copy patterns from here into your app.
  */
@@ -16,7 +16,7 @@ import { collection, getDocs, addDoc, doc, getDoc } from 'firebase/firestore';
 export function setupFirebase() {
   // Initialize Firebase - reads config from environment variables
   initializeFirebase();
-  
+
   // Or provide custom config:
   // initializeFirebase({
   //   apiKey: 'your-api-key',
@@ -34,7 +34,11 @@ export function setupFirebase() {
 
 export async function loginUser(email: string, password: string) {
   const auth = getAuth();
-  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  const userCredential = await signInWithEmailAndPassword(
+    auth,
+    email,
+    password
+  );
   return userCredential.user;
 }
 
@@ -51,8 +55,8 @@ export async function getUsers() {
   const firestore = getFirestore();
   const usersCollection = collection(firestore, 'users');
   const snapshot = await getDocs(usersCollection);
-  
-  return snapshot.docs.map(doc => ({
+
+  return snapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
   }));
@@ -62,11 +66,11 @@ export async function getUserById(userId: string) {
   const firestore = getFirestore();
   const userDoc = doc(firestore, 'users', userId);
   const snapshot = await getDoc(userDoc);
-  
+
   if (!snapshot.exists()) {
     throw new Error('User not found');
   }
-  
+
   return {
     id: snapshot.id,
     ...snapshot.data(),
@@ -86,7 +90,7 @@ export async function createUser(userData: Record<string, unknown>) {
 
 // import { getStorage } from './index';
 // import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-// 
+//
 // export async function uploadFile(file: File, path: string) {
 //   const storage = getStorage();
 //   const storageRef = ref(storage, path);
@@ -100,10 +104,9 @@ export async function createUser(userData: Record<string, unknown>) {
 
 // import { getFunctions } from './index';
 // import { httpsCallable } from 'firebase/functions';
-// 
+//
 // export async function callCloudFunction(functionName: string, data: unknown) {
 //   const functions = getFunctions();
 //   const callable = httpsCallable(functions, functionName);
 //   return callable(data);
 // }
-

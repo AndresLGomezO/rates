@@ -38,7 +38,12 @@ initializeFirebase();
 ### 2. Use Firebase Services
 
 ```typescript
-import { getAuth, getFirestore, getStorage, getFunctions } from '@rates/firebase-client';
+import {
+  getAuth,
+  getFirestore,
+  getStorage,
+  getFunctions,
+} from '@rates/firebase-client';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { collection, getDocs } from 'firebase/firestore';
 
@@ -50,14 +55,18 @@ const functions = getFunctions();
 
 // Use Firebase services
 async function login(email: string, password: string) {
-  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  const userCredential = await signInWithEmailAndPassword(
+    auth,
+    email,
+    password
+  );
   return userCredential.user;
 }
 
 async function getUsers() {
   const usersCollection = collection(firestore, 'users');
   const snapshot = await getDocs(usersCollection);
-  return snapshot.docs.map(doc => doc.data());
+  return snapshot.docs.map((doc) => doc.data());
 }
 ```
 
@@ -199,4 +208,3 @@ Make sure to call `initializeFirebase()` before using any Firebase services.
 ### Environment Variables Not Loading
 
 In Vite, environment variables must be prefixed with `VITE_` to be accessible in the browser. Make sure your `.env` files use the `VITE_` prefix.
-

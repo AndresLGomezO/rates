@@ -44,4 +44,3 @@ export interface FirebaseServices {
 }
 
 export type FirebaseMode = 'emulator' | 'live';
-

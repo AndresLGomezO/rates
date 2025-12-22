@@ -69,8 +69,8 @@ version: '3.8'
 services:
   firebase-emulators:
     ports:
-      - "4001:4000"  # Use port 4001 for UI instead of 4000
-      - "9100:9099"  # Use port 9100 for Auth instead of 9099
+      - '4001:4000' # Use port 4001 for UI instead of 4000
+      - '9100:9099' # Use port 9100 for Auth instead of 9099
 ```
 
 ### Data Persistence
@@ -108,6 +108,7 @@ VITE_FIREBASE_EMULATOR_FUNCTIONS_PORT=5001
 ### Hot Reload of Firebase Config
 
 The `firebase/` directory is mounted as read-only, so changes to:
+
 - `firebase/firestore.rules`
 - `firebase/firestore.indexes.json`
 - `firebase/firebase.json`
@@ -123,6 +124,7 @@ pnpm docker:emulators:restart
 ### Port Already in Use
 
 If you get port conflicts, either:
+
 1. Stop the conflicting service
 2. Change ports in `docker-compose.override.yml`
 3. Use `docker-compose -f docker/docker-compose.yml down` to free ports
@@ -176,21 +178,23 @@ The emulators run on a Docker network (`rates-network`). If your app is also con
 
 ## Comparison: Docker vs Local
 
-| Feature | Docker | Local (`pnpm firebase:emulators`) |
-|---------|--------|-----------------------------------|
-| Isolation | ✅ Full container isolation | ❌ Uses host system |
-| Consistency | ✅ Same environment everywhere | ⚠️ Depends on local setup |
-| Portability | ✅ Works on any Docker host | ⚠️ Requires Node.js/Java locally |
-| Data Persistence | ✅ Docker volumes | ⚠️ Local filesystem |
-| Resource Usage | ⚠️ Higher (container overhead) | ✅ Lower |
-| Setup Complexity | ⚠️ Requires Docker | ✅ Simple (just `pnpm install`) |
+| Feature          | Docker                         | Local (`pnpm firebase:emulators`) |
+| ---------------- | ------------------------------ | --------------------------------- |
+| Isolation        | ✅ Full container isolation    | ❌ Uses host system               |
+| Consistency      | ✅ Same environment everywhere | ⚠️ Depends on local setup         |
+| Portability      | ✅ Works on any Docker host    | ⚠️ Requires Node.js/Java locally  |
+| Data Persistence | ✅ Docker volumes              | ⚠️ Local filesystem               |
+| Resource Usage   | ⚠️ Higher (container overhead) | ✅ Lower                          |
+| Setup Complexity | ⚠️ Requires Docker             | ✅ Simple (just `pnpm install`)   |
 
 Choose Docker if:
+
 - You want consistent environments across team
 - You're already using Docker in your workflow
 - You want to isolate emulators from your system
 
 Choose Local if:
+
 - You want faster startup
 - You don't want Docker overhead
 - You're doing quick local testing

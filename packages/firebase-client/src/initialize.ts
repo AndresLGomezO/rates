@@ -1,6 +1,6 @@
 /**
  * Firebase initialization
- * 
+ *
  * Handles initialization of Firebase services with support for:
  * - Emulator mode (development)
  * - Live mode (production/staging)
@@ -63,12 +63,12 @@ function getFirebaseConfig(isEmulatorMode = false): FirebaseConfig {
   ];
 
   const missingFields = requiredFields.filter(
-    (field) => !config[field] || config[field] === '',
+    (field) => !config[field] || config[field] === ''
   );
 
   if (missingFields.length > 0) {
     throw new Error(
-      `Missing required Firebase configuration: ${missingFields.join(', ')}`,
+      `Missing required Firebase configuration: ${missingFields.join(', ')}`
     );
   }
 
@@ -95,28 +95,28 @@ function getEmulatorConfig(): FirebaseEmulatorConfig {
       host: emulatorHost,
       port: Number.parseInt(
         import.meta.env.VITE_FIREBASE_EMULATOR_AUTH_PORT || '9099',
-        10,
+        10
       ),
     },
     firestore: {
       host: emulatorHost,
       port: Number.parseInt(
         import.meta.env.VITE_FIREBASE_EMULATOR_FIRESTORE_PORT || '8080',
-        10,
+        10
       ),
     },
     storage: {
       host: emulatorHost,
       port: Number.parseInt(
         import.meta.env.VITE_FIREBASE_EMULATOR_STORAGE_PORT || '9199',
-        10,
+        10
       ),
     },
     functions: {
       host: emulatorHost,
       port: Number.parseInt(
         import.meta.env.VITE_FIREBASE_EMULATOR_FUNCTIONS_PORT || '5001',
-        10,
+        10
       ),
     },
   };
@@ -143,7 +143,7 @@ function connectEmulators(emulatorConfig: FirebaseEmulatorConfig): void {
     connectAuthEmulator(
       getAuth(),
       `http://${emulatorConfig.auth.host}:${emulatorConfig.auth.port}`,
-      { disableWarnings: true },
+      { disableWarnings: true }
     );
   }
 
@@ -151,7 +151,7 @@ function connectEmulators(emulatorConfig: FirebaseEmulatorConfig): void {
     connectFirestoreEmulator(
       getFirestore(),
       emulatorConfig.firestore.host,
-      emulatorConfig.firestore.port,
+      emulatorConfig.firestore.port
     );
   }
 
@@ -159,7 +159,7 @@ function connectEmulators(emulatorConfig: FirebaseEmulatorConfig): void {
     connectStorageEmulator(
       getStorage(),
       emulatorConfig.storage.host,
-      emulatorConfig.storage.port,
+      emulatorConfig.storage.port
     );
   }
 
@@ -167,21 +167,21 @@ function connectEmulators(emulatorConfig: FirebaseEmulatorConfig): void {
     connectFunctionsEmulator(
       getFunctions(),
       emulatorConfig.functions.host,
-      emulatorConfig.functions.port,
+      emulatorConfig.functions.port
     );
   }
 }
 
 /**
  * Initialize Firebase app and services
- * 
+ *
  * @param config - Optional Firebase config (defaults to environment variables)
  * @param forceReinit - Force re-initialization even if already initialized
  * @returns Firebase app instance
  */
 export function initializeFirebase(
   config?: FirebaseConfig,
-  forceReinit = false,
+  forceReinit = false
 ): FirebaseApp {
   // Return existing app if already initialized and not forcing reinit
   if (initialized && !forceReinit && firebaseApp) {
@@ -199,7 +199,7 @@ export function initializeFirebase(
   // Get mode first to determine if we need strict validation
   const mode = getFirebaseMode();
   const isEmulatorMode = mode === 'emulator';
-  
+
   // Get configuration (skip validation if using emulator)
   const firebaseConfig = config || getFirebaseConfig(isEmulatorMode);
   const emulatorConfig = getEmulatorConfig();
@@ -236,7 +236,7 @@ export function initializeFirebase(
 export function getFirebaseApp(): FirebaseApp {
   if (!firebaseApp) {
     throw new Error(
-      'Firebase not initialized. Call initializeFirebase() first.',
+      'Firebase not initialized. Call initializeFirebase() first.'
     );
   }
   return firebaseApp;
@@ -248,4 +248,3 @@ export function getFirebaseApp(): FirebaseApp {
 export function isFirebaseInitialized(): boolean {
   return initialized && firebaseApp !== null;
 }
-

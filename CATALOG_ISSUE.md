@@ -15,6 +15,7 @@ As a temporary workaround, we're using direct version numbers in `package.json` 
 ## Affected Packages
 
 All packages that were using `catalog:` protocol have been updated to use direct versions:
+
 - `apps/app/package.json`
 - `packages/firebase-client/package.json`
 
@@ -32,4 +33,3 @@ Once this issue is resolved (either by updating pnpm or finding the root cause),
 1. Update all `package.json` files to use `catalog:` instead of direct versions
 2. Run `pnpm install` to verify it works
 3. Update this document
-

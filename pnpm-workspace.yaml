@@ -30,6 +30,12 @@ catalog:
   "eslint-plugin-react-refresh": ^0.4.12
   globals: ^15.14.0
 
+  # Prettier
+  prettier: ^3.4.2
+
+  # Git hooks
+  husky: ^9.1.7
+
   # Firebase
   firebase: ^11.1.0
   "@types/node": ^22.10.2

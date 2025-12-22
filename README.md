@@ -97,6 +97,7 @@ This monorepo is configured to use pnpm's **catalog** feature to centralize depe
 ### How It Works
 
 1. **Versions are defined in `pnpm-workspace.yaml`**:
+
    ```yaml
    catalog:
      react: ^18.3.1
@@ -105,6 +106,7 @@ This monorepo is configured to use pnpm's **catalog** feature to centralize depe
    ```
 
 2. **Applications reference catalog versions**:
+
    ```json
    {
      "dependencies": {
@@ -144,6 +146,7 @@ This monorepo includes a global Firebase service package (`@rates/firebase-clien
 ### Quick Start
 
 1. **Install dependencies**:
+
    ```bash
    pnpm install
    ```
@@ -153,17 +156,23 @@ This monorepo includes a global Firebase service package (`@rates/firebase-clien
    - Fill in your Firebase project configuration
 
 3. **Start Firebase emulators** (for local development):
+
    ```bash
    pnpm firebase:emulators
    ```
 
 4. **Use Firebase in your app**:
+
    ```typescript
-   import { initializeFirebase, getAuth, getFirestore } from '@rates/firebase-client';
-   
+   import {
+     initializeFirebase,
+     getAuth,
+     getFirestore,
+   } from '@rates/firebase-client';
+
    // Initialize Firebase (in your app entry point)
    initializeFirebase();
-   
+
    // Use services
    const auth = getAuth();
    const firestore = getFirestore();
@@ -187,6 +196,7 @@ See `env.example` for all available environment variables. Key variables:
 ### Documentation
 
 For detailed Firebase usage, see:
+
 - `packages/firebase-client/README.md` - Complete API documentation
 - `packages/firebase-client/src/example-usage.ts` - Usage examples
 
@@ -198,4 +208,3 @@ This monorepo is designed to be used as a base structure. You can create branche
 2. Modify or extend the `apps/app` application
 3. Or create new applications under `apps/`
 4. Each branch can represent a different application or feature set
-

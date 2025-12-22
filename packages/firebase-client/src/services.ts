@@ -1,6 +1,6 @@
 /**
  * Firebase service getters
- * 
+ *
  * Provides typed access to Firebase services (Auth, Firestore, Storage, Functions).
  * Services are lazily initialized and cached.
  */
@@ -22,7 +22,7 @@ let functionsInstance: Functions | null = null;
 
 /**
  * Get Firebase Auth instance
- * 
+ *
  * @param region - Optional region for auth (defaults to default region)
  * @returns Auth instance
  */
@@ -36,7 +36,7 @@ export function getAuth(region?: string): Auth {
 
 /**
  * Get Firestore instance
- * 
+ *
  * @param databaseId - Optional database ID (defaults to default database)
  * @returns Firestore instance
  */
@@ -50,7 +50,7 @@ export function getFirestore(databaseId?: string): Firestore {
 
 /**
  * Get Firebase Storage instance
- * 
+ *
  * @param bucket - Optional storage bucket name
  * @returns Storage instance
  */
@@ -64,7 +64,7 @@ export function getStorage(bucket?: string): Storage {
 
 /**
  * Get Cloud Functions instance
- * 
+ *
  * @param region - Optional region for functions (defaults to us-central1)
  * @returns Functions instance
  */
@@ -85,4 +85,3 @@ export function resetServices(): void {
   storageInstance = null;
   functionsInstance = null;
 }
-

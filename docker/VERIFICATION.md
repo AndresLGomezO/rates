@@ -40,6 +40,7 @@ docker port rates-firebase-emulators
 ```
 
 Expected output should show:
+
 - 4000/tcp -> 0.0.0.0:4000
 - 5001/tcp -> 0.0.0.0:5001
 - 8080/tcp -> 0.0.0.0:8080
@@ -101,6 +102,7 @@ Expected: Volume should not exist (or be empty)
 ## App Connection Verification
 
 1. Set in your `.env.local`:
+
    ```env
    VITE_USE_FIREBASE_EMULATOR=true
    VITE_FIREBASE_MODE=emulator
@@ -122,4 +124,3 @@ If any step fails:
 3. Check Docker: `docker ps -a`
 4. Check ports: `lsof -i :4000` (or other ports)
 5. Review [README.md](./README.md) for detailed troubleshooting
-

@@ -49,6 +49,7 @@ pnpm docker:emulators:up
 This starts emulators in a Docker container. See `docker/README.md` for detailed Docker instructions.
 
 **Benefits of Docker:**
+
 - Consistent environment across team members
 - Isolated from your system
 - Easy to start/stop
@@ -101,10 +102,12 @@ Update `.firebaserc` with your actual project IDs.
 ## Available Scripts
 
 ### Local Emulators
+
 - `pnpm firebase:emulators` - Start all Firebase emulators locally
 - `pnpm firebase:emulators:exec` - Execute command with emulators running
 
 ### Docker Emulators
+
 - `pnpm docker:emulators:up` - Start emulators in Docker
 - `pnpm docker:emulators:down` - Stop Docker emulators
 - `pnpm docker:emulators:logs` - View emulator logs
@@ -113,6 +116,7 @@ Update `.firebaserc` with your actual project IDs.
 - `pnpm docker:emulators:clean` - Stop and remove volumes (clears data)
 
 ### Deployment
+
 - `pnpm firebase:deploy` - Deploy Firebase configuration (rules, indexes)
 - `pnpm firebase:deploy:rules` - Deploy Firestore rules only
 - `pnpm firebase:deploy:indexes` - Deploy Firestore indexes only
@@ -171,4 +175,3 @@ rates/
 4. **Deploy rules**: `pnpm firebase:deploy:rules` when ready
 
 For more details, see `packages/firebase-client/README.md`.
-
