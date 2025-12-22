@@ -12,24 +12,23 @@ import { getFunctions as getFirebaseFunctions } from 'firebase/functions';
 import { getFirebaseApp } from './initialize';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
-import type { Storage } from 'firebase/storage';
+import type { FirebaseStorage } from 'firebase/storage';
 import type { Functions } from 'firebase/functions';
 
 let authInstance: Auth | null = null;
 let firestoreInstance: Firestore | null = null;
-let storageInstance: Storage | null = null;
+let storageInstance: FirebaseStorage | null = null;
 let functionsInstance: Functions | null = null;
 
 /**
  * Get Firebase Auth instance
  *
- * @param region - Optional region for auth (defaults to default region)
  * @returns Auth instance
  */
-export function getAuth(region?: string): Auth {
+export function getAuth(): Auth {
   if (!authInstance) {
     const app = getFirebaseApp();
-    authInstance = getFirebaseAuth(app, region);
+    authInstance = getFirebaseAuth(app);
   }
   return authInstance;
 }
@@ -43,7 +42,9 @@ export function getAuth(region?: string): Auth {
 export function getFirestore(databaseId?: string): Firestore {
   if (!firestoreInstance) {
     const app = getFirebaseApp();
-    firestoreInstance = getFirebaseFirestore(app, databaseId);
+    firestoreInstance = databaseId
+      ? getFirebaseFirestore(app, databaseId)
+      : getFirebaseFirestore(app);
   }
   return firestoreInstance;
 }
@@ -52,12 +53,14 @@ export function getFirestore(databaseId?: string): Firestore {
  * Get Firebase Storage instance
  *
  * @param bucket - Optional storage bucket name
- * @returns Storage instance
+ * @returns FirebaseStorage instance
  */
-export function getStorage(bucket?: string): Storage {
+export function getStorage(bucket?: string): FirebaseStorage {
   if (!storageInstance) {
     const app = getFirebaseApp();
-    storageInstance = getFirebaseStorage(app, bucket);
+    storageInstance = bucket
+      ? getFirebaseStorage(app, bucket)
+      : getFirebaseStorage(app);
   }
   return storageInstance;
 }
@@ -71,7 +74,9 @@ export function getStorage(bucket?: string): Storage {
 export function getFunctions(region?: string): Functions {
   if (!functionsInstance) {
     const app = getFirebaseApp();
-    functionsInstance = getFirebaseFunctions(app, region);
+    functionsInstance = region
+      ? getFirebaseFunctions(app, region)
+      : getFirebaseFunctions(app);
   }
   return functionsInstance;
 }

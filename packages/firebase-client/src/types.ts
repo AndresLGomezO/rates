@@ -4,7 +4,7 @@
 
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
-import type { Storage } from 'firebase/storage';
+import type { FirebaseStorage } from 'firebase/storage';
 import type { Functions } from 'firebase/functions';
 
 export interface FirebaseConfig {
@@ -39,7 +39,7 @@ export interface FirebaseEmulatorConfig {
 export interface FirebaseServices {
   auth: Auth;
   firestore: Firestore;
-  storage: Storage;
+  storage: FirebaseStorage;
   functions: Functions;
 }
 

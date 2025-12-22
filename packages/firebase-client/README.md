@@ -141,11 +141,10 @@ Initialize Firebase app and connect to emulators if in emulator mode.
 - `forceReinit` (optional): Force re-initialization even if already initialized
 - Returns: `FirebaseApp` instance
 
-### `getAuth(region?)`
+### `getAuth()`
 
 Get Firebase Auth instance.
 
-- `region` (optional): Auth region
 - Returns: `Auth` instance
 
 ### `getFirestore(databaseId?)`
@@ -160,7 +159,7 @@ Get Firestore instance.
 Get Firebase Storage instance.
 
 - `bucket` (optional): Storage bucket name
-- Returns: `Storage` instance
+- Returns: `FirebaseStorage` instance
 
 ### `getFunctions(region?)`
 

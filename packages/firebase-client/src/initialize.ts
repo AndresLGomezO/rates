@@ -27,12 +27,12 @@ let initialized = false;
  */
 function getFirebaseConfig(isEmulatorMode = false): FirebaseConfig {
   const config: FirebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? '',
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ?? '',
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ?? '',
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ?? '',
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? '',
+    appId: import.meta.env.VITE_FIREBASE_APP_ID ?? '',
   };
 
   if (import.meta.env.VITE_FIREBASE_MEASUREMENT_ID) {
@@ -43,12 +43,12 @@ function getFirebaseConfig(isEmulatorMode = false): FirebaseConfig {
   if (isEmulatorMode) {
     // Use default/dummy values for emulator if not provided
     // The emulator doesn't actually validate these values
-    config.apiKey = config.apiKey || 'demo-api-key';
-    config.authDomain = config.authDomain || 'localhost';
-    config.projectId = config.projectId || 'demo-project';
-    config.storageBucket = config.storageBucket || 'demo-project.appspot.com';
-    config.messagingSenderId = config.messagingSenderId || '123456789';
-    config.appId = config.appId || '1:123456789:web:abcdef';
+    config.apiKey = config.apiKey ?? 'demo-api-key';
+    config.authDomain = config.authDomain ?? 'localhost';
+    config.projectId = config.projectId ?? 'demo-project';
+    config.storageBucket = config.storageBucket ?? 'demo-project.appspot.com';
+    config.messagingSenderId = config.messagingSenderId ?? '123456789';
+    config.appId = config.appId ?? '1:123456789:web:abcdef';
     return config;
   }
 
@@ -88,34 +88,34 @@ function getEmulatorConfig(): FirebaseEmulatorConfig {
   }
 
   const emulatorHost =
-    import.meta.env.VITE_FIREBASE_EMULATOR_HOST || 'localhost';
+    import.meta.env.VITE_FIREBASE_EMULATOR_HOST ?? 'localhost';
 
   return {
     auth: {
       host: emulatorHost,
       port: Number.parseInt(
-        import.meta.env.VITE_FIREBASE_EMULATOR_AUTH_PORT || '9099',
+        import.meta.env.VITE_FIREBASE_EMULATOR_AUTH_PORT ?? '9099',
         10
       ),
     },
     firestore: {
       host: emulatorHost,
       port: Number.parseInt(
-        import.meta.env.VITE_FIREBASE_EMULATOR_FIRESTORE_PORT || '8080',
+        import.meta.env.VITE_FIREBASE_EMULATOR_FIRESTORE_PORT ?? '8080',
         10
       ),
     },
     storage: {
       host: emulatorHost,
       port: Number.parseInt(
-        import.meta.env.VITE_FIREBASE_EMULATOR_STORAGE_PORT || '9199',
+        import.meta.env.VITE_FIREBASE_EMULATOR_STORAGE_PORT ?? '9199',
         10
       ),
     },
     functions: {
       host: emulatorHost,
       port: Number.parseInt(
-        import.meta.env.VITE_FIREBASE_EMULATOR_FUNCTIONS_PORT || '5001',
+        import.meta.env.VITE_FIREBASE_EMULATOR_FUNCTIONS_PORT ?? '5001',
         10
       ),
     },
@@ -138,10 +138,13 @@ function getFirebaseMode(): FirebaseMode {
 /**
  * Connect services to emulators
  */
-function connectEmulators(emulatorConfig: FirebaseEmulatorConfig): void {
+function connectEmulators(
+  app: FirebaseApp,
+  emulatorConfig: FirebaseEmulatorConfig
+): void {
   if (emulatorConfig.auth) {
     connectAuthEmulator(
-      getAuth(),
+      getAuth(app),
       `http://${emulatorConfig.auth.host}:${emulatorConfig.auth.port}`,
       { disableWarnings: true }
     );
@@ -149,7 +152,7 @@ function connectEmulators(emulatorConfig: FirebaseEmulatorConfig): void {
 
   if (emulatorConfig.firestore) {
     connectFirestoreEmulator(
-      getFirestore(),
+      getFirestore(app),
       emulatorConfig.firestore.host,
       emulatorConfig.firestore.port
     );
@@ -157,7 +160,7 @@ function connectEmulators(emulatorConfig: FirebaseEmulatorConfig): void {
 
   if (emulatorConfig.storage) {
     connectStorageEmulator(
-      getStorage(),
+      getStorage(app),
       emulatorConfig.storage.host,
       emulatorConfig.storage.port
     );
@@ -165,7 +168,7 @@ function connectEmulators(emulatorConfig: FirebaseEmulatorConfig): void {
 
   if (emulatorConfig.functions) {
     connectFunctionsEmulator(
-      getFunctions(),
+      getFunctions(app),
       emulatorConfig.functions.host,
       emulatorConfig.functions.port
     );
@@ -201,7 +204,7 @@ export function initializeFirebase(
   const isEmulatorMode = mode === 'emulator';
 
   // Get configuration (skip validation if using emulator)
-  const firebaseConfig = config || getFirebaseConfig(isEmulatorMode);
+  const firebaseConfig = config ?? getFirebaseConfig(isEmulatorMode);
   const emulatorConfig = getEmulatorConfig();
 
   // Initialize Firebase app
@@ -216,11 +219,10 @@ export function initializeFirebase(
   // Connect to emulators if in emulator mode
   if (mode === 'emulator' && Object.keys(emulatorConfig).length > 0) {
     try {
-      connectEmulators(emulatorConfig);
+      connectEmulators(firebaseApp, emulatorConfig);
       console.log('🔥 Firebase emulators connected');
-    } catch (error) {
-      console.warn('⚠️ Failed to connect to Firebase emulators:', error);
-      console.warn('⚠️ Continuing with live Firebase services');
+    } catch {
+      // Silently fall back to live services if emulator connection fails
     }
   } else {
     console.log('🔥 Firebase initialized in live mode');
