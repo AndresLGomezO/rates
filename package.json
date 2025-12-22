@@ -7,9 +7,22 @@
     "dev": "pnpm --filter app dev",
     "build": "pnpm --filter app build",
     "preview": "pnpm --filter app preview",
-    "lint": "pnpm --filter app lint"
+    "lint": "pnpm --filter app lint",
+    "firebase:emulators": "firebase emulators:start",
+    "firebase:emulators:exec": "firebase emulators:exec",
+    "firebase:deploy": "firebase deploy",
+    "firebase:deploy:rules": "firebase deploy --only firestore:rules",
+    "firebase:deploy:indexes": "firebase deploy --only firestore:indexes",
+    "docker:emulators:up": "docker-compose -f docker/docker-compose.yml up -d",
+    "docker:emulators:down": "docker-compose -f docker/docker-compose.yml down",
+    "docker:emulators:logs": "docker-compose -f docker/docker-compose.yml logs -f",
+    "docker:emulators:restart": "docker-compose -f docker/docker-compose.yml restart",
+    "docker:emulators:build": "docker-compose -f docker/docker-compose.yml build",
+    "docker:emulators:clean": "docker-compose -f docker/docker-compose.yml down -v"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "firebase-tools": "^13.0.0"
+  },
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
