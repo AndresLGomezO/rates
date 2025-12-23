@@ -76,6 +76,64 @@ importers:
         specifier: ^6.0.5
         version: 6.4.1(@types/node@22.19.2)(yaml@2.8.2)
 
+  apps/auth-app:
+    dependencies:
+      firebase:
+        specifier: ^11.1.0
+        version: 11.10.0
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      react-router:
+        specifier: ^7.9.2
+        version: 7.10.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-router-dom:
+        specifier: ^7.9.2
+        version: 7.10.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+    devDependencies:
+      '@eslint/js':
+        specifier: ^9.17.0
+        version: 9.39.1
+      '@types/react':
+        specifier: ^18.3.12
+        version: 18.3.27
+      '@types/react-dom':
+        specifier: ^18.3.1
+        version: 18.3.7(@types/react@18.3.27)
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^8.18.0
+        version: 8.49.0(@typescript-eslint/parser@8.49.0(eslint@9.39.1)(typescript@5.9.3))(eslint@9.39.1)(typescript@5.9.3)
+      '@typescript-eslint/parser':
+        specifier: ^8.18.0
+        version: 8.49.0(eslint@9.39.1)(typescript@5.9.3)
+      '@vitejs/plugin-react':
+        specifier: ^4.3.1
+        version: 4.7.0(vite@6.4.1(@types/node@22.19.2)(yaml@2.8.2))
+      eslint:
+        specifier: ^9.17.0
+        version: 9.39.1
+      eslint-plugin-react-hooks:
+        specifier: ^5.1.0
+        version: 5.2.0(eslint@9.39.1)
+      eslint-plugin-react-refresh:
+        specifier: ^0.4.12
+        version: 0.4.24(eslint@9.39.1)
+      globals:
+        specifier: ^15.14.0
+        version: 15.15.0
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      typescript-eslint:
+        specifier: ^8.18.0
+        version: 8.49.0(eslint@9.39.1)(typescript@5.9.3)
+      vite:
+        specifier: ^6.0.5
+        version: 6.4.1(@types/node@22.19.2)(yaml@2.8.2)
+
   packages/firebase-client:
     dependencies:
       firebase:

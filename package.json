@@ -6,8 +6,11 @@
   "description": "Monorepo for multiple applications",
   "scripts": {
     "dev": "pnpm --filter app dev",
+    "dev:auth-app": "pnpm --filter auth-app dev",
     "build": "pnpm --filter app build",
+    "build:auth-app": "pnpm --filter auth-app build",
     "preview": "pnpm --filter app preview",
+    "preview:auth-app": "pnpm --filter auth-app preview",
     "lint": "pnpm --filter \"./apps/*\" --filter \"./packages/*\" lint",
     "lint:fix": "pnpm --filter \"./apps/*\" --filter \"./packages/*\" lint:fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
