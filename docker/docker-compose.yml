@@ -24,11 +24,12 @@ services:
       - ../firebase/firestore.rules:/app/firestore.rules:ro
       - ../firebase/firestore.indexes.json:/app/firestore.indexes.json:ro
       - ../firebase/storage.rules:/app/storage.rules:ro
-    # Optional: uncomment to use .env.docker file from project root
-    # env_file:
-    #   - ../.env.docker
+    # Load environment from .env.docker if it exists
+    # Create .env.docker from docker/env.docker.example if missing
+    env_file:
+      - ../.env.docker
     environment:
-      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID:-default}
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID:-demo-project}
     networks:
       - rates-network
     healthcheck:

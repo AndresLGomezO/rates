@@ -4,13 +4,33 @@ Standalone authentication UI that signs users in with Firebase Auth, issues an I
 
 ## Running locally
 
-```bash
-cd apps/auth-app
-pnpm install
-pnpm dev
-```
+### Prerequisites
+
+1. **Start Firebase Emulators** (required for local development):
+
+   ```bash
+   # From project root
+   pnpm firebase:emulators
+   # Or using Docker
+   pnpm docker:emulators:up
+   ```
+
+2. **Set up environment variables**:
+
+   ```bash
+   cd apps/auth-app
+   cp env.example .env.local
+   # Edit .env.local and set your values, especially VITE_NONCE_SECRET
+   ```
+
+3. **Start the auth-app**:
+   ```bash
+   pnpm dev
+   ```
 
 The dev server listens on `http://127.0.0.1:5175`.
+
+> **Important**: The Firebase Auth emulator must be running on port 9099 (default) for authentication to work in development mode.
 
 ## Environment
 
