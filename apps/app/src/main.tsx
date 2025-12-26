@@ -6,6 +6,7 @@ import './index.css';
 import Login from './pages/Login.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import AccountsByType from './pages/AccountsByType.tsx';
+import MigrateAccounts from './pages/MigrateAccounts.tsx';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthRedirectHandler } from './components/AuthRedirectHandler';
@@ -46,6 +47,16 @@ const router = createBrowserRouter([
           <ProtectedRoute>
             <PrivateLayout>
               <AccountsByType />
+            </PrivateLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'migrate',
+        element: (
+          <ProtectedRoute>
+            <PrivateLayout>
+              <MigrateAccounts />
             </PrivateLayout>
           </ProtectedRoute>
         ),

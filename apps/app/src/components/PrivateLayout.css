@@ -499,6 +499,7 @@ body.modal-open .main-content {
   z-index: 1;
   width: calc(100% - 280px);
   overflow: hidden;
+  background: transparent;
 }
 
 .sidebar.collapsed ~ .main-content {

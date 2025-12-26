@@ -1,15 +1,19 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import type {
   FinancialAccount,
   AccountType,
+  AccountStatus,
   CreateFinancialAccountInput,
 } from '@rates/firebase-client';
 import { getAccountWithCalculated } from '@rates/firebase-client';
 import {
   createFinancialAccount,
   getUserFinancialAccounts,
+  updateFinancialAccount,
+  deleteFinancialAccount,
 } from '../services/financialAccounts';
+import { filterAccounts } from '../utils/filterAccounts';
 import { Modal } from '../components/Modal';
 import { CreateAccountForm } from '../components/CreateAccountForm';
 import './Dashboard.css';
@@ -31,6 +35,28 @@ export default function AccountsByType() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingAccount, setEditingAccount] = useState<FinancialAccount | null>(
+    null
+  );
+  const [deletingAccount, setDeletingAccount] =
+    useState<FinancialAccount | null>(null);
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get('search') ?? '';
+
+  // Filter accounts based on search query and filters (type is already filtered by route)
+  const filteredAccounts = useMemo(() => {
+    const statusFilters = (searchParams
+      .get('status')
+      ?.split(',')
+      .filter(Boolean) ?? []) as AccountStatus[];
+    const currencyFilter = searchParams.get('currency') ?? '';
+
+    return filterAccounts(accounts, {
+      search: searchQuery,
+      status: statusFilters.length > 0 ? statusFilters : undefined,
+      currency: currencyFilter || undefined,
+    });
+  }, [accounts, searchQuery, searchParams]);
 
   useEffect(() => {
     void loadAccounts();
@@ -102,6 +128,26 @@ export default function AccountsByType() {
         return '#ff9800';
       default:
         return '#757575';
+    }
+  };
+
+  const handleOpenCreateModal = () => {
+    setEditingAccount(null);
+    setIsModalOpen(true);
+    setError(null);
+  };
+
+  const handleOpenEditModal = (account: FinancialAccount) => {
+    setEditingAccount(account);
+    setIsModalOpen(true);
+    setError(null);
+  };
+
+  const handleCloseModal = () => {
+    if (!saving) {
+      setIsModalOpen(false);
+      setEditingAccount(null);
+      setError(null);
     }
   };
 
@@ -204,7 +250,7 @@ export default function AccountsByType() {
 
       console.log('🟢 [handleCreateAccount] Closing modal...');
       // Close modal on success
-      setIsModalOpen(false);
+      handleCloseModal();
       console.log(
         '✅ [handleCreateAccount] Account creation completed successfully!'
       );
@@ -222,6 +268,58 @@ export default function AccountsByType() {
       setError(err instanceof Error ? err.message : 'Failed to create account');
     } finally {
       console.log('🟢 [handleCreateAccount] Setting saving state to false');
+      setSaving(false);
+    }
+  };
+
+  const handleUpdateAccount = async (
+    accountData: Omit<CreateFinancialAccountInput, 'userId'>
+  ) => {
+    if (!editingAccount) return;
+
+    try {
+      setSaving(true);
+      setError(null);
+
+      const updateData = {
+        accountName: accountData.accountName,
+        accountDescription: accountData.accountDescription,
+        status: accountData.status,
+        totalAmountRemaining: accountData.totalAmountRemaining,
+        monthlyPayment: accountData.monthlyPayment,
+        rate: accountData.rate,
+        nextDueDate: accountData.nextDueDate,
+        updatedAt: new Date(),
+        ...(accountData.originalAmount && {
+          originalAmount: accountData.originalAmount,
+        }),
+        ...(accountData.startDate && { startDate: accountData.startDate }),
+      };
+
+      await updateFinancialAccount(editingAccount.accountNumber, updateData);
+      await loadAccounts();
+      handleCloseModal();
+    } catch (err) {
+      console.error('Error updating account:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update account');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!deletingAccount) return;
+
+    try {
+      setSaving(true);
+      setError(null);
+      await deleteFinancialAccount(deletingAccount.accountNumber);
+      await loadAccounts();
+      setDeletingAccount(null);
+    } catch (err) {
+      console.error('Error deleting account:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete account');
+    } finally {
       setSaving(false);
     }
   };
@@ -259,7 +357,7 @@ export default function AccountsByType() {
         <h2>{ACCOUNT_TYPE_LABELS[type]}</h2>
         <button
           className="btn-add-new"
-          onClick={() => setIsModalOpen(true)}
+          onClick={handleOpenCreateModal}
           title="Add New Account"
         >
           <span className="btn-add-icon">+</span>
@@ -269,13 +367,12 @@ export default function AccountsByType() {
 
       <Modal
         isOpen={isModalOpen}
-        onClose={() => {
-          if (!saving) {
-            setIsModalOpen(false);
-            setError(null);
-          }
-        }}
-        title={`Create New ${ACCOUNT_TYPE_LABELS[type]?.slice(0, -1) || 'Account'}`}
+        onClose={handleCloseModal}
+        title={
+          editingAccount
+            ? `Edit ${ACCOUNT_TYPE_LABELS[type]?.slice(0, -1) ?? 'Account'}`
+            : `Create New ${ACCOUNT_TYPE_LABELS[type]?.slice(0, -1) ?? 'Account'}`
+        }
       >
         {error && (
           <div
@@ -295,15 +392,119 @@ export default function AccountsByType() {
         {type && (
           <CreateAccountForm
             accountType={type}
-            onSubmit={(account) => void handleCreateAccount(account)}
-            onCancel={() => {
-              if (!saving) {
-                setIsModalOpen(false);
-                setError(null);
-              }
-            }}
+            onSubmit={(account) =>
+              editingAccount
+                ? void handleUpdateAccount(account)
+                : void handleCreateAccount(account)
+            }
+            onCancel={handleCloseModal}
             isSubmitting={saving}
+            initialData={editingAccount ?? undefined}
+            mode={editingAccount ? 'edit' : 'create'}
           />
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={deletingAccount !== null}
+        onClose={() => {
+          if (!saving) {
+            setDeletingAccount(null);
+            setError(null);
+          }
+        }}
+        title="Delete Account"
+      >
+        {error && (
+          <div
+            style={{
+              padding: '1rem',
+              marginBottom: '1rem',
+              background: 'rgba(255, 107, 107, 0.2)',
+              border: '1px solid #ff6b6b',
+              borderRadius: '12px',
+              color: '#ff6b6b',
+              fontSize: '0.9rem',
+            }}
+          >
+            {error}
+          </div>
+        )}
+        {deletingAccount && (
+          <div style={{ color: 'white' }}>
+            <p style={{ marginBottom: '1.5rem', fontSize: '1rem' }}>
+              Are you sure you want to delete this account?
+            </p>
+            <div
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                padding: '1rem',
+                borderRadius: '12px',
+                marginBottom: '1.5rem',
+              }}
+            >
+              <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>
+                {deletingAccount.accountName}
+              </p>
+              <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>
+                {deletingAccount.accountNumber}
+              </p>
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                gap: '1rem',
+                justifyContent: 'flex-end',
+                marginTop: '1.5rem',
+                paddingTop: '1.5rem',
+                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+              }}
+            >
+              <button
+                type="button"
+                className="btn-cancel"
+                onClick={() => {
+                  if (!saving) {
+                    setDeletingAccount(null);
+                    setError(null);
+                  }
+                }}
+                disabled={saving}
+                style={{
+                  padding: '0.875rem 2rem',
+                  borderRadius: '12px',
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(10px)',
+                  color: 'white',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleDeleteAccount()}
+                disabled={saving}
+                style={{
+                  padding: '0.875rem 2rem',
+                  borderRadius: '12px',
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  background:
+                    'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)',
+                  color: 'white',
+                  border: 'none',
+                  boxShadow: '0 4px 12px rgba(244, 67, 54, 0.3)',
+                }}
+              >
+                {saving ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
         )}
       </Modal>
 
@@ -324,31 +525,48 @@ export default function AccountsByType() {
           </p>
           <button
             className="btn-add-new"
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenCreateModal}
             style={{ margin: '0 auto' }}
           >
             <span className="btn-add-icon">+</span>
             <span>Add Your First Account</span>
           </button>
         </div>
+      ) : filteredAccounts.length === 0 && searchQuery ? (
+        <div
+          style={{
+            textAlign: 'center',
+            padding: '3rem',
+            color: 'rgba(255, 255, 255, 0.8)',
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '20px',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
+          }}
+        >
+          <p style={{ fontSize: '1.2rem', margin: 0 }}>
+            No {ACCOUNT_TYPE_LABELS[type].toLowerCase()} found matching "
+            {searchQuery}"
+          </p>
+        </div>
       ) : (
         <>
           <div className="accounts-summary">
             <div className="summary-card">
               <h3>Total Accounts</h3>
-              <p className="summary-value">{accounts.length}</p>
+              <p className="summary-value">{filteredAccounts.length}</p>
             </div>
             <div className="summary-card">
               <h3>Active Accounts</h3>
               <p className="summary-value">
-                {accounts.filter((a) => a.status === 'active').length}
+                {filteredAccounts.filter((a) => a.status === 'active').length}
               </p>
             </div>
             <div className="summary-card">
               <h3>Total Remaining</h3>
               <p className="summary-value">
                 {formatCurrency(
-                  accounts.reduce(
+                  filteredAccounts.reduce(
                     (sum, a) => sum + a.totalAmountRemaining.amount,
                     0
                   ),
@@ -359,7 +577,7 @@ export default function AccountsByType() {
           </div>
 
           <div className="accounts-list">
-            {accounts.map((account) => {
+            {filteredAccounts.map((account) => {
               const accountWithCalculated = getAccountWithCalculated(account);
               const daysRemaining =
                 accountWithCalculated.daysRemainingToDueDate;
@@ -375,14 +593,88 @@ export default function AccountsByType() {
                         {account.accountDescription}
                       </p>
                     </div>
-                    <span
-                      className="status-badge"
+                    <div
                       style={{
-                        backgroundColor: getStatusColor(account.status),
+                        display: 'flex',
+                        gap: '0.75rem',
+                        alignItems: 'center',
                       }}
                     >
-                      {account.status.replace('_', ' ').toUpperCase()}
-                    </span>
+                      <span
+                        className="status-badge"
+                        style={{
+                          backgroundColor: getStatusColor(account.status),
+                        }}
+                      >
+                        {account.status.replace('_', ' ').toUpperCase()}
+                      </span>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          onClick={() => handleOpenEditModal(account)}
+                          title="Edit Account"
+                          style={{
+                            background: 'rgba(102, 126, 234, 0.2)',
+                            border: '1px solid rgba(102, 126, 234, 0.5)',
+                            borderRadius: '8px',
+                            padding: '0.5rem 0.75rem',
+                            color: 'white',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            transition: 'all 0.3s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background =
+                              'rgba(102, 126, 234, 0.3)';
+                            e.currentTarget.style.transform =
+                              'translateY(-2px)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background =
+                              'rgba(102, 126, 234, 0.2)';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                          }}
+                        >
+                          <span>✏️</span>
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          onClick={() => setDeletingAccount(account)}
+                          title="Delete Account"
+                          style={{
+                            background: 'rgba(244, 67, 54, 0.2)',
+                            border: '1px solid rgba(244, 67, 54, 0.5)',
+                            borderRadius: '8px',
+                            padding: '0.5rem 0.75rem',
+                            color: 'white',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            transition: 'all 0.3s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background =
+                              'rgba(244, 67, 54, 0.3)';
+                            e.currentTarget.style.transform =
+                              'translateY(-2px)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background =
+                              'rgba(244, 67, 54, 0.2)';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                          }}
+                        >
+                          <span>🗑️</span>
+                          <span>Delete</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="account-details">

@@ -1,6 +1,7 @@
 import { useState, useEffect, type PropsWithChildren } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { SearchBar } from './SearchBar';
 import './PrivateLayout.css';
 
 const ACCOUNT_TYPES = [
@@ -102,6 +103,16 @@ export function PrivateLayout({ children }: PropsWithChildren) {
                 )}
               </div>
             </li>
+            <li>
+              <Link
+                to="/migrate"
+                className={`nav-link ${isActive('/migrate') ? 'active' : ''}`}
+                title="Migrate Accounts"
+              >
+                <span className="nav-icon">🔄</span>
+                {sidebarExpanded && <span>Migrate Accounts</span>}
+              </Link>
+            </li>
           </ul>
         </nav>
         <div className="sidebar-footer">
@@ -123,6 +134,7 @@ export function PrivateLayout({ children }: PropsWithChildren) {
         </div>
       </aside>
       <main className="main-content">
+        <SearchBar />
         <div className="main-content-scrollable">{children}</div>
       </main>
     </div>

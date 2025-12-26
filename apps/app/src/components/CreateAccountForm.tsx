@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import type {
   AccountType,
   AccountStatus,
   CreateFinancialAccountInput,
+  FinancialAccount,
 } from '@rates/firebase-client';
 import './CreateAccountForm.css';
 
@@ -13,6 +14,8 @@ interface CreateAccountFormProps {
   ) => void | Promise<void>;
   onCancel: () => void;
   isSubmitting?: boolean;
+  initialData?: FinancialAccount;
+  mode?: 'create' | 'edit';
 }
 
 const ACCOUNT_STATUSES: AccountStatus[] = [
@@ -28,20 +31,53 @@ export function CreateAccountForm({
   onSubmit,
   onCancel,
   isSubmitting = false,
+  initialData,
+  mode = 'create',
 }: CreateAccountFormProps) {
+  const formatDateForInput = (
+    date: Date | { toDate: () => Date } | undefined
+  ): string => {
+    if (!date) return '';
+    const d = date instanceof Date ? date : date.toDate();
+    return d.toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState({
-    accountNumber: '',
-    accountName: '',
-    accountDescription: '',
-    status: 'active' as AccountStatus,
-    totalAmountRemaining: '',
-    monthlyPayment: '',
-    rate: '',
-    nextDueDate: '',
-    currency: 'COP' as 'COP' | 'USD',
-    originalAmount: '',
-    startDate: '',
+    accountNumber: initialData?.accountNumber ?? '',
+    accountName: initialData?.accountName ?? '',
+    accountDescription: initialData?.accountDescription ?? '',
+    status: initialData?.status ?? 'active',
+    totalAmountRemaining:
+      initialData?.totalAmountRemaining.amount.toString() ?? '',
+    monthlyPayment: initialData?.monthlyPayment.amount.toString() ?? '',
+    rate: initialData?.rate.toString() ?? '',
+    nextDueDate: formatDateForInput(initialData?.nextDueDate) ?? '',
+    currency: (initialData?.totalAmountRemaining.currency ?? 'COP') as
+      | 'COP'
+      | 'USD',
+    originalAmount: initialData?.originalAmount?.amount.toString() ?? '',
+    startDate: formatDateForInput(initialData?.startDate) ?? '',
   });
+
+  // Update form data when initialData changes (for edit mode)
+  useEffect(() => {
+    if (initialData && mode === 'edit') {
+      setFormData({
+        accountNumber: initialData.accountNumber,
+        accountName: initialData.accountName,
+        accountDescription: initialData.accountDescription,
+        status: initialData.status,
+        totalAmountRemaining:
+          initialData.totalAmountRemaining.amount.toString(),
+        monthlyPayment: initialData.monthlyPayment.amount.toString(),
+        rate: initialData.rate.toString(),
+        nextDueDate: formatDateForInput(initialData.nextDueDate),
+        currency: initialData.totalAmountRemaining.currency as 'COP' | 'USD',
+        originalAmount: initialData.originalAmount?.amount.toString() ?? '',
+        startDate: formatDateForInput(initialData.startDate),
+      });
+    }
+  }, [initialData, mode]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -158,6 +194,7 @@ export function CreateAccountForm({
             onChange={(e) => handleChange('accountNumber', e.target.value)}
             className={errors.accountNumber ? 'error' : ''}
             placeholder="e.g., ACC-0001"
+            disabled={mode === 'edit'}
           />
           {errors.accountNumber && (
             <span className="error-message">{errors.accountNumber}</span>
@@ -347,7 +384,13 @@ export function CreateAccountForm({
           Cancel
         </button>
         <button type="submit" className="btn-submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating...' : 'Create Account'}
+          {isSubmitting
+            ? mode === 'edit'
+              ? 'Updating...'
+              : 'Creating...'
+            : mode === 'edit'
+              ? 'Update Account'
+              : 'Create Account'}
         </button>
       </div>
     </form>
