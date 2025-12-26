@@ -22,8 +22,8 @@ export default function Dashboard() {
         </p>
         <p>
           <small>
-            In production, verify this token with Firebase Admin SDK on your
-            backend before trusting it.
+            ✓ This token is validated server-side using Firebase Admin SDK for
+            secure verification.
           </small>
         </p>
         <button onClick={() => void signOut()} style={{ marginTop: '1rem' }}>

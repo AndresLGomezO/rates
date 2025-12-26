@@ -1,9 +1,11 @@
 /**
  * Token validation utilities
- * Validates Firebase ID tokens and handles refresh/revocation
+ * Validates Firebase ID tokens using server-side Firebase Admin SDK
+ *
+ * This module handles token validation by calling the auth-app's server-side
+ * validation endpoint, which uses Firebase Admin SDK for proper token verification.
  */
 
-import { getAuth } from '@rates/firebase-client';
 import { getAuthToken, clearAuthToken } from './auth';
 
 const AUTH_APP_URL =
@@ -18,35 +20,49 @@ export type TokenValidationResult = {
   needsRefresh?: boolean;
 };
 
-type TokenPayload = {
-  exp?: number;
-  [key: string]: unknown;
+type ValidationApiResponse = {
+  valid: boolean;
+  error?: string;
+  expiresAt?: number;
 };
 
 /**
- * Decode JWT token to check expiration without verifying signature
- * This is a client-side check - server should verify signature
+ * Decode JWT token to check expiration (client-side check only)
+ * Used for determining if token needs refresh, not for validation
  */
-function isTokenExpired(token: string): boolean {
+function getTokenExpiration(token: string): number | null {
   try {
     const parts = token.split('.');
-    if (parts.length !== 3) return true;
+    if (parts.length !== 3) return null;
 
-    const payload = JSON.parse(atob(parts[1])) as TokenPayload;
-    const exp = payload.exp;
-    if (!exp || typeof exp !== 'number') return true;
-
-    // Check if token expires within the next 5 minutes (refresh threshold)
-    const now = Math.floor(Date.now() / 1000);
-    return exp <= now + 300; // 5 minutes buffer
+    const payload = JSON.parse(atob(parts[1])) as { exp?: number };
+    return payload.exp ? payload.exp * 1000 : null; // Convert to milliseconds
   } catch {
-    return true;
+    return null;
   }
 }
 
 /**
- * Validate token by attempting to use it with Firebase Auth
- * This will verify the token is valid and not revoked
+ * Check if token expires soon (within 5 minutes)
+ */
+function isTokenExpiringSoon(expiresAt: number | null): boolean {
+  if (!expiresAt) return false;
+  const expiresIn = expiresAt - Date.now();
+  return expiresIn < 300000; // 5 minutes in milliseconds
+}
+
+/**
+ * Validate token using server-side Firebase Admin SDK
+ *
+ * This function calls the auth-app's /api/validate endpoint which uses
+ * Firebase Admin SDK to perform full token verification including:
+ * - Signature validation
+ * - Expiration checking
+ * - Revocation status
+ * - Issuer verification
+ *
+ * @param token - Firebase ID token to validate
+ * @returns Validation result with token status and expiration info
  */
 export async function validateToken(
   token: string | null
@@ -61,147 +77,113 @@ export async function validateToken(
   }
 
   try {
-    const auth = getAuth();
-    const currentUser = auth.currentUser;
-
-    // If we have a current user, check if their token matches
-    if (currentUser) {
-      const currentToken = await currentUser.getIdToken(false);
-      if (currentToken === token) {
-        // Token matches current user, check if it needs refresh
-        const needsRefresh = isTokenExpired(token);
-        if (needsRefresh) {
-          const refreshedToken = await currentUser.getIdToken(true);
-          return {
-            isValid: true,
-            token: refreshedToken,
-            user: currentUser,
-            needsRefresh: false,
-          };
-        }
-        return {
-          isValid: true,
-          token: currentToken,
-          user: currentUser,
-          needsRefresh: false,
-        };
+    // Call auth-app server-side validation endpoint
+    // This uses Firebase Admin SDK for proper token verification
+    const response = await fetch(
+      `${AUTH_APP_URL}/api/validate?token=${encodeURIComponent(token)}`,
+      {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
       }
-    }
+    );
 
-    // Validate token by calling auth-app API validation endpoint
-    // This is the primary validation method - more reliable than client-side checks
+    // Parse response
+    let data: ValidationApiResponse;
+
     try {
-      const response = await fetch(
-        `${AUTH_APP_URL}/api/validate?token=${encodeURIComponent(token)}`,
-        {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      // Parse response
-      let data: {
-        valid: boolean;
-        error?: string;
-        refreshedToken?: string;
-        expiresAt?: number;
-      };
-
-      try {
-        const text = await response.text();
-        if (!text) {
-          throw new Error('Empty response from validation endpoint');
-        }
-        data = JSON.parse(text) as typeof data;
-      } catch (parseError) {
-        // If response is not JSON, it might be HTML (error page)
-        console.error('Failed to parse validation response:', parseError);
-        throw new Error('Invalid response format from validation endpoint');
+      const text = await response.text();
+      if (!text) {
+        throw new Error('Empty response from validation endpoint');
       }
-
-      if (!response.ok) {
-        // API returned an error status
-        return {
-          isValid: false,
-          token: null,
-          user: null,
-          error: data.error ?? `Token validation failed (${response.status})`,
-        };
-      }
-
-      if (data.valid) {
-        // Token is valid
-        const validatedToken = data.refreshedToken ?? token;
-
-        // Check if token needs refresh based on expiration time
-        let needsRefresh = false;
-        if (data.expiresAt) {
-          const expiresIn = data.expiresAt - Date.now();
-          // Refresh if expires within 5 minutes
-          needsRefresh = expiresIn < 300000; // 5 minutes in milliseconds
-        } else {
-          // Fallback to client-side expiration check
-          needsRefresh = isTokenExpired(validatedToken);
-        }
-
-        return {
-          isValid: true,
-          token: validatedToken,
-          user: null, // User object not available from API
-          needsRefresh,
-        };
-      }
-
-      // Token is invalid
+      data = JSON.parse(text) as ValidationApiResponse;
+    } catch (parseError) {
+      // If response is not JSON, it might be HTML (error page)
+      console.error('Failed to parse validation response:', parseError);
       return {
         isValid: false,
         token: null,
         user: null,
-        error: data.error ?? 'Token is invalid',
+        error: 'Invalid response format from validation endpoint',
       };
-    } catch (fetchError) {
-      // Network error or API unavailable - fallback to client-side validation
+    }
+
+    if (!response.ok || !data.valid) {
+      // Token is invalid according to Admin SDK
+      return {
+        isValid: false,
+        token: null,
+        user: null,
+        error: data.error ?? `Token validation failed (${response.status})`,
+      };
+    }
+
+    // Token is valid - check if it needs refresh based on expiration
+    const expiresAt = data.expiresAt ?? getTokenExpiration(token);
+    const needsRefresh = isTokenExpiringSoon(expiresAt);
+
+    return {
+      isValid: true,
+      token, // Use original token (Admin SDK doesn't return refreshed tokens)
+      user: null, // User object not available from API
+      needsRefresh,
+    };
+  } catch (error) {
+    // Network error or API unavailable
+    console.error('Token validation error:', error);
+
+    // In production, we should fail securely - don't allow access without validation
+    // In development, we might want to allow offline mode
+    const isDevelopment = import.meta.env.DEV;
+
+    if (isDevelopment) {
+      // Development fallback: check token format only
       console.warn(
-        'Token validation API unavailable, using fallback:',
-        fetchError
+        'Token validation API unavailable. Using format check only. ' +
+          'Server-side verification is required in production.'
       );
 
-      // Check token expiration client-side as fallback
-      if (isTokenExpired(token)) {
+      // Basic format check as last resort
+      const parts = token.split('.');
+      if (parts.length !== 3) {
         return {
           isValid: false,
           token: null,
           user: null,
-          error: 'Token expired (offline validation)',
-          needsRefresh: true,
+          error: 'Invalid token format',
         };
       }
 
-      // If we can't validate via API and token format looks valid,
-      // assume it's okay for now (but warn in console)
-      // In production, you should always validate server-side
-      console.warn(
-        'Token validation API unavailable. Using fallback validation. ' +
-          'Token format appears valid, but server-side verification is recommended.'
-      );
+      // Check expiration client-side
+      const expiresAt = getTokenExpiration(token);
+      if (expiresAt && expiresAt <= Date.now()) {
+        return {
+          isValid: false,
+          token: null,
+          user: null,
+          error: 'Token expired (offline check)',
+        };
+      }
 
       return {
         isValid: true,
         token,
         user: null,
-        needsRefresh: false,
+        needsRefresh: isTokenExpiringSoon(expiresAt),
       };
     }
-  } catch (error) {
+
+    // Production: fail securely
     return {
       isValid: false,
       token: null,
       user: null,
-      error: error instanceof Error ? error.message : 'Validation failed',
+      error:
+        error instanceof Error
+          ? `Validation failed: ${error.message}`
+          : 'Token validation failed - service unavailable',
     };
   }
 }

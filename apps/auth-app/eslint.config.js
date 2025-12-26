@@ -6,7 +6,7 @@ import baseConfig from '../../eslint.config.js';
 
 export default tseslint.config(
   ...baseConfig,
-  { ignores: ['dist', 'vite.config.ts'] },
+  { ignores: ['dist', 'vite.config.ts', 'vite.plugin.api.ts'] },
   {
     extends: [...tseslint.configs.recommendedTypeChecked],
     files: ['**/*.{ts,tsx}'],
