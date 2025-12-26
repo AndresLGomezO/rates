@@ -1,15 +1,16 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import './firebase'; // Initialize Firebase
 import './index.css';
-import App from './App.tsx';
-import Home from './pages/Home.tsx';
-import About from './pages/About.tsx';
+import Login from './pages/Login.tsx';
 import Dashboard from './pages/Dashboard.tsx';
+import AccountsByType from './pages/AccountsByType.tsx';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthRedirectHandler } from './components/AuthRedirectHandler';
+import { PublicLayout } from './components/PublicLayout';
+import { PrivateLayout } from './components/PrivateLayout';
 
 const router = createBrowserRouter([
   {
@@ -17,31 +18,45 @@ const router = createBrowserRouter([
     element: (
       <>
         <AuthRedirectHandler />
-        <App />
+        <Outlet />
       </>
     ),
     children: [
       {
-        index: true,
+        path: 'login',
         element: (
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'about',
-        element: (
-          <ProtectedRoute>
-            <About />
-          </ProtectedRoute>
+          <PublicLayout>
+            <Login />
+          </PublicLayout>
         ),
       },
       {
         path: 'dashboard',
         element: (
           <ProtectedRoute>
-            <Dashboard />
+            <PrivateLayout>
+              <Dashboard />
+            </PrivateLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'accounts/:type',
+        element: (
+          <ProtectedRoute>
+            <PrivateLayout>
+              <AccountsByType />
+            </PrivateLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        index: true,
+        element: (
+          <ProtectedRoute>
+            <PrivateLayout>
+              <Dashboard />
+            </PrivateLayout>
           </ProtectedRoute>
         ),
       },

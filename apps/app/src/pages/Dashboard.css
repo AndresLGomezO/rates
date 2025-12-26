@@ -1,0 +1,866 @@
+.dashboard {
+  padding: 0;
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  animation: fadeIn 0.6s ease-out;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  position: relative;
+}
+
+.dashboard-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+}
+
+.dashboard-header h2 {
+  margin: 0;
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    rgba(255, 255, 255, 0.8) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 20px rgba(255, 255, 255, 0.1);
+}
+
+.btn-secondary {
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.btn-add-new {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  backdrop-filter: blur(10px);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  white-space: nowrap;
+}
+
+.btn-add-new:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #7a8ef0 0%, #8559b8 100%);
+}
+
+.btn-add-new:active {
+  transform: translateY(0);
+}
+
+.btn-add-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.accounts-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.summary-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  color: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow:
+    0 8px 32px 0 rgba(31, 38, 135, 0.37),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.summary-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.summary-card:hover::before {
+  opacity: 1;
+}
+
+.summary-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow:
+    0 12px 40px 0 rgba(31, 38, 135, 0.5),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.summary-card:nth-child(1) {
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.3) 0%,
+    rgba(118, 75, 162, 0.3) 100%
+  );
+}
+
+.summary-card:nth-child(2) {
+  background: linear-gradient(
+    135deg,
+    rgba(240, 147, 251, 0.3) 0%,
+    rgba(79, 172, 254, 0.3) 100%
+  );
+}
+
+.summary-card:nth-child(3) {
+  background: linear-gradient(
+    135deg,
+    rgba(79, 172, 254, 0.3) 0%,
+    rgba(0, 242, 254, 0.3) 100%
+  );
+}
+
+.summary-card h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  z-index: 1;
+}
+
+.summary-value {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -1px;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.accounts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Sheet-like Account Row */
+.account-row {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.account-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    #667eea,
+    #764ba2,
+    #f093fb,
+    #4facfe,
+    #00f2fe
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.account-row:hover::before {
+  opacity: 1;
+}
+
+.account-row:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow:
+    0 8px 24px 0 rgba(31, 38, 135, 0.3),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+}
+
+.account-row.expanded {
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 12px 32px 0 rgba(31, 38, 135, 0.4),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.25);
+}
+
+.account-row.expanded::before {
+  opacity: 1;
+}
+
+/* Simplified Row Summary */
+.account-row-summary {
+  display: flex;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  cursor: pointer;
+  gap: 1.5rem;
+  transition: background-color 0.2s ease;
+  position: relative;
+}
+
+.account-row-summary:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.account-row-main {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 2rem;
+  min-width: 0;
+}
+
+.account-row-primary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 200px;
+  flex-shrink: 0;
+}
+
+.account-row-name {
+  margin: 0;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-row-number {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+.account-row-balance,
+.account-row-payment,
+.account-row-due {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 120px;
+}
+
+.account-row-balance-label,
+.account-row-payment-label,
+.account-row-due-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.account-row-balance-amount {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #4facfe;
+  text-shadow: 0 2px 10px rgba(79, 172, 254, 0.3);
+  letter-spacing: -0.5px;
+}
+
+.account-row-payment-amount {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  letter-spacing: -0.3px;
+}
+
+.account-row-due-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: white;
+}
+
+.account-row-due-value.overdue {
+  color: #ff6b6b;
+  font-weight: 700;
+}
+
+.account-row-due-value.due-soon {
+  color: #ffd93d;
+  font-weight: 700;
+}
+
+.account-row-due-days {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+.account-row-due-days.overdue {
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
+.account-row-due-days.due-soon {
+  color: #ffd93d;
+  font-weight: 600;
+}
+
+.account-row-status {
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Expand Button */
+.account-row-expand {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.account-row-expand:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.account-row-expand.expanded {
+  transform: rotate(180deg);
+}
+
+.account-row-expand.expanded:hover {
+  transform: rotate(180deg) scale(1.1);
+}
+
+.account-row-expand svg {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Expanded Details */
+.account-row-details {
+  max-height: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s ease;
+  opacity: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.account-row-details.visible {
+  max-height: 2000px;
+  opacity: 1;
+}
+
+.account-row-details-content {
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.account-row-details-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.account-row-details-header h4 {
+  margin: 0 0 0.5rem 0;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.account-row-details-header .account-description {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.account-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Legacy account-card styles for AccountsByType compatibility */
+.account-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow:
+    0 8px 32px 0 rgba(31, 38, 135, 0.37),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.account-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    #667eea,
+    #764ba2,
+    #f093fb,
+    #4facfe,
+    #00f2fe
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.account-card:hover::before {
+  opacity: 1;
+}
+
+.account-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 12px 40px 0 rgba(31, 38, 135, 0.5),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.account-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.account-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+}
+
+.account-header h3 {
+  margin: 0 0 0.75rem 0;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.account-number {
+  margin: 0 0 0.5rem 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+.account-description {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.status-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.account-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+  .account-details {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+}
+
+.detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.detail-row:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateX(4px);
+}
+
+.detail-label {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  font-size: 1.1rem;
+  color: white;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.detail-value.amount {
+  color: #4facfe;
+  font-size: 1.3rem;
+  text-shadow: 0 2px 10px rgba(79, 172, 254, 0.3);
+}
+
+.detail-value-secondary {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-left: 0.5rem;
+  font-weight: 500;
+}
+
+.detail-value.overdue {
+  color: #ff6b6b;
+  font-weight: 700;
+  text-shadow: 0 2px 10px rgba(255, 107, 107, 0.3);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.detail-value.due-soon {
+  color: #ffd93d;
+  font-weight: 700;
+  text-shadow: 0 2px 10px rgba(255, 217, 61, 0.3);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.dashboard-footer {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  position: relative;
+}
+
+.dashboard-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+}
+
+.dashboard-footer small {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: white;
+  gap: 1.5rem;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-state p {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .account-row-main {
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  .account-row-primary {
+    min-width: 180px;
+  }
+
+  .account-row-balance,
+  .account-row-payment,
+  .account-row-due {
+    min-width: 110px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 0;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .dashboard-header h2 {
+    font-size: 2rem;
+  }
+
+  .accounts-summary {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .account-row-summary {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .account-row-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .account-row-primary,
+  .account-row-balance,
+  .account-row-payment,
+  .account-row-due {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  .account-row-status {
+    align-self: flex-start;
+  }
+
+  .account-details-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .summary-card {
+    padding: 1.5rem;
+  }
+
+  .summary-value {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header h2 {
+    font-size: 1.75rem;
+  }
+
+  .summary-value {
+    font-size: 1.75rem;
+  }
+
+  .account-row-summary {
+    padding: 0.875rem;
+    gap: 0.75rem;
+  }
+
+  .account-row-name {
+    font-size: 0.95rem;
+  }
+
+  .account-row-balance-amount {
+    font-size: 1rem;
+  }
+
+  .account-row-payment-amount {
+    font-size: 1rem;
+  }
+
+  .account-row-due-value {
+    font-size: 0.85rem;
+  }
+
+  .account-row-due-days {
+    font-size: 0.75rem;
+  }
+
+  .account-row-status {
+    font-size: 0.65rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .account-row-expand {
+    width: 32px;
+    height: 32px;
+  }
+
+  .summary-card {
+    padding: 1.25rem;
+  }
+}

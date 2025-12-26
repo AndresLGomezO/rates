@@ -55,3 +55,4 @@ echo "  2. Hard refresh the page (Cmd+Shift+R / Ctrl+Shift+R)"
 echo "  3. If errors persist, check logs: docker logs rates-firebase-emulators"
 echo ""
 
+

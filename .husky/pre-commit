@@ -37,3 +37,4 @@ pnpm type-check || {
 }
 
 echo "✅ All pre-commit checks passed!"
+
