@@ -1,13 +1,18 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type {
   FinancialAccount,
   AccountType,
   AccountStatus,
 } from '@rates/firebase-client';
-import { getAccountWithCalculated } from '@rates/firebase-client';
 import { getUserFinancialAccounts } from '../services/financialAccounts';
-import { filterAccounts } from '../utils/filterAccounts';
+import {
+  calculateDaysRemaining,
+  identifyPendingPaymentsForAccount,
+  type PeriodPaymentInfo,
+} from '../utils/paymentUtils';
+import type { PaymentPeriod } from '@rates/firebase-client';
+import { LogPaymentModal } from '../components/LogPaymentModal';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -17,30 +22,130 @@ export default function Dashboard() {
   const [expandedAccounts, setExpandedAccounts] = useState<Set<string>>(
     new Set()
   );
+  const [selectedAccountForPayment, setSelectedAccountForPayment] =
+    useState<FinancialAccount | null>(null);
+  const [selectedPeriodForPayment, setSelectedPeriodForPayment] =
+    useState<PaymentPeriod | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [accountPaymentPeriods, setAccountPaymentPeriods] = useState<
+    Record<string, PeriodPaymentInfo[]>
+  >({});
+  const [loadingPeriods, setLoadingPeriods] = useState(false);
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search') ?? '';
+  const daysAhead = parseInt(searchParams.get('daysAhead') ?? '15', 10);
 
-  // Filter accounts based on search query and filters
-  const filteredAccounts = useMemo(() => {
+  // Flatten all pending payment periods from all accounts
+  interface PendingPeriodWithAccount {
+    periodInfo: PeriodPaymentInfo;
+    account: FinancialAccount;
+  }
+
+  const allPendingPeriods = useMemo(() => {
+    const periods: PendingPeriodWithAccount[] = [];
+
+    accounts.forEach((account) => {
+      // Only process active accounts
+      if (account.status !== 'active') {
+        return;
+      }
+
+      const accountPeriods = accountPaymentPeriods[account.accountNumber] || [];
+
+      // Filter to only pending periods
+      // For bills: only missing is pending (any payment means paid)
+      // For loans: both missing and incomplete are pending
+      const isBill = account.accountType === 'bill';
+      const pendingPeriods = accountPeriods.filter(
+        (p) => p.status === 'missing' || (!isBill && p.status === 'incomplete')
+      );
+
+      // If using daysAhead filter, check if period is within the date range
+      if (daysAhead > 0) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const maxDate = new Date(today);
+        maxDate.setDate(maxDate.getDate() + daysAhead);
+        maxDate.setHours(23, 59, 59, 999);
+
+        pendingPeriods.forEach((periodInfo) => {
+          const dueDate =
+            periodInfo.period.dueDate instanceof Date
+              ? periodInfo.period.dueDate
+              : periodInfo.period.dueDate.toDate();
+          const periodDate = new Date(dueDate);
+          periodDate.setHours(0, 0, 0, 0);
+          if (periodDate <= maxDate) {
+            periods.push({ periodInfo, account });
+          }
+        });
+      } else {
+        // If no daysAhead filter, show all pending periods
+        pendingPeriods.forEach((periodInfo) => {
+          periods.push({ periodInfo, account });
+        });
+      }
+    });
+
+    return periods;
+  }, [accounts, accountPaymentPeriods, daysAhead]);
+
+  // Filter and sort pending periods
+  const filteredPendingPeriods = useMemo(() => {
+    let filtered = allPendingPeriods;
+
+    // Apply search query filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          item.account.accountName.toLowerCase().includes(query) ||
+          item.account.accountNumber.toLowerCase().includes(query) ||
+          item.account.accountDescription?.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply status filter
     const statusFilters = (searchParams
       .get('status')
       ?.split(',')
       .filter(Boolean) ?? []) as AccountStatus[];
+    if (statusFilters.length > 0) {
+      filtered = filtered.filter((item) =>
+        statusFilters.includes(item.account.status)
+      );
+    }
+
+    // Apply type filter
     const typeFilters = (searchParams.get('type')?.split(',').filter(Boolean) ??
       []) as AccountType[];
+    if (typeFilters.length > 0) {
+      filtered = filtered.filter((item) =>
+        typeFilters.includes(item.account.accountType)
+      );
+    }
+
+    // Apply currency filter
     const currencyFilter = searchParams.get('currency') ?? '';
+    if (currencyFilter) {
+      filtered = filtered.filter(
+        (item) => item.account.monthlyPayment.currency === currencyFilter
+      );
+    }
 
-    return filterAccounts(accounts, {
-      search: searchQuery,
-      status: statusFilters.length > 0 ? statusFilters : undefined,
-      type: typeFilters.length > 0 ? typeFilters : undefined,
-      currency: currencyFilter || undefined,
+    // Sort by due date (ascending - most urgent first)
+    return filtered.sort((a, b) => {
+      const dueDateA =
+        a.periodInfo.period.dueDate instanceof Date
+          ? a.periodInfo.period.dueDate
+          : a.periodInfo.period.dueDate.toDate();
+      const dueDateB =
+        b.periodInfo.period.dueDate instanceof Date
+          ? b.periodInfo.period.dueDate
+          : b.periodInfo.period.dueDate.toDate();
+      return dueDateA.getTime() - dueDateB.getTime();
     });
-  }, [accounts, searchQuery, searchParams]);
-
-  useEffect(() => {
-    void loadAccounts();
-  }, []);
+  }, [allPendingPeriods, searchQuery, searchParams]);
 
   const loadAccounts = async () => {
     try {
@@ -56,6 +161,98 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadPaymentPeriods = useCallback(
+    async (accountsToLoad: FinancialAccount[]) => {
+      try {
+        setLoadingPeriods(true);
+        const periodsMap: Record<string, PeriodPaymentInfo[]> = {};
+        const { extendPeriodicBillPeriods } =
+          await import('../services/paymentPeriods');
+
+        // Load payment periods for each account
+        await Promise.all(
+          accountsToLoad.map(async (account) => {
+            try {
+              // For periodic bills, extend periods first if needed
+              const isPeriodic =
+                account.accountType === 'bill' &&
+                (account.metadata?.isPeriodic === true ||
+                  account.numberOfPayments === undefined);
+
+              if (isPeriodic) {
+                try {
+                  await extendPeriodicBillPeriods(account.accountNumber);
+                } catch (err) {
+                  // If extension fails, try to generate from scratch
+                  console.warn(
+                    `Failed to extend periods for ${account.accountNumber}, will try to generate:`,
+                    err
+                  );
+                  const { generateAmortizationPlanForAccount } =
+                    await import('../services/paymentPeriods');
+                  try {
+                    await generateAmortizationPlanForAccount(
+                      account.accountNumber,
+                      false
+                    );
+                  } catch (genErr) {
+                    console.error(
+                      `Failed to generate periods for ${account.accountNumber}:`,
+                      genErr
+                    );
+                  }
+                }
+              }
+
+              const periods = await identifyPendingPaymentsForAccount(account);
+              periodsMap[account.accountNumber] = periods;
+            } catch (err) {
+              console.error(
+                `Error loading periods for ${account.accountNumber}:`,
+                err
+              );
+              // Set empty array on error
+              periodsMap[account.accountNumber] = [];
+            }
+          })
+        );
+
+        setAccountPaymentPeriods(periodsMap);
+      } catch (err) {
+        console.error('Error loading payment periods:', err);
+      } finally {
+        setLoadingPeriods(false);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    void loadAccounts();
+  }, []);
+
+  // Load payment periods for all accounts
+  useEffect(() => {
+    if (accounts.length > 0) {
+      void loadPaymentPeriods(accounts);
+    }
+  }, [accounts, loadPaymentPeriods]);
+
+  const handleLogPayment = (
+    account: FinancialAccount,
+    period: PaymentPeriod
+  ) => {
+    setSelectedAccountForPayment(account);
+    setSelectedPeriodForPayment(period);
+    setIsPaymentModalOpen(true);
+  };
+
+  const handlePaymentLogged = () => {
+    // Reload accounts and payment periods after payment is logged
+    void loadAccounts();
+    // Payment periods will be reloaded automatically via useEffect
   };
 
   const formatCurrency = (amount: number, currency: string): string => {
@@ -84,30 +281,13 @@ export default function Dashboard() {
     }).format(d);
   };
 
-  const getStatusColor = (status: string): string => {
-    switch (status) {
-      case 'active':
-        return '#4caf50';
-      case 'paid_off':
-        return '#2196f3';
-      case 'closed':
-        return '#757575';
-      case 'defaulted':
-        return '#f44336';
-      case 'on_hold':
-        return '#ff9800';
-      default:
-        return '#757575';
-    }
-  };
-
-  const toggleExpand = (accountNumber: string) => {
+  const toggleExpand = (key: string) => {
     setExpandedAccounts((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(accountNumber)) {
-        newSet.delete(accountNumber);
+      if (newSet.has(key)) {
+        newSet.delete(key);
       } else {
-        newSet.add(accountNumber);
+        newSet.add(key);
       }
       return newSet;
     });
@@ -155,35 +335,45 @@ export default function Dashboard() {
   return (
     <div className="dashboard">
       <div className="dashboard-header">
-        <h2>Financial Accounts</h2>
+        <h2>Pending Payments</h2>
+        <p className="dashboard-subtitle">
+          {daysAhead > 0
+            ? `Accounts with missing or incomplete payments within the next ${daysAhead} days from start date`
+            : 'Accounts with missing or incomplete payments from start date'}
+        </p>
       </div>
 
       <div className="accounts-summary">
         <div className="summary-card">
-          <h3>Total Accounts</h3>
-          <p className="summary-value">{filteredAccounts.length}</p>
+          <h3>Pending Periods</h3>
+          <p className="summary-value">{filteredPendingPeriods.length}</p>
         </div>
         <div className="summary-card">
-          <h3>Active Accounts</h3>
+          <h3>Total Pending Amount</h3>
           <p className="summary-value">
-            {filteredAccounts.filter((a) => a.status === 'active').length}
+            {formatCurrency(
+              filteredPendingPeriods.reduce(
+                (sum, item) => sum + item.periodInfo.amountRemaining,
+                0
+              ),
+              filteredPendingPeriods[0]?.account.monthlyPayment.currency ||
+                'COP'
+            )}
           </p>
         </div>
         <div className="summary-card">
-          <h3>Total Remaining</h3>
+          <h3>Unique Accounts</h3>
           <p className="summary-value">
-            {formatCurrency(
-              filteredAccounts.reduce(
-                (sum, a) => sum + a.totalAmountRemaining.amount,
-                0
-              ),
-              'COP'
-            )}
+            {
+              new Set(
+                filteredPendingPeriods.map((item) => item.account.accountNumber)
+              ).size
+            }
           </p>
         </div>
       </div>
 
-      {searchQuery && filteredAccounts.length === 0 && (
+      {filteredPendingPeriods.length === 0 && !loading && (
         <div
           style={{
             textAlign: 'center',
@@ -196,28 +386,41 @@ export default function Dashboard() {
           }}
         >
           <p style={{ fontSize: '1.2rem', margin: 0 }}>
-            No accounts found matching "{searchQuery}"
+            {searchQuery
+              ? `No pending payment periods found matching "${searchQuery}"`
+              : loadingPeriods
+                ? 'Loading payment periods...'
+                : 'No pending payment periods found. All payments are complete!'}
           </p>
         </div>
       )}
 
-      {filteredAccounts.length > 0 && (
+      {filteredPendingPeriods.length > 0 && (
         <div className="accounts-list">
-          {filteredAccounts.map((account) => {
-            const accountWithCalculated = getAccountWithCalculated(account);
-            const daysRemaining = accountWithCalculated.daysRemainingToDueDate;
+          {filteredPendingPeriods.map((item) => {
+            const { periodInfo, account } = item;
+            const period = periodInfo.period;
+
+            // Calculate days remaining for this specific period
+            const dueDate =
+              period.dueDate instanceof Date
+                ? period.dueDate
+                : period.dueDate.toDate();
+            const daysRemaining = calculateDaysRemaining(dueDate);
             const isOverdue = daysRemaining < 0;
-            const isExpanded = expandedAccounts.has(account.accountNumber);
+
+            const periodKey = `${account.accountNumber}-${period.periodNumber}`;
+            const isExpanded = expandedAccounts.has(periodKey);
 
             return (
               <div
-                key={account.accountNumber}
+                key={periodKey}
                 className={`account-row ${isExpanded ? 'expanded' : ''}`}
               >
                 {/* Simplified Row View */}
                 <div
                   className="account-row-summary"
-                  onClick={() => toggleExpand(account.accountNumber)}
+                  onClick={() => toggleExpand(periodKey)}
                 >
                   <div className="account-row-main">
                     <div className="account-row-primary">
@@ -225,25 +428,23 @@ export default function Dashboard() {
                         {account.accountName}
                       </h3>
                       <p className="account-row-number">
-                        {account.accountNumber}
+                        Period #{period.periodNumber} • {account.accountNumber}
                       </p>
                     </div>
                     <div className="account-row-balance">
-                      <span className="account-row-balance-label">Balance</span>
+                      <span className="account-row-balance-label">
+                        Amount Due
+                      </span>
                       <span className="account-row-balance-amount">
-                        {formatCurrency(
-                          account.totalAmountRemaining.amount,
-                          account.totalAmountRemaining.currency
-                        )}
+                        {formatCurrency(periodInfo.amountDue, period.currency)}
                       </span>
                     </div>
                     <div className="account-row-payment">
-                      <span className="account-row-payment-label">Monthly</span>
+                      <span className="account-row-payment-label">
+                        Amount Paid
+                      </span>
                       <span className="account-row-payment-amount">
-                        {formatCurrency(
-                          account.monthlyPayment.amount,
-                          account.monthlyPayment.currency
-                        )}
+                        {formatCurrency(periodInfo.amountPaid, period.currency)}
                       </span>
                     </div>
                     <div className="account-row-due">
@@ -257,7 +458,7 @@ export default function Dashboard() {
                               : ''
                         }`}
                       >
-                        {formatDate(account.nextDueDate)}
+                        {formatDate(dueDate)}
                       </span>
                       <span
                         className={`account-row-due-days ${
@@ -276,36 +477,68 @@ export default function Dashboard() {
                     <span
                       className="account-row-status"
                       style={{
-                        backgroundColor: getStatusColor(account.status),
+                        backgroundColor:
+                          periodInfo.status === 'missing'
+                            ? '#f44336'
+                            : periodInfo.status === 'incomplete'
+                              ? '#ff9800'
+                              : '#4caf50',
                       }}
                     >
-                      {account.status.replace('_', ' ').toUpperCase()}
+                      {periodInfo.status.toUpperCase()}
                     </span>
                   </div>
-                  <button
-                    className={`account-row-expand ${isExpanded ? 'expanded' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleExpand(account.accountNumber);
-                    }}
-                    aria-label={isExpanded ? 'Collapse' : 'Expand'}
-                  >
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
+                  <div className="account-row-actions">
+                    <button
+                      className="account-row-log-payment"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLogPayment(account, period);
+                      }}
+                      aria-label="Log Payment"
                     >
-                      <path
-                        d="M5 7.5L10 12.5L15 7.5"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 18 18"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M9 3V15M3 9H15"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      Log Payment
+                    </button>
+                    <button
+                      className={`account-row-expand ${isExpanded ? 'expanded' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleExpand(periodKey);
+                      }}
+                      aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                    >
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M5 7.5L10 12.5L15 7.5"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Expanded Details View */}
@@ -314,68 +547,32 @@ export default function Dashboard() {
                 >
                   <div className="account-row-details-content">
                     <div className="account-row-details-header">
-                      <h4>Account Details</h4>
+                      <h4>Payment Period Details</h4>
                       <p className="account-description">
                         {account.accountDescription}
                       </p>
                     </div>
                     <div className="account-details-grid">
                       <div className="detail-row">
-                        <span className="detail-label">Type:</span>
+                        <span className="detail-label">Account:</span>
                         <span className="detail-value">
-                          {account.accountType.replace('_', ' ')}
+                          {account.accountName} ({account.accountNumber})
                         </span>
                       </div>
                       <div className="detail-row">
-                        <span className="detail-label">Remaining Balance:</span>
-                        <span className="detail-value amount">
-                          {formatCurrency(
-                            account.totalAmountRemaining.amount,
-                            account.totalAmountRemaining.currency
-                          )}
-                        </span>
-                        {account.additionalAmounts?.[0] && (
-                          <span className="detail-value-secondary">
-                            (
-                            {formatCurrency(
-                              account.additionalAmounts[0].amount,
-                              account.additionalAmounts[0].currency
-                            )}
-                            )
-                          </span>
-                        )}
-                      </div>
-                      <div className="detail-row">
-                        <span className="detail-label">Monthly Payment:</span>
+                        <span className="detail-label">Period Number:</span>
                         <span className="detail-value">
-                          {formatCurrency(
-                            account.monthlyPayment.amount,
-                            account.monthlyPayment.currency
-                          )}
+                          #{period.periodNumber}
                         </span>
                       </div>
                       <div className="detail-row">
-                        <span className="detail-label">Interest Rate:</span>
-                        <span className="detail-value">{account.rate}%</span>
-                      </div>
-                      <div className="detail-row">
-                        <span className="detail-label">
-                          Capital/Interest Split:
-                        </span>
+                        <span className="detail-label">Status:</span>
                         <span className="detail-value">
-                          {formatCurrency(
-                            accountWithCalculated.monthlyCapital.amount,
-                            accountWithCalculated.monthlyCapital.currency
-                          )}{' '}
-                          /{' '}
-                          {formatCurrency(
-                            accountWithCalculated.monthlyInterest.amount,
-                            accountWithCalculated.monthlyInterest.currency
-                          )}
+                          {periodInfo.status.toUpperCase()}
                         </span>
                       </div>
                       <div className="detail-row">
-                        <span className="detail-label">Next Due Date:</span>
+                        <span className="detail-label">Due Date:</span>
                         <span
                           className={`detail-value ${
                             isOverdue
@@ -385,8 +582,7 @@ export default function Dashboard() {
                                 : ''
                           }`}
                         >
-                          {formatDate(account.nextDueDate)} (
-                          {accountWithCalculated.nextDueDateMonth})
+                          {formatDate(dueDate)}
                         </span>
                       </div>
                       <div className="detail-row">
@@ -400,32 +596,70 @@ export default function Dashboard() {
                                 : ''
                           }`}
                         >
-                          {daysRemaining} days
+                          {daysRemaining < 0
+                            ? `${Math.abs(daysRemaining)} days overdue`
+                            : `${daysRemaining} days left`}
                         </span>
                       </div>
                       <div className="detail-row">
-                        <span className="detail-label">Payments Made:</span>
-                        <span className="detail-value">
-                          {account.paymentLog.length} payments
-                        </span>
-                      </div>
-                      <div className="detail-row">
-                        <span className="detail-label">Total Paid:</span>
-                        <span className="detail-value">
+                        <span className="detail-label">Amount Due:</span>
+                        <span className="detail-value amount">
                           {formatCurrency(
-                            accountWithCalculated.totalPaid.amount,
-                            accountWithCalculated.totalPaid.currency
+                            periodInfo.amountDue,
+                            period.currency
                           )}
                         </span>
                       </div>
-                      {accountWithCalculated.estimatedPayoffDate && (
+                      <div className="detail-row">
+                        <span className="detail-label">Amount Paid:</span>
+                        <span className="detail-value">
+                          {formatCurrency(
+                            periodInfo.amountPaid,
+                            period.currency
+                          )}
+                        </span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="detail-label">Amount Remaining:</span>
+                        <span className="detail-value amount">
+                          {formatCurrency(
+                            periodInfo.amountRemaining,
+                            period.currency
+                          )}
+                        </span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="detail-label">Capital Portion:</span>
+                        <span className="detail-value">
+                          {formatCurrency(period.capital, period.currency)}
+                        </span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="detail-label">Interest Portion:</span>
+                        <span className="detail-value">
+                          {formatCurrency(period.interest, period.currency)}
+                        </span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="detail-label">
+                          Payment Log Entries:
+                        </span>
+                        <span className="detail-value">
+                          {periodInfo.paymentLogCount}{' '}
+                          {periodInfo.paymentLogCount === 1
+                            ? 'entry'
+                            : 'entries'}
+                        </span>
+                      </div>
+                      {period.remainingPrincipal !== undefined && (
                         <div className="detail-row">
                           <span className="detail-label">
-                            Estimated Payoff:
+                            Remaining Principal:
                           </span>
                           <span className="detail-value">
-                            {formatDate(
-                              accountWithCalculated.estimatedPayoffDate
+                            {formatCurrency(
+                              period.remainingPrincipal,
+                              period.currency
                             )}
                           </span>
                         </div>
@@ -438,6 +672,18 @@ export default function Dashboard() {
           })}
         </div>
       )}
+
+      <LogPaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => {
+          setIsPaymentModalOpen(false);
+          setSelectedAccountForPayment(null);
+          setSelectedPeriodForPayment(null);
+        }}
+        account={selectedAccountForPayment}
+        period={selectedPeriodForPayment}
+        onPaymentLogged={handlePaymentLogged}
+      />
     </div>
   );
 }

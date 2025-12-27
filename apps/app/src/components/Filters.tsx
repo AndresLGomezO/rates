@@ -32,9 +32,13 @@ const CURRENCIES = ['COP', 'USD', 'EUR', 'GBP'] as const;
 
 interface FiltersProps {
   hideAccountType?: boolean; // For AccountsByType page where type is already filtered
+  showDaysFilter?: boolean; // Show days ahead filter (for Dashboard)
 }
 
-export function Filters({ hideAccountType = false }: FiltersProps) {
+export function Filters({
+  hideAccountType = false,
+  showDaysFilter = false,
+}: FiltersProps) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Get current filter values from URL
@@ -43,9 +47,13 @@ export function Filters({ hideAccountType = false }: FiltersProps) {
   const typeFilters =
     searchParams.get('type')?.split(',').filter(Boolean) ?? [];
   const currencyFilter = searchParams.get('currency') ?? '';
+  const daysAhead = parseInt(searchParams.get('daysAhead') ?? '15', 10);
 
   const hasActiveFilters =
-    statusFilters.length > 0 || typeFilters.length > 0 || currencyFilter !== '';
+    statusFilters.length > 0 ||
+    typeFilters.length > 0 ||
+    currencyFilter !== '' ||
+    (showDaysFilter && daysAhead !== 15);
 
   const toggleStatus = (status: AccountStatus) => {
     const newStatuses = statusFilters.includes(status)
@@ -91,12 +99,27 @@ export function Filters({ hideAccountType = false }: FiltersProps) {
     });
   };
 
+  const setDaysAhead = (days: number) => {
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      if (days === 15) {
+        newParams.delete('daysAhead');
+      } else {
+        newParams.set('daysAhead', days.toString());
+      }
+      return newParams;
+    });
+  };
+
   const clearAllFilters = () => {
     setSearchParams((prev) => {
       const newParams = new URLSearchParams(prev);
       newParams.delete('status');
       newParams.delete('type');
       newParams.delete('currency');
+      if (showDaysFilter) {
+        newParams.delete('daysAhead');
+      }
       return newParams;
     });
   };
@@ -164,6 +187,25 @@ export function Filters({ hideAccountType = false }: FiltersProps) {
           ))}
         </div>
       </div>
+
+      {/* Days Ahead Filter (for Dashboard) */}
+      {showDaysFilter && (
+        <div className="filter-group">
+          <label className="filter-group-label">Days Ahead</label>
+          <div className="filter-options">
+            {[7, 15, 30, 60, 90].map((days) => (
+              <button
+                key={days}
+                className={`filter-chip ${daysAhead === days ? 'active' : ''}`}
+                onClick={() => setDaysAhead(days)}
+                type="button"
+              >
+                <span className="filter-chip-label">{days} days</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {hasActiveFilters && (
         <button

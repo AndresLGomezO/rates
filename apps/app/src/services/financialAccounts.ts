@@ -328,3 +328,153 @@ export async function deleteFinancialAccount(accountId: string): Promise<void> {
   // Or use deleteDoc if you want to permanently delete:
   // await deleteDoc(accountRef);
 }
+
+/**
+ * Log a payment for a financial account
+ * This will:
+ * 1. Find the appropriate payment period(s) to apply the payment to
+ * 2. Log the payment to the period(s) and validate amounts
+ * 3. Add the payment to the account payment log
+ * 4. Update the total amount remaining (subtract capital portion)
+ * 5. Update the next due date (add one month)
+ * 6. Recalculate account status if needed
+ */
+export async function logPayment(
+  accountId: string,
+  paymentData: {
+    valuePaid: number;
+    currency: string;
+    datePaid: Date;
+    notes?: string;
+  }
+): Promise<void> {
+  const firestore: Firestore = getFirestore();
+  const accountRef: DocumentReference<FinancialAccount> = doc(
+    firestore,
+    FINANCIAL_ACCOUNTS_COLLECTION,
+    accountId
+  ) as DocumentReference<FinancialAccount>;
+
+  // Get current account data
+  const accountSnap = await getDoc(accountRef);
+  if (!accountSnap.exists()) {
+    throw new Error('Account not found');
+  }
+
+  const account = accountSnap.data() as unknown as FinancialAccount;
+
+  // Import calculation utilities
+  const { calculatePaymentBreakdown, createPaymentLogEntry } =
+    await import('@rates/firebase-client');
+
+  // Try to find and update payment periods
+  let totalCapitalPaid = 0;
+  let remainingPayment = paymentData.valuePaid;
+
+  try {
+    const { getUnpaidPaymentPeriods, logPaymentToPeriod } =
+      await import('./paymentPeriods');
+
+    // Get unpaid periods ordered by due date (oldest first)
+    const unpaidPeriods = await getUnpaidPaymentPeriods(accountId, 365); // Get all unpaid periods
+
+    // Apply payment to periods in order (oldest first)
+    for (const period of unpaidPeriods) {
+      if (remainingPayment <= 0) break;
+
+      const periodAmountDue = period.amount - period.amountPaid;
+      const paymentForThisPeriod = Math.min(remainingPayment, periodAmountDue);
+
+      if (paymentForThisPeriod > 0) {
+        // Log payment to this period
+        await logPaymentToPeriod(accountId, period.periodNumber, {
+          datePaid: paymentData.datePaid,
+          amount: paymentForThisPeriod,
+          currency: paymentData.currency,
+          notes: paymentData.notes,
+        });
+
+        // Track capital paid (use period's capital breakdown)
+        totalCapitalPaid +=
+          period.capital * (paymentForThisPeriod / period.amount);
+        remainingPayment -= paymentForThisPeriod;
+      }
+    }
+
+    // If there's remaining payment after all periods are paid, calculate capital from remaining
+    if (remainingPayment > 0) {
+      const breakdown = calculatePaymentBreakdown(
+        account.totalAmountRemaining.amount,
+        account.rate,
+        remainingPayment,
+        paymentData.currency
+      );
+      totalCapitalPaid += breakdown.capital;
+    }
+  } catch (error) {
+    // If payment periods don't exist yet, fall back to simple calculation
+    console.warn('Payment periods not found, using simple calculation:', error);
+    const breakdown = calculatePaymentBreakdown(
+      account.totalAmountRemaining.amount,
+      account.rate,
+      paymentData.valuePaid,
+      paymentData.currency
+    );
+    totalCapitalPaid = breakdown.capital;
+  }
+
+  // Create payment log entry
+  const paymentEntry = createPaymentLogEntry(
+    paymentData.valuePaid,
+    paymentData.currency,
+    paymentData.datePaid,
+    paymentData.notes
+  );
+
+  // Convert date to Timestamp if needed
+  if (paymentEntry.datePaid instanceof Date) {
+    paymentEntry.datePaid = Timestamp.fromDate(
+      paymentEntry.datePaid
+    ) as unknown as typeof paymentEntry.datePaid;
+  }
+  if (paymentEntry.createdAt instanceof Date) {
+    paymentEntry.createdAt = Timestamp.fromDate(
+      paymentEntry.createdAt
+    ) as unknown as typeof paymentEntry.createdAt;
+  }
+
+  // Calculate new remaining amount
+  const newRemainingAmount = Math.max(
+    0,
+    account.totalAmountRemaining.amount - totalCapitalPaid
+  );
+
+  // Calculate next due date (add one month)
+  const currentDueDate =
+    account.nextDueDate instanceof Date
+      ? account.nextDueDate
+      : account.nextDueDate.toDate();
+  const nextDueDate = new Date(currentDueDate);
+  nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+
+  // Update account
+  const updatedAt: ReturnType<typeof Timestamp.now> = Timestamp.now();
+  const updateData: UpdateFinancialAccountInput = {
+    paymentLog: [...account.paymentLog, paymentEntry],
+    totalAmountRemaining: {
+      amount: newRemainingAmount,
+      currency: account.totalAmountRemaining.currency,
+    },
+    nextDueDate: Timestamp.fromDate(
+      nextDueDate
+    ) as unknown as typeof account.nextDueDate,
+    updatedAt,
+  };
+
+  // Update status if account is paid off
+  if (newRemainingAmount <= 0 && account.status === 'active') {
+    updateData.status = 'paid_off';
+  }
+
+  await updateDoc(accountRef, updateData);
+}

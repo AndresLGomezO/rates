@@ -3,49 +3,64 @@
  */
 
 import type { CreateFinancialAccountInput } from '@rates/firebase-client';
-import { createFinancialAccount } from '../services/financialAccounts';
+import {
+  createFinancialAccount,
+  getFinancialAccount,
+} from '../services/financialAccounts';
+import {
+  getPaymentPeriods,
+  logPaymentToPeriod,
+} from '../services/paymentPeriods';
+import { parseMonthYear } from './paymentUtils';
+import type { PaymentPeriod } from '@rates/firebase-client';
 
 /**
  * Raw account data from spreadsheet
  */
 interface RawAccountData {
-  fechaMaxima: string; // DD-MM-YYYY format
-  accountName: string;
-  total: string; // Total remaining (with dots as thousands separators, e.g., "95.057")
-  capital: string; // Capital portion (with dots, e.g., "356.464.928")
-  interest: string; // Interest portion (with dots, e.g., "700.695")
-  cuota: string; // Monthly payment capital portion (with dots, e.g., "2.994.305")
-  totalPayment: string; // Total monthly payment (with dots, e.g., "3.695.000")
-  rate: string; // Interest rate as percentage string (e.g., "0,84%" or "0.84%")
+  due_date: string; // YYYY-MM-DD format
+  name: string;
+  start_date: string; // YYYY-MM-DD format
+  frequency: string; // "Mensual", "Bimestral", "Unico pago"
+  total_periods: number | 'periodic'; // Number of periods or "periodic" for bills
+  initial_amount: number;
+  current_amount: number | null;
+  principal: number | null; // Capital portion of payment
+  interest: number | null; // Interest portion of payment
+  payment: number; // Total payment amount
+  interest_rate: number; // Interest rate as decimal (e.g., 0.0084 = 0.84%)
 }
 
 /**
- * Parse European number format (dots as thousands separators)
- * Examples: "95.057" -> 95057, "356.464.928" -> 356464928
- */
-function parseEuropeanNumber(numStr: string): number {
-  if (!numStr || numStr.trim() === '') return 0;
-  // Remove dots (thousands separators) and replace comma with dot for decimals
-  const cleaned = numStr.replace(/\./g, '').replace(',', '.');
-  return parseFloat(cleaned) || 0;
-}
-
-/**
- * Parse interest rate from string (e.g., "0,84%" -> 0.84)
- */
-function parseRate(rateStr: string): number {
-  if (!rateStr || rateStr.trim() === '') return 0;
-  // Remove % and replace comma with dot
-  const cleaned = rateStr.replace('%', '').replace(',', '.');
-  return parseFloat(cleaned) || 0;
-}
-
-/**
- * Parse date from DD-MM-YYYY format
+ * Parse date from YYYY-MM-DD format
  */
 function parseDate(dateStr: string): Date {
-  const [day, month, year] = dateStr.split('-').map(Number);
+  const [year, month, day] = dateStr.split('-').map(Number);
   return new Date(year, month - 1, day);
+}
+
+/**
+ * Get payment interval in months based on frequency
+ */
+function getPaymentIntervalMonths(frequency: string): number {
+  const freq = frequency.toLowerCase();
+  if (freq.includes('mensual') || freq.includes('monthly')) {
+    return 1;
+  }
+  if (freq.includes('bimestral') || freq.includes('bimonthly')) {
+    return 2;
+  }
+  if (freq.includes('trimestral') || freq.includes('quarterly')) {
+    return 3;
+  }
+  if (freq.includes('semestral') || freq.includes('semiannual')) {
+    return 6;
+  }
+  if (freq.includes('anual') || freq.includes('annual')) {
+    return 12;
+  }
+  // Default to monthly
+  return 1;
 }
 
 /**
@@ -117,22 +132,17 @@ function convertToAccountInput(
   raw: RawAccountData,
   index: number
 ): Omit<CreateFinancialAccountInput, 'userId'> {
-  const accountType = mapAccountType(raw.accountName);
-  const accountNumber = generateAccountNumber(raw.accountName, index);
+  const accountType = mapAccountType(raw.name);
+  const accountNumber = generateAccountNumber(raw.name, index);
 
-  // Parse all amounts from European format
-  // Total is in thousands, so multiply by 1000
-  const totalInThousands = parseEuropeanNumber(raw.total);
-  const totalAmount = totalInThousands * 1000;
+  // Parse amounts (already numbers in new format)
+  const totalAmount = raw.current_amount ?? 0;
+  const monthlyPaymentAmount = raw.payment ?? 0;
+  const capitalPortion = raw.principal ?? 0;
+  const interestPortion = raw.interest ?? 0;
 
-  // Use totalPayment if available, otherwise use cuota
-  const monthlyPaymentAmount = raw.totalPayment
-    ? parseEuropeanNumber(raw.totalPayment)
-    : parseEuropeanNumber(raw.cuota);
-
-  const capitalPortion = parseEuropeanNumber(raw.cuota); // Capital portion of payment
-  const interestPortion = parseEuropeanNumber(raw.interest); // Interest portion of payment
-  const rate = parseRate(raw.rate);
+  // Convert interest rate from decimal to percentage (e.g., 0.0084 -> 0.84)
+  const rate = (raw.interest_rate ?? 0) * 100;
 
   // Determine status
   let status: 'active' | 'paid_off' | 'closed' | 'defaulted' | 'on_hold' =
@@ -145,8 +155,8 @@ function convertToAccountInput(
 
   const account: Omit<CreateFinancialAccountInput, 'userId'> = {
     accountNumber,
-    accountName: raw.accountName,
-    accountDescription: `${raw.accountName} - Migrated from initial data`,
+    accountName: raw.name,
+    accountDescription: `${raw.name} - Migrated from initial data`,
     accountType,
     status,
     totalAmountRemaining: {
@@ -158,9 +168,30 @@ function convertToAccountInput(
       currency: 'COP',
     },
     rate, // Interest rate as percentage
-    nextDueDate: parseDate(raw.fechaMaxima),
+    nextDueDate: parseDate(raw.due_date),
     paymentLog: [],
   };
+
+  // Set start date if available
+  if (raw.start_date) {
+    account.startDate = parseDate(raw.start_date);
+  }
+
+  // Set number of payments if not periodic
+  if (
+    raw.total_periods !== 'periodic' &&
+    typeof raw.total_periods === 'number'
+  ) {
+    account.numberOfPayments = raw.total_periods;
+  }
+
+  // Set original amount if available
+  if (raw.initial_amount > 0) {
+    account.originalAmount = {
+      amount: raw.initial_amount,
+      currency: 'COP',
+    };
+  }
 
   // Add optional fields if available
   if (capitalPortion > 0 || interestPortion > 0) {
@@ -168,7 +199,8 @@ function convertToAccountInput(
     account.metadata = {
       capitalPortion,
       interestPortion,
-      totalCapitalPaid: parseEuropeanNumber(raw.capital), // Total capital paid (if that's what it represents)
+      paymentIntervalMonths: getPaymentIntervalMonths(raw.frequency),
+      isPeriodic: raw.total_periods === 'periodic',
     };
   }
 
@@ -182,11 +214,10 @@ function convertToAccountInput(
 
   // For savings accounts (ahorro/scaleno), mark as other type
   if (
-    raw.accountName.toLowerCase().includes('ahorro') ||
-    raw.accountName.toLowerCase().includes('scaleno')
+    raw.name.toLowerCase().includes('ahorro') ||
+    raw.name.toLowerCase().includes('scaleno')
   ) {
     // These might be savings accounts, not debts
-    // You may want to handle these differently
     account.metadata = {
       ...account.metadata,
       isSavings: true,
@@ -198,208 +229,268 @@ function convertToAccountInput(
 
 /**
  * Raw account data from the spreadsheet
- * Numbers are in European format (dots as thousands separators)
+ * New format with direct numeric values and YYYY-MM-DD dates
  */
 const rawAccounts: RawAccountData[] = [
   {
-    fechaMaxima: '19-01-2026',
-    accountName: 'Hipotecario 2',
-    total: '95.057',
-    capital: '356.464.928',
-    interest: '700.695',
-    cuota: '2.994.305',
-    totalPayment: '3.695.000',
-    rate: '0,84%',
+    due_date: '2026-01-19',
+    name: 'Hipotecario 2',
+    start_date: '2024-08-20',
+    frequency: 'Mensual',
+    total_periods: 240,
+    initial_amount: 361000000,
+    current_amount: 356464928,
+    principal: 700695,
+    interest: 2994305,
+    payment: 3695000,
+    interest_rate: 0.0084,
   },
   {
-    fechaMaxima: '04-01-2026',
-    accountName: 'Hipotecario',
-    total: '50.204',
-    capital: '188.263.631',
-    interest: '955.370',
-    cuota: '1.449.630',
-    totalPayment: '2.405.000',
-    rate: '0,77%',
+    due_date: '2026-01-04',
+    name: 'Hipotecario',
+    start_date: '2022-03-04',
+    frequency: 'Mensual',
+    total_periods: 180,
+    initial_amount: 210000000,
+    current_amount: 188263631,
+    principal: 955370,
+    interest: 1449630,
+    payment: 2405000,
+    interest_rate: 0.0077,
   },
   {
-    fechaMaxima: '08-01-2026',
-    accountName: 'TC Signature',
-    total: '3.083',
-    capital: '11.560.451',
-    interest: '251.832',
-    cuota: '138.725',
-    totalPayment: '390.557',
-    rate: '1,20%',
+    due_date: '2026-01-08',
+    name: 'TC Signature',
+    start_date: '2026-01-08',
+    frequency: 'Mensual',
+    total_periods: 20,
+    initial_amount: 11730523,
+    current_amount: 11560451,
+    principal: 251832,
+    interest: 138725,
+    payment: 390557,
+    interest_rate: 0.012,
   },
   {
-    fechaMaxima: '03-01-2026',
-    accountName: 'AutoPrestamo',
-    total: '16.000',
-    capital: '60.000.000',
-    interest: '4.709.500',
-    cuota: '600.000',
-    totalPayment: '5.309.500',
-    rate: '1,00%',
+    due_date: '2026-01-03',
+    name: 'Prestamo Personal Conmigo mismo',
+    start_date: '2024-10-03',
+    frequency: 'Mensual',
+    total_periods: 12,
+    initial_amount: 60000000,
+    current_amount: 60000000,
+    principal: 4709500,
+    interest: 600000,
+    payment: 5309500,
+    interest_rate: 0.01,
   },
   {
-    fechaMaxima: '28-01-2026',
-    accountName: 'Ahorro Scaleno 17',
-    total: '16.784',
-    capital: '62.940.840',
-    interest: '86.526.660',
-    cuota: '0',
-    totalPayment: '7.866.060',
-    rate: '0,00%',
+    due_date: '2026-01-28',
+    name: 'Ahorro Apartamento Scaleno 17',
+    start_date: '2025-02-28',
+    frequency: 'Mensual',
+    total_periods: 20,
+    initial_amount: 157321000,
+    current_amount: 62940840,
+    principal: 86526660,
+    interest: 0,
+    payment: 7866060,
+    interest_rate: 0,
   },
   {
-    fechaMaxima: '11-01-2026',
-    accountName: 'Scaleno Rentabilidad',
-    total: '2.133',
-    capital: '8.000.000',
-    interest: '800.000',
-    cuota: '0',
-    totalPayment: '800.000',
-    rate: '1,00%',
+    due_date: '2026-01-11',
+    name: 'Scaleno Rentabilidad',
+    start_date: '2025-12-11',
+    frequency: 'Mensual',
+    total_periods: 10,
+    initial_amount: 8000000,
+    current_amount: 8000000,
+    principal: 800000,
+    interest: 0,
+    payment: 800000,
+    interest_rate: 0.01,
   },
   {
-    fechaMaxima: '27-12-2025',
-    accountName: 'Scaleno Proyecto',
-    total: '1.805',
-    capital: '6.769.460',
-    interest: '57.288.040',
-    cuota: '0',
-    totalPayment: '754.838',
-    rate: '0,00%',
+    due_date: '2025-12-27',
+    name: 'Scaleno Proyecto Constructora',
+    start_date: '2022-06-27',
+    frequency: 'Mensual',
+    total_periods: 45,
+    initial_amount: 64057500,
+    current_amount: 6769460,
+    principal: 57288040,
+    interest: 0,
+    payment: 754838,
+    interest_rate: 0,
   },
   {
-    fechaMaxima: '15-01-2026',
-    accountName: 'TC Davivienda',
-    total: '0',
-    capital: '0',
-    interest: '0',
-    cuota: '0',
-    totalPayment: '0',
-    rate: '2,29%',
+    due_date: '2026-01-15',
+    name: 'TC Davivienda',
+    start_date: '2026-01-15',
+    frequency: 'Mensual',
+    total_periods: 1,
+    initial_amount: 2950000,
+    current_amount: 0,
+    principal: 0,
+    interest: 0,
+    payment: 0,
+    interest_rate: 0.0229,
   },
   {
-    fechaMaxima: '12-02-2026',
-    accountName: 'Crediservice',
-    total: '1.200',
-    capital: '4.500.000',
-    interest: '4.401.000',
-    cuota: '99.000',
-    totalPayment: '4.500.000',
-    rate: '2,20%',
+    due_date: '2026-02-12',
+    name: 'Crediservice',
+    start_date: '2025-12-12',
+    frequency: 'Mensual',
+    total_periods: 1,
+    initial_amount: 4500000,
+    current_amount: 4500000,
+    principal: 4401000,
+    interest: 99000,
+    payment: 4500000,
+    interest_rate: 0.022,
   },
   {
-    fechaMaxima: '08-01-2026',
-    accountName: 'Planilla Salud/Pension',
-    total: '0',
-    capital: '0',
-    interest: '0',
-    cuota: '0',
-    totalPayment: '471.700',
-    rate: '0,00%',
+    due_date: '2026-01-08',
+    name: 'Planilla Salud/Pension Mia',
+    start_date: '2025-09-08',
+    frequency: 'Mensual',
+    total_periods: 'periodic',
+    initial_amount: 0,
+    current_amount: 0,
+    principal: null,
+    interest: null,
+    payment: 471700,
+    interest_rate: 0,
   },
   {
-    fechaMaxima: '08-01-2026',
-    accountName: 'Planilla Salud/Pension Ginna',
-    total: '0',
-    capital: '0',
-    interest: '0',
-    cuota: '0',
-    totalPayment: '471.700',
-    rate: '0,00%',
+    due_date: '2026-01-08',
+    name: 'Planilla Salud/Pension Ginna',
+    start_date: '2025-11-08',
+    frequency: 'Mensual',
+    total_periods: 'periodic',
+    initial_amount: 0,
+    current_amount: 0,
+    principal: null,
+    interest: null,
+    payment: 471700,
+    interest_rate: 0,
   },
   {
-    fechaMaxima: '16-01-2026',
-    accountName: 'Administracion',
-    total: '0',
-    capital: '0',
-    interest: '0',
-    cuota: '0',
-    totalPayment: '455.600',
-    rate: '0,00%',
+    due_date: '2026-01-16',
+    name: 'Administracion Granada',
+    start_date: '2022-06-16',
+    frequency: 'Mensual',
+    total_periods: 'periodic',
+    initial_amount: 0,
+    current_amount: 0,
+    principal: null,
+    interest: null,
+    payment: 455600,
+    interest_rate: 0,
   },
   {
-    fechaMaxima: '10-01-2026',
-    accountName: 'Administracion Altavista',
-    total: '0',
-    capital: '0',
-    interest: '0',
-    cuota: '0',
-    totalPayment: '366.700',
-    rate: '0,00%',
+    due_date: '2026-01-10',
+    name: 'Administracion Altavista',
+    start_date: '2024-09-10',
+    frequency: 'Mensual',
+    total_periods: 'periodic',
+    initial_amount: 0,
+    current_amount: 0,
+    principal: null,
+    interest: null,
+    payment: 366700,
+    interest_rate: 0,
   },
   {
-    fechaMaxima: '09-02-2026',
-    accountName: 'Agua',
-    total: '0',
-    capital: '0',
-    interest: '0',
-    cuota: '0',
-    totalPayment: '75.000',
-    rate: '0,00%',
+    due_date: '2026-02-09',
+    name: 'Agua',
+    start_date: '2024-10-09',
+    frequency: 'Bimestral',
+    total_periods: 'periodic',
+    initial_amount: 0,
+    current_amount: 0,
+    principal: null,
+    interest: null,
+    payment: 75000,
+    interest_rate: 0,
   },
   {
-    fechaMaxima: '13-01-2026',
-    accountName: 'Luz',
-    total: '0',
-    capital: '0',
-    interest: '0',
-    cuota: '0',
-    totalPayment: '180.000',
-    rate: '0,00%',
+    due_date: '2026-01-13',
+    name: 'Luz',
+    start_date: '2024-09-13',
+    frequency: 'Mensual',
+    total_periods: 'periodic',
+    initial_amount: 0,
+    current_amount: 0,
+    principal: null,
+    interest: null,
+    payment: 180000,
+    interest_rate: 0,
   },
   {
-    fechaMaxima: '18-01-2026',
-    accountName: 'Gas Natural',
-    total: '0',
-    capital: '0',
-    interest: '0',
-    cuota: '0',
-    totalPayment: '25.000',
-    rate: '0,00%',
+    due_date: '2026-01-18',
+    name: 'Gas Natural',
+    start_date: '2024-08-18',
+    frequency: 'Mensual',
+    total_periods: 'periodic',
+    initial_amount: 0,
+    current_amount: 0,
+    principal: null,
+    interest: null,
+    payment: 25000,
+    interest_rate: 0,
   },
   {
-    fechaMaxima: '10-01-2026',
-    accountName: 'Internet Altavista',
-    total: '0',
-    capital: '0',
-    interest: '0',
-    cuota: '0',
-    totalPayment: '55.000',
-    rate: '0,00%',
+    due_date: '2026-01-10',
+    name: 'Internet Altavista',
+    start_date: '2022-06-10',
+    frequency: 'Mensual',
+    total_periods: 'periodic',
+    initial_amount: 0,
+    current_amount: 0,
+    principal: null,
+    interest: null,
+    payment: 55000,
+    interest_rate: 0,
   },
   {
-    fechaMaxima: '24-01-2026',
-    accountName: 'Cel Mama',
-    total: '0',
-    capital: '0',
-    interest: '0',
-    cuota: '0',
-    totalPayment: '50.000',
-    rate: '0,00%',
+    due_date: '2026-01-24',
+    name: 'Cel Mama',
+    start_date: '2022-06-24',
+    frequency: 'Mensual',
+    total_periods: 'periodic',
+    initial_amount: 0,
+    current_amount: 0,
+    principal: null,
+    interest: null,
+    payment: 50000,
+    interest_rate: 0,
   },
   {
-    fechaMaxima: '19-01-2026',
-    accountName: 'Cel Leo',
-    total: '0',
-    capital: '0',
-    interest: '0',
-    cuota: '0',
-    totalPayment: '56.000',
-    rate: '0,00%',
+    due_date: '2026-01-19',
+    name: 'Cel Leo',
+    start_date: '2022-06-19',
+    frequency: 'Mensual',
+    total_periods: 'periodic',
+    initial_amount: 0,
+    current_amount: 0,
+    principal: null,
+    interest: null,
+    payment: 56000,
+    interest_rate: 0,
   },
   {
-    fechaMaxima: '19-01-2026',
-    accountName: 'Prestamo Fidel',
-    total: '2.172',
-    capital: '8.144.200',
-    interest: '0',
-    cuota: '0',
-    totalPayment: '15.000.000',
-    rate: '0,00%',
+    due_date: '2026-01-19',
+    name: 'Prestamo Fidel',
+    start_date: '2025-11-19',
+    frequency: 'Mensual',
+    total_periods: 1,
+    initial_amount: 8144200,
+    current_amount: null,
+    principal: null,
+    interest: null,
+    payment: 15000000,
+    interest_rate: 0,
   },
 ];
 
@@ -419,7 +510,7 @@ export async function runMigration(): Promise<void> {
     const raw = rawAccounts[i];
     try {
       console.log(
-        `\n📝 Processing account ${i + 1}/${rawAccounts.length}: ${raw.accountName}`
+        `\n📝 Processing account ${i + 1}/${rawAccounts.length}: ${raw.name}`
       );
 
       const accountInput = convertToAccountInput(raw, i);
@@ -437,12 +528,9 @@ export async function runMigration(): Promise<void> {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      console.error(
-        `❌ Failed to create account "${raw.accountName}":`,
-        errorMessage
-      );
+      console.error(`❌ Failed to create account "${raw.name}":`, errorMessage);
       results.errors.push({
-        account: raw.accountName,
+        account: raw.name,
         error: errorMessage,
       });
     }
@@ -503,5 +591,306 @@ export function previewMigration(): void {
     );
     console.log(`   Rate: ${accountInput.rate}%`);
     console.log(`   Next Due Date: ${dueDate.toLocaleDateString('es-CO')}`);
+  });
+}
+
+/**
+ * Historical payment data structure
+ */
+export interface HistoricalPaymentData {
+  id: string;
+  payments: Array<{
+    date?: string; // YYYY-MM format (optional, can use period/month instead)
+    period?: string; // YYYY-MM format (optional, can use date/month instead)
+    month?: string; // YYYY-MM format (optional, can use date/period instead)
+    amount: number | string; // Can be a number or string (e.g., "500.000" with dots as thousand separators)
+  }>;
+}
+
+/**
+ * Parse amount from string or number
+ * Handles strings with dots as thousand separators (e.g., "500.000" -> 500000)
+ */
+function parseAmount(amount: number | string): number {
+  if (typeof amount === 'number') {
+    return amount;
+  }
+  if (typeof amount === 'string') {
+    // Remove dots (thousand separators) and commas (decimal separators in some locales)
+    // Then parse as float and convert to integer (assuming amounts are in whole currency units)
+    const cleaned = amount.replace(/\./g, '').replace(',', '.');
+    const parsed = parseFloat(cleaned);
+    if (isNaN(parsed)) {
+      throw new Error(`Invalid amount format: ${amount}`);
+    }
+    return Math.round(parsed);
+  }
+  throw new Error(`Amount must be a number or string, got: ${typeof amount}`);
+}
+
+/**
+ * Match a payment date (YYYY-MM) to a payment period based on due date
+ */
+function findMatchingPeriod(
+  periods: PaymentPeriod[],
+  paymentDate: string
+): PaymentPeriod | null {
+  // Parse the payment date (YYYY-MM) to get year and month
+  const paymentDateObj = parseMonthYear(paymentDate);
+  const paymentYear = paymentDateObj.getFullYear();
+  const paymentMonth = paymentDateObj.getMonth();
+
+  // Find the period whose due date matches the payment month/year
+  for (const period of periods) {
+    const dueDate =
+      period.dueDate instanceof Date ? period.dueDate : period.dueDate.toDate();
+    const dueYear = dueDate.getFullYear();
+    const dueMonth = dueDate.getMonth();
+
+    // Match if year and month are the same
+    if (dueYear === paymentYear && dueMonth === paymentMonth) {
+      return period;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Migrate historical payments for accounts
+ *
+ * @param accountsData - Array of account payment data
+ * @returns Migration results
+ */
+export async function migrateHistoricalPayments(
+  accountsData: HistoricalPaymentData[]
+): Promise<{
+  success: Array<{ accountId: string; paymentsLogged: number }>;
+  errors: Array<{ accountId: string; error: string }>;
+  warnings: Array<{ accountId: string; paymentDate: string; message: string }>;
+}> {
+  console.log('🚀 Starting historical payments migration...');
+  console.log(`📊 Found ${accountsData.length} accounts to process\n`);
+
+  const results = {
+    success: [] as Array<{ accountId: string; paymentsLogged: number }>,
+    errors: [] as Array<{ accountId: string; error: string }>,
+    warnings: [] as Array<{
+      accountId: string;
+      paymentDate: string;
+      message: string;
+    }>,
+  };
+
+  for (const accountData of accountsData) {
+    try {
+      console.log(`\n📝 Processing account: ${accountData.id}`);
+      console.log(`   Payments to migrate: ${accountData.payments.length}`);
+
+      // Get the account to verify it exists and get currency
+      const account = await getFinancialAccount(accountData.id);
+      if (!account) {
+        const errorMsg = `Account ${accountData.id} not found`;
+        console.error(`❌ ${errorMsg}`);
+        results.errors.push({
+          accountId: accountData.id,
+          error: errorMsg,
+        });
+        continue;
+      }
+
+      // Get all payment periods for this account
+      const periods = await getPaymentPeriods(accountData.id);
+      if (periods.length === 0) {
+        const errorMsg = `No payment periods found for account ${accountData.id}. Please generate the amortization plan first.`;
+        console.error(`❌ ${errorMsg}`);
+        results.errors.push({
+          accountId: accountData.id,
+          error: errorMsg,
+        });
+        continue;
+      }
+
+      console.log(`   Found ${periods.length} payment periods`);
+
+      // Check if there are any payments to process
+      if (accountData.payments.length === 0) {
+        console.log(
+          `   ℹ️  No payments to migrate for account ${accountData.id} (empty payments array)`
+        );
+        results.success.push({
+          accountId: accountData.id,
+          paymentsLogged: 0,
+        });
+        continue;
+      }
+
+      // Process each payment
+      let paymentsLogged = 0;
+      for (const payment of accountData.payments) {
+        try {
+          // Get the date/period/month field (support "date", "period", and "month")
+          const paymentDateStr =
+            payment.date ?? payment.period ?? payment.month;
+          if (!paymentDateStr) {
+            const warningMsg =
+              'Payment missing "date", "period", or "month" field';
+            console.warn(`⚠️  ${warningMsg}`);
+            results.warnings.push({
+              accountId: accountData.id,
+              paymentDate: 'unknown',
+              message: warningMsg,
+            });
+            continue;
+          }
+
+          // Parse amount (handle both number and string formats)
+          let paymentAmount: number;
+          try {
+            paymentAmount = parseAmount(payment.amount);
+          } catch (error) {
+            const errorMsg =
+              error instanceof Error ? error.message : String(error);
+            console.error(
+              `   ❌ Failed to parse amount for ${paymentDateStr}: ${errorMsg}`
+            );
+            results.warnings.push({
+              accountId: accountData.id,
+              paymentDate: paymentDateStr,
+              message: `Failed to parse amount: ${errorMsg}`,
+            });
+            continue;
+          }
+
+          // Skip payments with zero amount
+          if (paymentAmount === 0) {
+            console.log(
+              `   ⏭️  Skipping payment for ${paymentDateStr} (amount is 0)`
+            );
+            continue;
+          }
+
+          // Find matching period
+          const matchingPeriod = findMatchingPeriod(periods, paymentDateStr);
+          if (!matchingPeriod) {
+            const warningMsg = `No matching period found for date ${paymentDateStr}`;
+            console.warn(`⚠️  ${warningMsg}`);
+            results.warnings.push({
+              accountId: accountData.id,
+              paymentDate: paymentDateStr,
+              message: warningMsg,
+            });
+            continue;
+          }
+
+          // Log payment to the period
+          // Use the first day of the payment month as the payment date
+          const paymentDate = parseMonthYear(paymentDateStr);
+          await logPaymentToPeriod(
+            accountData.id,
+            matchingPeriod.periodNumber,
+            {
+              datePaid: paymentDate,
+              amount: paymentAmount,
+              currency: account.monthlyPayment.currency,
+              notes: `Historical payment migrated for ${paymentDateStr}`,
+            }
+          );
+
+          paymentsLogged++;
+          console.log(
+            `   ✅ Logged payment ${paymentAmount.toLocaleString('es-CO')} ${account.monthlyPayment.currency} for ${paymentDateStr} (Period ${matchingPeriod.periodNumber})`
+          );
+        } catch (error) {
+          const errorMsg =
+            error instanceof Error ? error.message : String(error);
+          const paymentDateStr =
+            payment.date ?? payment.period ?? payment.month ?? 'unknown';
+          console.error(
+            `   ❌ Failed to log payment for ${paymentDateStr}: ${errorMsg}`
+          );
+          results.warnings.push({
+            accountId: accountData.id,
+            paymentDate: paymentDateStr,
+            message: `Failed to log payment: ${errorMsg}`,
+          });
+        }
+      }
+
+      console.log(
+        `✅ Successfully processed account ${accountData.id}: ${paymentsLogged}/${accountData.payments.length} payments logged`
+      );
+      results.success.push({
+        accountId: accountData.id,
+        paymentsLogged,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error(
+        `❌ Failed to process account "${accountData.id}": ${errorMessage}`
+      );
+      results.errors.push({
+        accountId: accountData.id,
+        error: errorMessage,
+      });
+    }
+  }
+
+  console.log('\n📊 Historical Payments Migration Summary:');
+  console.log(`✅ Successfully processed: ${results.success.length} accounts`);
+  console.log(`❌ Failed: ${results.errors.length} accounts`);
+  console.log(`⚠️  Warnings: ${results.warnings.length} issues`);
+
+  if (results.errors.length > 0) {
+    console.log('\n❌ Errors:');
+    results.errors.forEach(({ accountId, error }) => {
+      console.log(`  - ${accountId}: ${error}`);
+    });
+  }
+
+  if (results.warnings.length > 0) {
+    console.log('\n⚠️  Warnings:');
+    results.warnings.forEach(({ accountId, paymentDate, message }) => {
+      console.log(`  - ${accountId} (${paymentDate}): ${message}`);
+    });
+  }
+
+  if (results.success.length > 0) {
+    console.log('\n✅ Successfully processed accounts:');
+    results.success.forEach(({ accountId, paymentsLogged }) => {
+      console.log(`  - ${accountId}: ${paymentsLogged} payments logged`);
+    });
+  }
+
+  return results;
+}
+
+/**
+ * Preview historical payments migration without actually logging payments
+ */
+export function previewHistoricalPaymentsMigration(
+  accountsData: HistoricalPaymentData[]
+): void {
+  console.log('👀 Historical Payments Migration Preview:');
+  console.log(`📊 Will process ${accountsData.length} accounts\n`);
+
+  accountsData.forEach((accountData) => {
+    console.log(`\n📝 Account: ${accountData.id}`);
+    console.log(`   Payments to migrate: ${accountData.payments.length}`);
+    accountData.payments.forEach((payment) => {
+      const paymentDateStr =
+        payment.date ?? payment.period ?? payment.month ?? 'unknown';
+      try {
+        const amount = parseAmount(payment.amount);
+        console.log(
+          `   - ${paymentDateStr}: ${amount.toLocaleString('es-CO')} COP`
+        );
+      } catch {
+        console.log(
+          `   - ${paymentDateStr}: ${String(payment.amount)} COP (parse error)`
+        );
+      }
+    });
   });
 }

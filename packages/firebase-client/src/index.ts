@@ -35,3 +35,19 @@ export {
   createPaymentLogEntry,
   convertCurrency,
 } from './financial-accounts-utils';
+
+// Payment Periods Schema
+export type {
+  PaymentPeriodStatus,
+  PaymentPeriod,
+  PaymentPeriodPayment,
+  CreatePaymentPeriodInput,
+  UpdatePaymentPeriodInput,
+  LogPaymentToPeriodInput,
+} from './payment-periods';
+
+// Amortization Plan Generator
+export {
+  generateAmortizationPlan,
+  calculateRemainingPrincipal,
+} from './amortization';

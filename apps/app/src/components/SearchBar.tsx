@@ -18,16 +18,27 @@ export function SearchBar() {
   // Hide account type filter on AccountsByType page (type is already filtered by route)
   const hideAccountType = location.pathname.startsWith('/accounts/');
 
+  // Show days filter on Dashboard page
+  const showDaysFilter =
+    location.pathname === '/' || location.pathname === '/dashboard';
+
   // Check if there are active filters
   const statusFilters =
     searchParams.get('status')?.split(',').filter(Boolean) ?? [];
   const typeFilters =
     searchParams.get('type')?.split(',').filter(Boolean) ?? [];
   const currencyFilter = searchParams.get('currency') ?? '';
+  const daysAhead = parseInt(searchParams.get('daysAhead') ?? '15', 10);
   const hasActiveFilters =
-    statusFilters.length > 0 || typeFilters.length > 0 || currencyFilter !== '';
+    statusFilters.length > 0 ||
+    typeFilters.length > 0 ||
+    currencyFilter !== '' ||
+    (showDaysFilter && daysAhead !== 15);
   const activeFiltersCount =
-    statusFilters.length + typeFilters.length + (currencyFilter ? 1 : 0);
+    statusFilters.length +
+    typeFilters.length +
+    (currencyFilter ? 1 : 0) +
+    (showDaysFilter && daysAhead !== 15 ? 1 : 0);
 
   // Update URL when search query changes (with debounce)
   useEffect(() => {
@@ -167,7 +178,10 @@ export function SearchBar() {
         onClose={() => setIsFiltersModalOpen(false)}
         title="Filters"
       >
-        <Filters hideAccountType={hideAccountType} />
+        <Filters
+          hideAccountType={hideAccountType}
+          showDaysFilter={showDaysFilter}
+        />
       </Modal>
     </>
   );
