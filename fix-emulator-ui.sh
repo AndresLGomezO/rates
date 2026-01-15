@@ -56,3 +56,7 @@ echo "  3. If errors persist, check logs: docker logs rates-firebase-emulators"
 echo ""
 
 
+
+
+
+
