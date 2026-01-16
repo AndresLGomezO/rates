@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import type {
   FinancialAccount,
   AccountType,
@@ -30,6 +30,7 @@ const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
 
 export default function AccountsByType() {
   const { type } = useParams<{ type: AccountType }>();
+  const navigate = useNavigate();
   const [accounts, setAccounts] = useState<FinancialAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -610,7 +611,45 @@ export default function AccountsByType() {
                       </span>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button
-                          onClick={() => handleOpenEditModal(account)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void navigate(`/account/${account.accountNumber}`);
+                          }}
+                          title="View Details"
+                          style={{
+                            background: 'rgba(76, 175, 80, 0.2)',
+                            border: '1px solid rgba(76, 175, 80, 0.5)',
+                            borderRadius: '8px',
+                            padding: '0.5rem 0.75rem',
+                            color: 'white',
+                            cursor: 'pointer',
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            transition: 'all 0.3s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background =
+                              'rgba(76, 175, 80, 0.3)';
+                            e.currentTarget.style.transform =
+                              'translateY(-2px)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background =
+                              'rgba(76, 175, 80, 0.2)';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                          }}
+                        >
+                          <span>📊</span>
+                          <span>View Details</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenEditModal(account);
+                          }}
                           title="Edit Account"
                           style={{
                             background: 'rgba(102, 126, 234, 0.2)',
@@ -642,7 +681,10 @@ export default function AccountsByType() {
                           <span>Edit</span>
                         </button>
                         <button
-                          onClick={() => setDeletingAccount(account)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeletingAccount(account);
+                          }}
                           title="Delete Account"
                           style={{
                             background: 'rgba(244, 67, 54, 0.2)',

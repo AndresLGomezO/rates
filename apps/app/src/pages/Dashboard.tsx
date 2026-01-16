@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import type {
   FinancialAccount,
   AccountType,
@@ -16,6 +16,7 @@ import { LogPaymentModal } from '../components/LogPaymentModal';
 import './Dashboard.css';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [accounts, setAccounts] = useState<FinancialAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -424,7 +425,23 @@ export default function Dashboard() {
                 >
                   <div className="account-row-main">
                     <div className="account-row-primary">
-                      <h3 className="account-row-name">
+                      <h3
+                        className="account-row-name"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void navigate(`/account/${account.accountNumber}`);
+                        }}
+                        style={{
+                          cursor: 'pointer',
+                          transition: 'color 0.2s',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = '#667eea';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = '';
+                        }}
+                      >
                         {account.accountName}
                       </h3>
                       <p className="account-row-number">

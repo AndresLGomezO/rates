@@ -6,6 +6,7 @@ import './index.css';
 import Login from './pages/Login.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import AccountsByType from './pages/AccountsByType.tsx';
+import AccountDetail from './pages/AccountDetail.tsx';
 import MigrateAccounts from './pages/MigrateAccounts.tsx';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -47,6 +48,16 @@ const router = createBrowserRouter([
           <ProtectedRoute>
             <PrivateLayout>
               <AccountsByType />
+            </PrivateLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'account/:accountNumber',
+        element: (
+          <ProtectedRoute>
+            <PrivateLayout>
+              <AccountDetail />
             </PrivateLayout>
           </ProtectedRoute>
         ),
