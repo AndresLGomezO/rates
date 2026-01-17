@@ -227,6 +227,9 @@ export default function AccountsByType() {
           originalAmount: accountData.originalAmount,
         }),
         ...(accountData.startDate && { startDate: accountData.startDate }),
+        ...(accountData.numberOfPayments && {
+          numberOfPayments: accountData.numberOfPayments,
+        }),
         ...(accountData.additionalAmounts && {
           additionalAmounts: accountData.additionalAmounts,
         }),
@@ -295,6 +298,9 @@ export default function AccountsByType() {
           originalAmount: accountData.originalAmount,
         }),
         ...(accountData.startDate && { startDate: accountData.startDate }),
+        ...(accountData.numberOfPayments !== undefined && {
+          numberOfPayments: accountData.numberOfPayments,
+        }),
       };
 
       await updateFinancialAccount(editingAccount.accountNumber, updateData);

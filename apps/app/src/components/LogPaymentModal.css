@@ -56,7 +56,8 @@
 }
 
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.form-group select {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
@@ -68,7 +69,8 @@
 }
 
 .form-group input:focus,
-.form-group textarea:focus {
+.form-group textarea:focus,
+.form-group select:focus {
   outline: none;
   border-color: rgba(99, 102, 241, 0.5);
   background: rgba(255, 255, 255, 0.12);
@@ -76,9 +78,19 @@
 }
 
 .form-group input:disabled,
-.form-group textarea:disabled {
+.form-group textarea:disabled,
+.form-group select:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.form-group select {
+  cursor: pointer;
+}
+
+.form-group select option {
+  background: rgba(30, 30, 30, 0.95);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .form-group textarea {

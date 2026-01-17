@@ -49,6 +49,47 @@ export interface InterestCapitalDataPoint {
 }
 
 /**
+ * Amortization schedule data point (Principal vs Interest per period)
+ */
+export interface AmortizationScheduleDataPoint {
+  period: number;
+  date: string;
+  principal: number;
+  interest: number;
+  total: number;
+}
+
+/**
+ * Cumulative interest paid over time
+ */
+export interface CumulativeInterestDataPoint {
+  period: number;
+  date: string;
+  cumulativeInterest: number;
+  interestThisPeriod: number;
+}
+
+/**
+ * Interest vs Principal ratio over time
+ */
+export interface InterestPrincipalRatioDataPoint {
+  period: number;
+  date: string;
+  interestPortion: number;
+  principalPortion: number;
+  interestPercentage: number;
+}
+
+/**
+ * Payment status distribution data
+ */
+export interface PaymentStatusDataPoint {
+  name: string;
+  value: number;
+  color: string;
+}
+
+/**
  * Pie chart label props
  */
 export interface PieLabelProps {

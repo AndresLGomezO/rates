@@ -150,7 +150,7 @@ export function generateAmortizationPlan(
  * Calculate the remaining principal after a specific number of periods
  *
  * @param originalAmount - Original loan amount
- * @param rate - Annual interest rate (as percentage)
+ * @param rate - Monthly interest rate (as percentage, e.g., 0.77 for 0.77% per month)
  * @param monthlyPayment - Monthly payment amount
  * @param periodsPaid - Number of periods that have been paid
  * @returns Remaining principal balance
@@ -161,7 +161,7 @@ export function calculateRemainingPrincipal(
   monthlyPayment: number,
   periodsPaid: number
 ): number {
-  const monthlyRate = rate / 100 / 12;
+  const monthlyRate = rate / 100;
   let remaining = originalAmount;
 
   for (let i = 0; i < periodsPaid; i++) {

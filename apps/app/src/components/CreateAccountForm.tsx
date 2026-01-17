@@ -57,6 +57,7 @@ export function CreateAccountForm({
       | 'USD',
     originalAmount: initialData?.originalAmount?.amount.toString() ?? '',
     startDate: formatDateForInput(initialData?.startDate) ?? '',
+    numberOfPayments: initialData?.numberOfPayments?.toString() ?? '',
   });
 
   // Update form data when initialData changes (for edit mode)
@@ -75,6 +76,7 @@ export function CreateAccountForm({
         currency: initialData.totalAmountRemaining.currency as 'COP' | 'USD',
         originalAmount: initialData.originalAmount?.amount.toString() ?? '',
         startDate: formatDateForInput(initialData.startDate),
+        numberOfPayments: initialData.numberOfPayments?.toString() ?? '',
       });
     }
   }, [initialData, mode]);
@@ -120,6 +122,30 @@ export function CreateAccountForm({
       newErrors.nextDueDate = 'Next due date is required';
     }
 
+    // Validate numberOfPayments
+    // For bills: optional (can be empty for periodic bills)
+    // For loans and other account types: required
+    if (accountType === 'bill') {
+      // For bills, numberOfPayments is optional
+      // If provided, it must be valid
+      if (formData.numberOfPayments) {
+        const numPayments = parseInt(formData.numberOfPayments);
+        if (isNaN(numPayments) || numPayments <= 0) {
+          newErrors.numberOfPayments =
+            'Number of payments must be greater than 0';
+        }
+      }
+    } else {
+      // For loans and other account types, numberOfPayments is required
+      if (
+        !formData.numberOfPayments ||
+        parseInt(formData.numberOfPayments) <= 0
+      ) {
+        newErrors.numberOfPayments =
+          'Number of payments is required (must be greater than 0)';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -156,6 +182,14 @@ export function CreateAccountForm({
       ...(formData.startDate && {
         startDate: new Date(formData.startDate),
       }),
+      ...(formData.numberOfPayments.trim() &&
+        (() => {
+          const numPayments = parseInt(formData.numberOfPayments.trim(), 10);
+          if (!isNaN(numPayments) && numPayments > 0) {
+            return { numberOfPayments: numPayments };
+          }
+          return {};
+        })()),
     };
 
     void onSubmit(account);
@@ -371,6 +405,60 @@ export function CreateAccountForm({
             onChange={(e) => handleChange('startDate', e.target.value)}
             max={new Date().toISOString().split('T')[0]}
           />
+        </div>
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label htmlFor="numberOfPayments">
+            Number of Payments
+            {accountType !== 'bill' && <span className="required">*</span>}
+            {accountType === 'bill' && (
+              <span
+                style={{
+                  fontSize: '0.85rem',
+                  fontWeight: 400,
+                  marginLeft: '0.5rem',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                }}
+              >
+                (Optional for periodic bills)
+              </span>
+            )}
+          </label>
+          <input
+            id="numberOfPayments"
+            type="number"
+            step="1"
+            min="1"
+            value={formData.numberOfPayments}
+            onChange={(e) => handleChange('numberOfPayments', e.target.value)}
+            className={errors.numberOfPayments ? 'error' : ''}
+            placeholder={
+              accountType === 'bill'
+                ? 'Leave empty for periodic bills'
+                : 'e.g., 12'
+            }
+          />
+          {errors.numberOfPayments && (
+            <span className="error-message">{errors.numberOfPayments}</span>
+          )}
+          {accountType === 'bill' && (
+            <small
+              style={{
+                fontSize: '0.85rem',
+                color: 'rgba(255, 255, 255, 0.6)',
+                marginTop: '0.25rem',
+                display: 'block',
+              }}
+            >
+              Leave empty if this is a periodic bill (will generate periods
+              automatically)
+            </small>
+          )}
+        </div>
+        <div className="form-group" style={{ visibility: 'hidden' }}>
+          {/* Empty div to maintain form-row layout */}
         </div>
       </div>
 

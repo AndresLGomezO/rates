@@ -17,7 +17,7 @@ import type {
  * Calculate capital and interest split for a payment based on rate
  *
  * @param principal - Remaining principal amount
- * @param rate - Annual interest rate (as percentage, e.g., 12.5 for 12.5%)
+ * @param rate - Monthly interest rate (as percentage, e.g., 0.77 for 0.77% per month)
  * @param paymentAmount - Total payment amount
  * @param currency - Currency code
  * @returns Payment breakdown with capital and interest portions
@@ -28,8 +28,8 @@ export function calculatePaymentBreakdown(
   paymentAmount: number,
   currency: CurrencyCode
 ): PaymentBreakdown {
-  // Convert annual rate to monthly rate
-  const monthlyRate = rate / 100 / 12;
+  // Convert percentage rate to decimal (e.g., 0.77% -> 0.0077)
+  const monthlyRate = rate / 100;
 
   // Calculate interest portion
   const interest = principal * monthlyRate;

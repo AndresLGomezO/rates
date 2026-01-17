@@ -334,3 +334,88 @@ export async function hasPendingPaymentsFromPeriods(
 
   return false;
 }
+
+/**
+ * Overall payment status for an account
+ */
+export type AccountPaymentStatus =
+  | 'no_pending'
+  | 'pending'
+  | 'delayed'
+  | 'overdue';
+
+/**
+ * Get the overall payment status for an account based on payment periods
+ *
+ * @param paymentPeriods - Array of payment periods for the account
+ * @returns The overall payment status
+ */
+export function getAccountPaymentStatus(
+  paymentPeriods: PaymentPeriod[]
+): AccountPaymentStatus {
+  if (paymentPeriods.length === 0) {
+    return 'no_pending';
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let hasOverdue = false;
+  let hasDelayed = false;
+  let hasPending = false;
+  let allPaid = true;
+
+  for (const period of paymentPeriods) {
+    const dueDate =
+      period.dueDate instanceof Date ? period.dueDate : period.dueDate.toDate();
+    const periodDate = new Date(dueDate);
+    periodDate.setHours(0, 0, 0, 0);
+
+    const daysPastDue = Math.floor(
+      (today.getTime() - periodDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const isOverdue = periodDate < today;
+    const isPaid = period.status === 'paid';
+
+    if (!isPaid) {
+      allPaid = false;
+    }
+
+    // Check for overdue status (explicitly marked or significantly past due)
+    if (period.status === 'overdue' || (isOverdue && daysPastDue > 30)) {
+      hasOverdue = true;
+    }
+    // Check for delayed status (past due but not too far)
+    else if (isOverdue && daysPastDue <= 30) {
+      hasDelayed = true;
+    }
+    // Check for pending status (not yet due)
+    else if (period.status === 'pending' || period.status === 'partial') {
+      if (isOverdue) {
+        // This shouldn't happen if logic is correct, but handle it
+        hasDelayed = true;
+      } else {
+        hasPending = true;
+      }
+    }
+  }
+
+  if (allPaid) {
+    return 'no_pending';
+  }
+
+  if (hasOverdue) {
+    return 'overdue';
+  }
+
+  if (hasDelayed) {
+    return 'delayed';
+  }
+
+  if (hasPending) {
+    return 'pending';
+  }
+
+  // Default to no pending if we can't determine
+  return 'no_pending';
+}

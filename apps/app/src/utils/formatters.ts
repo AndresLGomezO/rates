@@ -112,3 +112,43 @@ export function getAccountStatusColor(status: AccountStatus): string {
 export function formatAccountStatus(status: AccountStatus): string {
   return status.replace('_', ' ').toUpperCase();
 }
+
+/**
+ * Get color for account payment status
+ */
+export function getAccountPaymentStatusColor(
+  status: 'no_pending' | 'pending' | 'delayed' | 'overdue'
+): string {
+  switch (status) {
+    case 'no_pending':
+      return '#4caf50';
+    case 'pending':
+      return '#ff9800';
+    case 'delayed':
+      return '#ff5722';
+    case 'overdue':
+      return '#f44336';
+    default:
+      return '#9e9e9e';
+  }
+}
+
+/**
+ * Format account payment status for display
+ */
+export function formatAccountPaymentStatus(
+  status: 'no_pending' | 'pending' | 'delayed' | 'overdue'
+): string {
+  switch (status) {
+    case 'no_pending':
+      return 'No Pending Payments';
+    case 'pending':
+      return 'Pending';
+    case 'delayed':
+      return 'Delayed';
+    case 'overdue':
+      return 'Overdue';
+    default:
+      return 'Unknown';
+  }
+}

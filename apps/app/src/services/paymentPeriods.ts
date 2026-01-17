@@ -599,3 +599,101 @@ export async function extendPeriodicBillPeriods(
 
   return periodsToGenerate;
 }
+
+/**
+ * Batch log payments for a range of periods
+ *
+ * Logs payments for all periods from startPeriod to endPeriod (inclusive).
+ * Uses each period's amount and due date for the payment.
+ *
+ * @param accountNumber - Account number
+ * @param startPeriod - Starting period number (inclusive)
+ * @param endPeriod - Ending period number (inclusive)
+ * @param paymentDate - Optional payment date (defaults to each period's due date)
+ * @param notes - Optional notes to add to each payment
+ * @returns Array of results for each period payment
+ */
+export async function batchLogPaymentsToPeriods(
+  accountNumber: string,
+  startPeriod: number,
+  endPeriod: number,
+  paymentDate?: Date,
+  notes?: string
+): Promise<Array<{ periodNumber: number; success: boolean; error?: string }>> {
+  // Get all periods for the account
+  const allPeriods = await getPaymentPeriods(accountNumber);
+
+  // Filter to only pending periods within the range
+  const periodsToPay = allPeriods.filter((period) => {
+    const isInRange =
+      period.periodNumber >= startPeriod && period.periodNumber <= endPeriod;
+    const isPending = period.status === 'pending';
+    return isInRange && isPending;
+  });
+
+  if (periodsToPay.length === 0) {
+    throw new Error(
+      `No pending periods found in range ${startPeriod} to ${endPeriod}`
+    );
+  }
+
+  // Get account for currency
+  const { getFinancialAccount } = await import('./financialAccounts');
+  const account = await getFinancialAccount(accountNumber);
+  if (!account) {
+    throw new Error(`Account ${accountNumber} not found`);
+  }
+
+  const currency = account.monthlyPayment.currency;
+  const results: Array<{
+    periodNumber: number;
+    success: boolean;
+    error?: string;
+  }> = [];
+
+  // Log payment for each period
+  for (const period of periodsToPay) {
+    try {
+      // Use provided payment date or period's due date
+      const dateToUse =
+        paymentDate ??
+        (period.dueDate instanceof Date
+          ? period.dueDate
+          : period.dueDate.toDate());
+
+      // Use remaining amount (amount - amountPaid) to avoid overpaying
+      // For pending periods, this should be the full amount, but this is safer
+      const remainingAmount = period.amount - period.amountPaid;
+
+      if (remainingAmount <= 0) {
+        // Skip periods that are already fully paid
+        results.push({
+          periodNumber: period.periodNumber,
+          success: false,
+          error: 'Period is already fully paid',
+        });
+        continue;
+      }
+
+      await logPaymentToPeriod(accountNumber, period.periodNumber, {
+        datePaid: dateToUse,
+        amount: remainingAmount,
+        currency,
+        notes,
+      });
+
+      results.push({
+        periodNumber: period.periodNumber,
+        success: true,
+      });
+    } catch (error) {
+      results.push({
+        periodNumber: period.periodNumber,
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  return results;
+}

@@ -16,6 +16,7 @@ import {
   extendPeriodicBillPeriods,
 } from '../services/paymentPeriods';
 import type { FinancialAccount } from '@rates/firebase-client';
+import { BatchPaymentModal } from '../components/BatchPaymentModal';
 import './Dashboard.css';
 
 // Helper to decode user ID from token
@@ -45,6 +46,7 @@ interface AccountPlanStatus {
   account: FinancialAccount;
   hasPlan: boolean;
   periodCount: number;
+  pendingPeriodCount: number;
   isLoading: boolean;
   isGenerating: boolean;
   error: string | null;
@@ -69,6 +71,11 @@ export default function MigrateAccounts() {
   const [isPreviewingHistorical, setIsPreviewingHistorical] = useState(false);
   const [historicalResult, setHistoricalResult] = useState<string | null>(null);
   const [historicalError, setHistoricalError] = useState<string | null>(null);
+
+  // Batch payment modal state
+  const [batchPaymentAccount, setBatchPaymentAccount] =
+    useState<FinancialAccount | null>(null);
+  const [isBatchPaymentModalOpen, setIsBatchPaymentModalOpen] = useState(false);
 
   const handlePreview = () => {
     try {
@@ -153,10 +160,12 @@ export default function MigrateAccounts() {
       for (const account of userAccounts) {
         try {
           const periods = await getPaymentPeriods(account.accountNumber);
+          const pendingPeriods = periods.filter((p) => p.status === 'pending');
           plansStatus[account.accountNumber] = {
             account,
             hasPlan: periods.length > 0,
             periodCount: periods.length,
+            pendingPeriodCount: pendingPeriods.length,
             isLoading: false,
             isGenerating: false,
             error: null,
@@ -166,6 +175,7 @@ export default function MigrateAccounts() {
             account,
             hasPlan: false,
             periodCount: 0,
+            pendingPeriodCount: 0,
             isLoading: false,
             isGenerating: false,
             error: err instanceof Error ? err.message : 'Unknown error',
@@ -207,12 +217,14 @@ export default function MigrateAccounts() {
         await extendPeriodicBillPeriods(accountNumber);
         // Reload plan status
         const periods = await getPaymentPeriods(accountNumber);
+        const pendingPeriods = periods.filter((p) => p.status === 'pending');
         setAccountPlans((prev) => ({
           ...prev,
           [accountNumber]: {
             ...planStatus,
             hasPlan: true,
             periodCount: periods.length,
+            pendingPeriodCount: pendingPeriods.length,
             isGenerating: false,
             error: null,
           },
@@ -221,12 +233,14 @@ export default function MigrateAccounts() {
         await generateAmortizationPlanForAccount(accountNumber);
         // Reload plan status
         const periods = await getPaymentPeriods(accountNumber);
+        const pendingPeriods = periods.filter((p) => p.status === 'pending');
         setAccountPlans((prev) => ({
           ...prev,
           [accountNumber]: {
             ...planStatus,
             hasPlan: true,
             periodCount: periods.length,
+            pendingPeriodCount: pendingPeriods.length,
             isGenerating: false,
             error: null,
           },
@@ -269,12 +283,14 @@ export default function MigrateAccounts() {
       await generateAmortizationPlanForAccount(accountNumber, true);
       // Reload plan status
       const periods = await getPaymentPeriods(accountNumber);
+      const pendingPeriods = periods.filter((p) => p.status === 'pending');
       setAccountPlans((prev) => ({
         ...prev,
         [accountNumber]: {
           ...planStatus,
           hasPlan: true,
           periodCount: periods.length,
+          pendingPeriodCount: pendingPeriods.length,
           isGenerating: false,
           error: null,
         },
@@ -1040,33 +1056,59 @@ export default function MigrateAccounts() {
                         }}
                       >
                         {planStatus.hasPlan ? (
-                          <button
-                            onClick={() =>
-                              void handleRegeneratePlan(account.accountNumber)
-                            }
-                            disabled={!canGenerate || planStatus.isGenerating}
-                            style={{
-                              padding: '0.625rem 1.25rem',
-                              fontSize: '0.9rem',
-                              backgroundColor: '#ff9800',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '6px',
-                              cursor:
-                                !canGenerate || planStatus.isGenerating
-                                  ? 'not-allowed'
-                                  : 'pointer',
-                              opacity:
-                                !canGenerate || planStatus.isGenerating
-                                  ? 0.6
-                                  : 1,
-                              fontWeight: 600,
-                            }}
-                          >
-                            {planStatus.isGenerating
-                              ? 'Regenerating...'
-                              : 'Regenerate Plan'}
-                          </button>
+                          <>
+                            {planStatus.pendingPeriodCount > 0 && (
+                              <button
+                                onClick={() => {
+                                  setBatchPaymentAccount(account);
+                                  setIsBatchPaymentModalOpen(true);
+                                }}
+                                disabled={planStatus.isGenerating}
+                                style={{
+                                  padding: '0.625rem 1.25rem',
+                                  fontSize: '0.9rem',
+                                  backgroundColor: '#2196f3',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  cursor: planStatus.isGenerating
+                                    ? 'not-allowed'
+                                    : 'pointer',
+                                  opacity: planStatus.isGenerating ? 0.6 : 1,
+                                  fontWeight: 600,
+                                }}
+                              >
+                                Batch Add Payments
+                              </button>
+                            )}
+                            <button
+                              onClick={() =>
+                                void handleRegeneratePlan(account.accountNumber)
+                              }
+                              disabled={!canGenerate || planStatus.isGenerating}
+                              style={{
+                                padding: '0.625rem 1.25rem',
+                                fontSize: '0.9rem',
+                                backgroundColor: '#ff9800',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor:
+                                  !canGenerate || planStatus.isGenerating
+                                    ? 'not-allowed'
+                                    : 'pointer',
+                                opacity:
+                                  !canGenerate || planStatus.isGenerating
+                                    ? 0.6
+                                    : 1,
+                                fontWeight: 600,
+                              }}
+                            >
+                              {planStatus.isGenerating
+                                ? 'Regenerating...'
+                                : 'Regenerate Plan'}
+                            </button>
+                          </>
                         ) : (
                           <button
                             onClick={() =>
@@ -1181,6 +1223,20 @@ export default function MigrateAccounts() {
           </p>
         </div>
       </div>
+
+      {/* Batch Payment Modal */}
+      <BatchPaymentModal
+        isOpen={isBatchPaymentModalOpen}
+        onClose={() => {
+          setIsBatchPaymentModalOpen(false);
+          setBatchPaymentAccount(null);
+        }}
+        account={batchPaymentAccount}
+        onPaymentsLogged={() => {
+          // Reload account plans to reflect updated payment status
+          void loadAccountsAndPlans();
+        }}
+      />
     </div>
   );
 }
