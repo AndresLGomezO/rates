@@ -6,6 +6,9 @@
   animation: fadeIn 0.6s ease-out;
   box-sizing: border-box;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 @keyframes fadeIn {
@@ -495,6 +498,398 @@
   font-weight: 400;
 }
 
+/* Metrics Grid */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    #667eea,
+    #764ba2,
+    #f093fb,
+    #4facfe,
+    #00f2fe
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.metric-card:hover::before {
+  opacity: 1;
+}
+
+.metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.metric-card.income {
+  background: linear-gradient(
+    135deg,
+    rgba(76, 175, 80, 0.2) 0%,
+    rgba(76, 175, 80, 0.1) 100%
+  );
+}
+
+.metric-card.outcome {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 107, 0.2) 0%,
+    rgba(255, 107, 107, 0.1) 100%
+  );
+}
+
+.metric-card.pending {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 152, 0, 0.2) 0%,
+    rgba(255, 152, 0, 0.1) 100%
+  );
+}
+
+.metric-card.interest {
+  background: linear-gradient(
+    135deg,
+    rgba(240, 147, 251, 0.2) 0%,
+    rgba(240, 147, 251, 0.1) 100%
+  );
+}
+
+.metric-card.principal {
+  background: linear-gradient(
+    135deg,
+    rgba(79, 172, 254, 0.2) 0%,
+    rgba(79, 172, 254, 0.1) 100%
+  );
+}
+
+.metric-card.accounts {
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.2) 0%,
+    rgba(102, 126, 234, 0.1) 100%
+  );
+}
+
+.metric-label {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.5px;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.metric-change {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+.metric-change.positive {
+  color: #4caf50;
+}
+
+.metric-change.warning {
+  color: #ff9800;
+}
+
+/* Charts Section */
+.dashboard .charts-section {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  margin-bottom: 2rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure 2 columns on xl screens and above (1280px+) */
+@media (min-width: 1280px) {
+  .dashboard .charts-section {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* 2 columns on tablets and large screens (769px - 1279px) */
+@media (min-width: 769px) and (max-width: 1279px) {
+  .dashboard .charts-section {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 1 column on mobile (768px and below) */
+@media (max-width: 768px) {
+  .dashboard .charts-section {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.chart-card {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+  padding: 2rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chart-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.chart-title {
+  margin: 0 0 1.5rem 0;
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+/* Top Accounts Compact (in chart card) */
+.chart-card.top-accounts-compact {
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
+}
+
+.top-accounts-compact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.top-accounts-compact-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.top-accounts-compact-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.top-accounts-compact-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.top-accounts-compact-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.top-account-compact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.top-account-compact-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateX(2px);
+}
+
+.top-account-compact-rank {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #667eea;
+  min-width: 1.75rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.top-account-compact-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.top-account-compact-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: white;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-account-compact-amount {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f093fb;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Pending Payments Section */
+.pending-payments-section {
+  margin-top: 2rem;
+}
+
+.section-title {
+  margin: 0 0 1.5rem 0;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* Status Summary */
+.status-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.status-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  min-width: 120px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.status-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px 0 rgba(31, 38, 135, 0.3);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.status-badge.paid {
+  background: linear-gradient(
+    135deg,
+    rgba(76, 175, 80, 0.2) 0%,
+    rgba(76, 175, 80, 0.1) 100%
+  );
+}
+
+.status-badge.pending {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 152, 0, 0.2) 0%,
+    rgba(255, 152, 0, 0.1) 100%
+  );
+}
+
+.status-badge.partial {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 193, 7, 0.2) 0%,
+    rgba(255, 193, 7, 0.1) 100%
+  );
+}
+
+.status-badge.overdue {
+  background: linear-gradient(
+    135deg,
+    rgba(244, 67, 54, 0.2) 0%,
+    rgba(244, 67, 54, 0.1) 100%
+  );
+}
+
+.status-badge-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.5px;
+}
+
+.error-state {
+  text-align: center;
+  padding: 3rem;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 107, 107, 0.2);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+.error-state p {
+  font-size: 1.2rem;
+  margin: 0;
+  color: #ff6b6b;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.empty-state p {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
 /* Expanded Details */
 .account-row-details {
   max-height: 0;
@@ -875,6 +1270,60 @@
 @media (max-width: 480px) {
   .dashboard-header h2 {
     font-size: 1.75rem;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .metric-card {
+    padding: 1rem;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+  }
+
+  .metric-label {
+    font-size: 0.75rem;
+  }
+
+  .dashboard .charts-section {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .chart-card {
+    padding: 1rem;
+  }
+
+  .chart-title {
+    font-size: 1.1rem;
+  }
+
+  .top-accounts-section {
+    padding: 1rem;
+  }
+
+  .section-title {
+    font-size: 1.25rem;
+  }
+
+  .top-account-name {
+    font-size: 1rem;
+  }
+
+  .top-account-amount {
+    font-size: 1.1rem;
+  }
+
+  .status-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .status-badge {
+    min-width: 100%;
   }
 
   .summary-value {

@@ -219,6 +219,9 @@
 /* Charts Section */
 .charts-section {
   margin-bottom: 3rem;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 .section-title {
@@ -228,12 +231,24 @@
   margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+  grid-column: 1 / -1;
 }
 
 .charts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 }
 
 .chart-card {

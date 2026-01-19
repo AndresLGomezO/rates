@@ -42,8 +42,6 @@ docker-compose.override.yml
 # Lock files
 pnpm-lock.yaml
 package-lock.json
-yarn.lock
-
-# Generated files
+yarn.lock# Generated files
 coverage
 .nyc_output
