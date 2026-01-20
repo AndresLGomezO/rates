@@ -97,8 +97,8 @@ export default function Logout() {
 
   if (loading || !nonceValidated || isLoggingOut) {
     return (
-      <div className="grid">
-        <div className="muted">
+      <div className="grid gap-4">
+        <div className="m-0 text-slate-600">
           {loading
             ? 'Checking session…'
             : !nonceValidated
@@ -111,14 +111,16 @@ export default function Logout() {
 
   if (error) {
     return (
-      <div className="grid">
-        <div className="error">{error}</div>
-        <p className="muted">
+      <div className="grid gap-4">
+        <div className="p-2.5 px-3 rounded-[10px] bg-red-50 text-red-700 border border-red-200">
+          {error}
+        </div>
+        <p className="m-0 text-slate-600">
           Logout failed. You can try again or close this window.
         </p>
-        <div className="actions">
+        <div className="flex justify-between gap-3 flex-wrap">
           <button
-            className="button"
+            className="px-4 py-2.5 rounded-[10px] border-0 font-bold cursor-pointer inline-flex items-center gap-2 bg-gradient-to-br from-cyan-500 to-indigo-500 text-white shadow-[0_10px_30px_rgba(14,165,233,0.35)] transition-[transform,box-shadow] duration-150 ease hover:-translate-y-px hover:shadow-[0_14px_34px_rgba(79,70,229,0.35)]"
             type="button"
             onClick={() => void handleLogout()}
           >
@@ -130,8 +132,8 @@ export default function Logout() {
   }
 
   return (
-    <div className="grid">
-      <div className="muted">Redirecting...</div>
+    <div className="grid gap-4">
+      <div className="m-0 text-slate-600">Redirecting...</div>
     </div>
   );
 }

@@ -86,8 +86,8 @@ export default function Session() {
 
   if (loading || !nonceValidated) {
     return (
-      <div className="grid">
-        <div className="muted">
+      <div className="grid gap-4">
+        <div className="m-0 text-slate-600">
           {loading ? 'Checking session…' : 'Validating request security…'}
         </div>
       </div>
@@ -96,9 +96,11 @@ export default function Session() {
 
   if (!nonceValidated && error) {
     return (
-      <div className="grid">
-        <div className="error">{error}</div>
-        <p className="muted">
+      <div className="grid gap-4">
+        <div className="p-2.5 px-3 rounded-[10px] bg-red-50 text-red-700 border border-red-200">
+          {error}
+        </div>
+        <p className="m-0 text-slate-600">
           This authentication request is invalid. Please initiate authentication
           from your application.
         </p>
@@ -111,10 +113,15 @@ export default function Session() {
     if (redirectTo) loginParams.set('redirectTo', redirectTo);
     if (nonce) loginParams.set('nonce', nonce);
     return (
-      <div className="grid">
-        <div className="error">No active session.</div>
-        <div className="actions">
-          <Link className="button" to={`/login?${loginParams.toString()}`}>
+      <div className="grid gap-4">
+        <div className="p-2.5 px-3 rounded-[10px] bg-red-50 text-red-700 border border-red-200">
+          No active session.
+        </div>
+        <div className="flex justify-between gap-3 flex-wrap">
+          <Link
+            className="px-4 py-2.5 rounded-[10px] border-0 font-bold cursor-pointer inline-flex items-center gap-2 bg-gradient-to-br from-cyan-500 to-indigo-500 text-white shadow-[0_10px_30px_rgba(14,165,233,0.35)] transition-[transform,box-shadow] duration-150 ease hover:-translate-y-px hover:shadow-[0_14px_34px_rgba(79,70,229,0.35)]"
+            to={`/login?${loginParams.toString()}`}
+          >
             Go to login
           </Link>
         </div>
@@ -123,35 +130,46 @@ export default function Session() {
   }
 
   return (
-    <div className="grid two">
-      <div className="grid">
-        <div className="badge">Session</div>
-        <h2 className="title">Active session detected</h2>
-        <p className="muted">
+    <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
+      <div className="grid gap-4">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-100 text-sky-700 rounded-full text-xs font-semibold">
+          Session
+        </div>
+        <h2 className="text-2xl m-0 text-slate-900">Active session detected</h2>
+        <p className="m-0 text-slate-600">
           Signed in as <strong>{user.email ?? user.uid}</strong>
         </p>
-        <p className="muted">
+        <p className="m-0 text-slate-600">
           Redirect target:{' '}
           <strong>{redirectTo ?? authConfig.defaultReturnUrl}</strong>
         </p>
-        <p className="muted">
+        <p className="m-0 text-slate-600">
           Cookie name: <strong>{authConfig.cookieName}</strong>
         </p>
         {tokenPreview && (
-          <div className="token-box" aria-label="token-preview">
+          <div
+            className="font-mono text-xs bg-slate-900 text-slate-200 p-3 rounded-[10px] break-all"
+            aria-label="token-preview"
+          >
             {tokenPreview}
           </div>
         )}
       </div>
 
-      <div className="grid">
-        {error && <div className="error">{error}</div>}
-        {isRedirecting && (
-          <div className="success">Redirecting with your ID token…</div>
+      <div className="grid gap-4">
+        {error && (
+          <div className="p-2.5 px-3 rounded-[10px] bg-red-50 text-red-700 border border-red-200">
+            {error}
+          </div>
         )}
-        <div className="actions">
+        {isRedirecting && (
+          <div className="p-2.5 px-3 rounded-[10px] bg-green-50 text-green-700 border border-green-200">
+            Redirecting with your ID token…
+          </div>
+        )}
+        <div className="flex justify-between gap-3 flex-wrap">
           <button
-            className="button"
+            className="px-4 py-2.5 rounded-[10px] border-0 font-bold cursor-pointer inline-flex items-center gap-2 bg-gradient-to-br from-cyan-500 to-indigo-500 text-white shadow-[0_10px_30px_rgba(14,165,233,0.35)] transition-[transform,box-shadow] duration-150 ease hover:-translate-y-px hover:shadow-[0_14px_34px_rgba(79,70,229,0.35)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-[0_10px_30px_rgba(14,165,233,0.35)]"
             type="button"
             onClick={() => void handleContinue()}
             disabled={isRedirecting}
@@ -159,7 +177,7 @@ export default function Session() {
             Continue to app
           </button>
           <button
-            className="button secondary"
+            className="px-4 py-2.5 rounded-[10px] border-0 font-bold cursor-pointer inline-flex items-center gap-2 bg-slate-200 text-slate-900 shadow-none transition-[transform,box-shadow] duration-150 ease hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed"
             type="button"
             onClick={() => void handleSignOut()}
             disabled={isSigningOut}

@@ -6,7 +6,7 @@
  * validation endpoint, which uses Firebase Admin SDK for proper token verification.
  */
 
-import { getAuthToken, clearAuthToken } from './auth';
+import { getAuthToken, clearAuthToken, setAuthToken } from './auth';
 
 const AUTH_APP_URL =
   (import.meta.env as Record<string, string | undefined>).VITE_AUTH_APP_URL ??
@@ -24,6 +24,8 @@ type ValidationApiResponse = {
   valid: boolean;
   error?: string;
   expiresAt?: number;
+  refreshedToken?: string;
+  needsRefresh?: boolean;
 };
 
 /**
@@ -122,11 +124,23 @@ export async function validateToken(
 
     // Token is valid - check if it needs refresh based on expiration
     const expiresAt = data.expiresAt ?? getTokenExpiration(token);
-    const needsRefresh = isTokenExpiringSoon(expiresAt);
+    const needsRefresh = data.needsRefresh ?? isTokenExpiringSoon(expiresAt);
+
+    // Use refreshed token if provided, otherwise use original
+    const finalToken = data.refreshedToken ?? token;
+
+    // If we got a refreshed token, update the stored token
+    if (data.refreshedToken && data.refreshedToken !== token) {
+      // Update the token in storage
+      const maxAge = expiresAt
+        ? Math.floor((expiresAt - Date.now()) / 1000)
+        : 3600;
+      setAuthToken(data.refreshedToken, maxAge);
+    }
 
     return {
       isValid: true,
-      token, // Use original token (Admin SDK doesn't return refreshed tokens)
+      token: finalToken,
       user: null, // User object not available from API
       needsRefresh,
     };

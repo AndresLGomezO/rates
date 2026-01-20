@@ -41,14 +41,14 @@ function getFirebaseConfig(isEmulatorMode = false): FirebaseConfig {
 
   // When using emulator, provide default values for missing config
   if (isEmulatorMode) {
-    // Use default/dummy values for emulator if not provided
+    // Use default/dummy values for emulator if not provided or empty
     // The emulator doesn't actually validate these values
-    config.apiKey = config.apiKey ?? 'demo-api-key';
-    config.authDomain = config.authDomain ?? 'localhost';
-    config.projectId = config.projectId ?? 'demo-project';
-    config.storageBucket = config.storageBucket ?? 'demo-project.appspot.com';
-    config.messagingSenderId = config.messagingSenderId ?? '123456789';
-    config.appId = config.appId ?? '1:123456789:web:abcdef';
+    config.apiKey = config.apiKey || 'demo-api-key';
+    config.authDomain = config.authDomain || 'localhost';
+    config.projectId = config.projectId || 'demo-project';
+    config.storageBucket = config.storageBucket || 'demo-project.appspot.com';
+    config.messagingSenderId = config.messagingSenderId || '123456789';
+    config.appId = config.appId || '1:123456789:web:abcdef';
     return config;
   }
 
@@ -219,13 +219,27 @@ export function initializeFirebase(
   // Connect to emulators if in emulator mode
   if (mode === 'emulator' && Object.keys(emulatorConfig).length > 0) {
     try {
+      console.log('🔥 [initializeFirebase] Connecting to emulators...');
+      console.log('🔥 [initializeFirebase] Emulator config:', emulatorConfig);
       connectEmulators(firebaseApp, emulatorConfig);
-      console.log('🔥 Firebase emulators connected');
-    } catch {
+      console.log(
+        '✅ [initializeFirebase] Firebase emulators connected successfully'
+      );
+    } catch (error) {
+      console.error(
+        '🔴 [initializeFirebase] Failed to connect to emulators:',
+        error
+      );
       // Silently fall back to live services if emulator connection fails
     }
   } else {
-    console.log('🔥 Firebase initialized in live mode');
+    console.log('🔥 [initializeFirebase] Firebase initialized in live mode');
+    if (mode !== 'emulator') {
+      console.log('🔥 [initializeFirebase] Not in emulator mode, mode:', mode);
+    }
+    if (Object.keys(emulatorConfig).length === 0) {
+      console.log('🔥 [initializeFirebase] No emulator config found');
+    }
   }
 
   initialized = true;

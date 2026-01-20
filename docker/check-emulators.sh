@@ -71,3 +71,8 @@ echo "  3. Restart container: docker restart rates-firebase-emulators"
 echo ""
 echo "Access Emulator UI: http://127.0.0.1:4000"
 
+
+
+
+
+

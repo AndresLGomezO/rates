@@ -39,15 +39,8 @@ export function initializeAdmin(): App {
       process.env.NODE_ENV !== 'production');
 
   if (isEmulator) {
-    // Initialize Admin SDK for emulator
-    // In emulator mode, we don't need credentials
-    const projectId =
-      env.VITE_FIREBASE_PROJECT_ID ?? env.FIREBASE_PROJECT_ID ?? 'demo-project';
-    adminApp = initializeApp({
-      projectId,
-    });
-
-    // Connect to Auth emulator
+    // Connect to Auth emulator FIRST (before initializing app)
+    // This must be set before any Admin SDK calls
     const emulatorHost =
       env.VITE_FIREBASE_EMULATOR_HOST ??
       env.FIREBASE_EMULATOR_HOST ??
@@ -57,6 +50,14 @@ export function initializeAdmin(): App {
       env.FIREBASE_EMULATOR_AUTH_PORT ??
       '9099';
     process.env.FIREBASE_AUTH_EMULATOR_HOST = `${emulatorHost}:${emulatorPort}`;
+
+    // Initialize Admin SDK for emulator
+    // In emulator mode, we don't need credentials
+    const projectId =
+      env.VITE_FIREBASE_PROJECT_ID ?? env.FIREBASE_PROJECT_ID ?? 'demo-project';
+    adminApp = initializeApp({
+      projectId,
+    });
 
     return adminApp;
   }

@@ -63,16 +63,16 @@ export default function ApiValidate() {
   // Show loading state while validating
   if (loading) {
     return (
-      <div className="grid">
-        <div className="muted">Validating token...</div>
+      <div className="grid gap-4">
+        <div className="m-0 text-slate-600">Validating token...</div>
       </div>
     );
   }
 
   // This should not render normally as we replace the document
   return (
-    <div className="grid">
-      <div className="muted">Processing validation request...</div>
+    <div className="grid gap-4">
+      <div className="m-0 text-slate-600">Processing validation request...</div>
     </div>
   );
 }
