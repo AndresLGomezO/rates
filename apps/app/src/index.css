@@ -1,3 +1,7 @@
+/* Import shared Tailwind design system */
+@import '@rates/ui-theme/styles.css';
+
+/* Legacy styles - to be migrated gradually to Tailwind */
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
