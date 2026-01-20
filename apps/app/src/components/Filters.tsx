@@ -1,6 +1,5 @@
 import { useSearchParams } from 'react-router-dom';
 import type { AccountType, AccountStatus } from '@rates/firebase-client';
-import './Filters.css';
 
 const ACCOUNT_STATUSES: Array<{
   value: AccountStatus;
@@ -125,20 +124,28 @@ export function Filters({
   };
 
   return (
-    <div className="filters-content">
+    <div className="overflow-y-auto modal-scrollbar md:max-h-[60vh] xs:max-h-[50vh]">
       {/* Status Filters */}
-      <div className="filter-group">
-        <label className="filter-group-label">Status</label>
-        <div className="filter-options">
+      <div className="mb-8 last:mb-4 md:mb-6 xs:mb-5">
+        <label className="block text-xs font-bold uppercase tracking-wide text-white/70 mb-3">
+          Status
+        </label>
+        <div className="flex flex-wrap gap-2 md:gap-[0.4rem] xs:gap-[0.35rem]">
           {ACCOUNT_STATUSES.map((status) => (
             <button
               key={status.value}
-              className={`filter-chip ${statusFilters.includes(status.value) ? 'active' : ''}`}
+              className={`flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-[20px] text-[0.85rem] font-medium md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] xs:px-3 xs:py-[0.4rem] xs:text-xs ${
+                statusFilters.includes(status.value)
+                  ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(102,126,234,0.3)] to-[rgba(118,75,162,0.3)] border border-[rgba(102,126,234,0.5)] shadow-[0_2px_8px_rgba(102,126,234,0.2)] hover:shadow-[0_4px_12px_rgba(102,126,234,0.3)] hover:from-[rgba(102,126,234,0.4)] hover:to-[rgba(118,75,162,0.4)]'
+                  : 'px-4 py-2 text-white/90 bg-white/10 border border-white/20 hover:bg-white/15 hover:border-white/30 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+              }`}
               onClick={() => toggleStatus(status.value)}
               type="button"
             >
-              <span className="filter-chip-icon">{status.icon}</span>
-              <span className="filter-chip-label">{status.label}</span>
+              <span className="flex items-center text-[0.9rem] xs:text-xs">
+                {status.icon}
+              </span>
+              <span className="flex items-center">{status.label}</span>
             </button>
           ))}
         </div>
@@ -146,18 +153,26 @@ export function Filters({
 
       {/* Account Type Filters */}
       {!hideAccountType && (
-        <div className="filter-group">
-          <label className="filter-group-label">Account Type</label>
-          <div className="filter-options">
+        <div className="mb-8 last:mb-4 md:mb-6 xs:mb-5">
+          <label className="block text-xs font-bold uppercase tracking-wide text-white/70 mb-3">
+            Account Type
+          </label>
+          <div className="flex flex-wrap gap-2 md:gap-[0.4rem] xs:gap-[0.35rem]">
             {ACCOUNT_TYPES.map((type) => (
               <button
                 key={type.value}
-                className={`filter-chip ${typeFilters.includes(type.value) ? 'active' : ''}`}
+                className={`flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-[20px] text-[0.85rem] font-medium md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] xs:px-3 xs:py-[0.4rem] xs:text-xs ${
+                  typeFilters.includes(type.value)
+                    ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(102,126,234,0.3)] to-[rgba(118,75,162,0.3)] border border-[rgba(102,126,234,0.5)] shadow-[0_2px_8px_rgba(102,126,234,0.2)] hover:shadow-[0_4px_12px_rgba(102,126,234,0.3)] hover:from-[rgba(102,126,234,0.4)] hover:to-[rgba(118,75,162,0.4)]'
+                    : 'px-4 py-2 text-white/90 bg-white/10 border border-white/20 hover:bg-white/15 hover:border-white/30 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+                }`}
                 onClick={() => toggleType(type.value)}
                 type="button"
               >
-                <span className="filter-chip-icon">{type.icon}</span>
-                <span className="filter-chip-label">{type.label}</span>
+                <span className="flex items-center text-[0.9rem] xs:text-xs">
+                  {type.icon}
+                </span>
+                <span className="flex items-center">{type.label}</span>
               </button>
             ))}
           </div>
@@ -165,24 +180,34 @@ export function Filters({
       )}
 
       {/* Currency Filter */}
-      <div className="filter-group">
-        <label className="filter-group-label">Currency</label>
-        <div className="filter-options">
+      <div className="mb-8 last:mb-4 md:mb-6 xs:mb-5">
+        <label className="block text-xs font-bold uppercase tracking-wide text-white/70 mb-3">
+          Currency
+        </label>
+        <div className="flex flex-wrap gap-2 md:gap-[0.4rem] xs:gap-[0.35rem]">
           <button
-            className={`filter-chip ${currencyFilter === '' ? 'active' : ''}`}
+            className={`flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-[20px] text-[0.85rem] font-medium md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] xs:px-3 xs:py-[0.4rem] xs:text-xs ${
+              currencyFilter === ''
+                ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(102,126,234,0.3)] to-[rgba(118,75,162,0.3)] border border-[rgba(102,126,234,0.5)] shadow-[0_2px_8px_rgba(102,126,234,0.2)] hover:shadow-[0_4px_12px_rgba(102,126,234,0.3)] hover:from-[rgba(102,126,234,0.4)] hover:to-[rgba(118,75,162,0.4)]'
+                : 'px-4 py-2 text-white/90 bg-white/10 border border-white/20 hover:bg-white/15 hover:border-white/30 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+            }`}
             onClick={() => setCurrency('')}
             type="button"
           >
-            <span className="filter-chip-label">All</span>
+            <span className="flex items-center">All</span>
           </button>
           {CURRENCIES.map((currency) => (
             <button
               key={currency}
-              className={`filter-chip ${currencyFilter === currency ? 'active' : ''}`}
+              className={`flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-[20px] text-[0.85rem] font-medium md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] xs:px-3 xs:py-[0.4rem] xs:text-xs ${
+                currencyFilter === currency
+                  ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(102,126,234,0.3)] to-[rgba(118,75,162,0.3)] border border-[rgba(102,126,234,0.5)] shadow-[0_2px_8px_rgba(102,126,234,0.2)] hover:shadow-[0_4px_12px_rgba(102,126,234,0.3)] hover:from-[rgba(102,126,234,0.4)] hover:to-[rgba(118,75,162,0.4)]'
+                  : 'px-4 py-2 text-white/90 bg-white/10 border border-white/20 hover:bg-white/15 hover:border-white/30 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+              }`}
               onClick={() => setCurrency(currency)}
               type="button"
             >
-              <span className="filter-chip-label">{currency}</span>
+              <span className="flex items-center">{currency}</span>
             </button>
           ))}
         </div>
@@ -190,17 +215,23 @@ export function Filters({
 
       {/* Days Ahead Filter (for Dashboard) */}
       {showDaysFilter && (
-        <div className="filter-group">
-          <label className="filter-group-label">Days Ahead</label>
-          <div className="filter-options">
+        <div className="mb-8 last:mb-4 md:mb-6 xs:mb-5">
+          <label className="block text-xs font-bold uppercase tracking-wide text-white/70 mb-3">
+            Days Ahead
+          </label>
+          <div className="flex flex-wrap gap-2 md:gap-[0.4rem] xs:gap-[0.35rem]">
             {[7, 15, 30, 60, 90].map((days) => (
               <button
                 key={days}
-                className={`filter-chip ${daysAhead === days ? 'active' : ''}`}
+                className={`flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-[20px] text-[0.85rem] font-medium md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] xs:px-3 xs:py-[0.4rem] xs:text-xs ${
+                  daysAhead === days
+                    ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(102,126,234,0.3)] to-[rgba(118,75,162,0.3)] border border-[rgba(102,126,234,0.5)] shadow-[0_2px_8px_rgba(102,126,234,0.2)] hover:shadow-[0_4px_12px_rgba(102,126,234,0.3)] hover:from-[rgba(102,126,234,0.4)] hover:to-[rgba(118,75,162,0.4)]'
+                    : 'px-4 py-2 text-white/90 bg-white/10 border border-white/20 hover:bg-white/15 hover:border-white/30 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+                }`}
                 onClick={() => setDaysAhead(days)}
                 type="button"
               >
-                <span className="filter-chip-label">{days} days</span>
+                <span className="flex items-center">{days} days</span>
               </button>
             ))}
           </div>
@@ -209,7 +240,7 @@ export function Filters({
 
       {hasActiveFilters && (
         <button
-          className="filters-clear"
+          className="block w-full mt-6 px-6 py-3.5 text-[0.9rem] font-semibold cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-xl bg-danger-500/20 border border-danger-500/30 text-danger-500 hover:bg-danger-500/30 hover:border-danger-500/40 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(239,68,68,0.2)]"
           onClick={clearAllFilters}
           type="button"
         >

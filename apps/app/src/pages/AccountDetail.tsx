@@ -35,7 +35,6 @@ import type {
   InterestPrincipalRatioDataPoint,
   PaymentStatusDataPoint,
 } from './AccountDetail.types';
-import './AccountDetail.css';
 import * as rechartsModule from 'recharts';
 
 /**
@@ -435,9 +434,9 @@ export default function AccountDetail() {
 
   if (loading) {
     return (
-      <div className="account-detail">
-        <div className="loading-state">
-          <div className="loading-spinner"></div>
+      <div className="py-8 px-8 max-w-[1400px] mx-auto animate-fadeIn-slow box-border md:p-4">
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center text-white/80">
+          <div className="w-[50px] h-[50px] border-4 border-white/10 border-t-primary-500 rounded-full animate-spin mb-4"></div>
           <p>Loading account details...</p>
         </div>
       </div>
@@ -446,15 +445,15 @@ export default function AccountDetail() {
 
   if (error || !account || !calculatedAccount) {
     return (
-      <div className="account-detail">
-        <div className="error-state">
-          <h2>Error</h2>
+      <div className="py-8 px-8 max-w-[1400px] mx-auto animate-fadeIn-slow box-border md:p-4">
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center text-white/80">
+          <h2 className="text-danger-500 mb-4">Error</h2>
           <p>{error ?? 'Account not found'}</p>
           <button
             onClick={() => {
               void navigate('/dashboard');
             }}
-            className="btn-back"
+            className="flex items-center gap-2 px-5 py-3 bg-white/10 backdrop-blur-[10px] text-white border border-white/20 rounded-[10px] cursor-pointer text-sm font-semibold transition-all duration-300 ease-in-out mt-4 hover:bg-white/15 hover:-translate-x-1"
           >
             Go Back
           </button>
@@ -485,10 +484,10 @@ export default function AccountDetail() {
   } = rechartsModule;
 
   return (
-    <div className="account-detail">
+    <div className="py-8 px-8 max-w-[1400px] mx-auto animate-fadeIn-slow box-border md:p-4">
       {/* Header */}
-      <div className="account-detail-header">
-        <div className="account-detail-header-left">
+      <div className="flex justify-between items-start mb-10 pb-6 border-b border-white/10 gap-8 flex-wrap md:flex-col">
+        <div className="flex-1 min-w-0">
           <button
             onClick={() => {
               if (account?.accountType) {
@@ -497,7 +496,7 @@ export default function AccountDetail() {
                 void navigate('/dashboard');
               }
             }}
-            className="btn-back"
+            className="flex items-center gap-2 px-5 py-3 bg-white/10 backdrop-blur-[10px] text-white border border-white/20 rounded-[10px] cursor-pointer text-sm font-semibold transition-all duration-300 ease-in-out mb-6 hover:bg-white/15 hover:-translate-x-1"
           >
             <svg
               width="20"
@@ -516,19 +515,36 @@ export default function AccountDetail() {
             </svg>
             Back
           </button>
-          <div className="account-title-section">
-            <h1>{account.accountName}</h1>
-            <p className="account-number">{account.accountNumber}</p>
-            <p className="account-description">{account.accountDescription}</p>
+          <div>
+            <h1 className="m-0 mb-2 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent md:text-3xl">
+              {account.accountName}
+            </h1>
+            <p className="text-white/70 text-base m-0 mb-2 font-mono">
+              {account.accountNumber}
+            </p>
+            <p className="text-white/80 text-lg m-0 leading-relaxed">
+              {account.accountDescription}
+            </p>
           </div>
         </div>
-        <div className="account-header-badges">
-          <div className="account-status-badge" data-status={account.status}>
+        <div className="flex flex-col gap-3 items-end md:flex-row md:items-start md:w-full md:mt-4">
+          <div
+            className={`px-6 py-3 rounded-xl font-semibold text-xs tracking-wide uppercase whitespace-nowrap ${
+              account.status === 'active'
+                ? 'bg-success-css/20 text-success-css border border-success-css/30'
+                : account.status === 'paid_off'
+                  ? 'bg-[rgba(33,150,243,0.2)] text-[#2196f3] border border-[rgba(33,150,243,0.3)]'
+                  : account.status === 'closed'
+                    ? 'bg-[rgba(158,158,158,0.2)] text-[#9e9e9e] border border-[rgba(158,158,158,0.3)]'
+                    : account.status === 'defaulted'
+                      ? 'bg-danger-500/20 text-danger-500 border border-danger-500/30'
+                      : 'bg-warning-500/20 text-warning-500 border border-warning-500/30'
+            }`}
+          >
             {formatAccountStatus(account.status)}
           </div>
           <div
-            className="account-payment-status-badge"
-            data-payment-status={paymentStatus}
+            className="px-6 py-3 rounded-xl font-semibold text-xs tracking-wide uppercase whitespace-nowrap border"
             style={{
               backgroundColor: `${getAccountPaymentStatusColor(paymentStatus)}20`,
               color: getAccountPaymentStatusColor(paymentStatus),
@@ -541,60 +557,74 @@ export default function AccountDetail() {
       </div>
 
       {/* Key Metrics */}
-      <div className="account-metrics-grid">
-        <div className="metric-card">
-          <div className="metric-label">Remaining Balance</div>
-          <div className="metric-value primary">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-6 mb-12 md:grid-cols-1">
+        <div className="ds-card-light p-6">
+          <div className="text-white/70 text-sm font-semibold uppercase tracking-wide mb-3">
+            Remaining Balance
+          </div>
+          <div className="text-primary-500 text-[1.75rem] font-bold mb-2">
             {formatCurrency(account.totalAmountRemaining.amount, currency)}
           </div>
           {account.originalAmount && (
-            <div className="metric-sublabel">
+            <div className="text-white/50 text-sm">
               {formatCurrency(account.originalAmount.amount, currency)} original
             </div>
           )}
         </div>
-        <div className="metric-card">
-          <div className="metric-label">Total Paid</div>
-          <div className="metric-value success">
+        <div className="ds-card-light p-6">
+          <div className="text-white/70 text-sm font-semibold uppercase tracking-wide mb-3">
+            Total Paid
+          </div>
+          <div className="text-success-css text-[1.75rem] font-bold mb-2">
             {formatCurrency(metrics.totalPaid, currency)}
           </div>
-          <div className="metric-sublabel">
+          <div className="text-white/50 text-sm">
             {paymentHistoryData.length} payments
           </div>
         </div>
-        <div className="metric-card">
-          <div className="metric-label">Monthly Payment</div>
-          <div className="metric-value">
+        <div className="ds-card-light p-6">
+          <div className="text-white/70 text-sm font-semibold uppercase tracking-wide mb-3">
+            Monthly Payment
+          </div>
+          <div className="text-white text-[1.75rem] font-bold mb-2">
             {formatCurrency(account.monthlyPayment.amount, currency)}
           </div>
-          <div className="metric-sublabel">{account.rate}% interest rate</div>
+          <div className="text-white/50 text-sm">
+            {account.rate}% interest rate
+          </div>
         </div>
-        <div className="metric-card">
-          <div className="metric-label">Progress</div>
-          <div className="metric-value">
+        <div className="ds-card-light p-6">
+          <div className="text-white/70 text-sm font-semibold uppercase tracking-wide mb-3">
+            Progress
+          </div>
+          <div className="text-white text-[1.75rem] font-bold mb-2">
             {metrics.paidPeriods} / {metrics.totalPeriods} periods
           </div>
-          <div className="progress-bar-container">
+          <div className="w-full h-2 bg-white/10 rounded overflow-hidden mt-3">
             <div
-              className="progress-bar"
+              className="h-full bg-gradient-to-r from-[#667eea] to-[#764ba2] rounded transition-all duration-500 ease-in-out"
               style={{ width: `${metrics.progressPercentage}%` }}
             ></div>
           </div>
         </div>
         {account.nextDueDate && (
-          <div className="metric-card">
-            <div className="metric-label">Next Due Date</div>
-            <div className="metric-value">
+          <div className="ds-card-light p-6">
+            <div className="text-white/70 text-sm font-semibold uppercase tracking-wide mb-3">
+              Next Due Date
+            </div>
+            <div className="text-white text-[1.75rem] font-bold">
               {formatDate(account.nextDueDate)}
             </div>
           </div>
         )}
-        <div className="metric-card">
-          <div className="metric-label">Interest Paid</div>
-          <div className="metric-value warning">
+        <div className="ds-card-light p-6">
+          <div className="text-white/70 text-sm font-semibold uppercase tracking-wide mb-3">
+            Interest Paid
+          </div>
+          <div className="text-warning-500 text-[1.75rem] font-bold mb-2">
             {formatCurrency(metrics.totalInterestPaid, currency)}
           </div>
-          <div className="metric-sublabel">
+          <div className="text-white/50 text-sm">
             {metrics.totalCapitalPaid > 0
               ? `${((metrics.totalInterestPaid / (metrics.totalInterestPaid + metrics.totalCapitalPaid)) * 100).toFixed(1)}% of total`
               : 'N/A'}
@@ -603,15 +633,19 @@ export default function AccountDetail() {
       </div>
 
       {/* Charts Section */}
-      <div className="charts-section">
-        <h2 className="section-title">Loan Payment Insights</h2>
+      <div className="mb-12 flex flex-col w-full">
+        <h2 className="text-white text-[1.75rem] font-bold mb-8 pb-4 border-b border-white/10 w-full col-span-full">
+          Loan Payment Insights
+        </h2>
 
-        <div className="charts-grid">
+        <div className="grid grid-cols-2 gap-6 w-full box-border md:grid-cols-1 md:gap-4">
           {/* Principal Reduction Over Time */}
           {chartData.length > 0 && (
-            <div className="chart-card">
-              <h3>Principal Balance Over Time</h3>
-              <p className="chart-description">
+            <div className="ds-card-light p-6">
+              <h3 className="text-white text-xl font-semibold m-0 mb-2">
+                Principal Balance Over Time
+              </h3>
+              <p className="text-white/70 text-sm m-0 mb-4 leading-relaxed">
                 Track how your loan principal decreases as you make payments
               </p>
               <ResponsiveContainer width="100%" height={300}>
@@ -667,9 +701,11 @@ export default function AccountDetail() {
 
           {/* Amortization Schedule - Principal vs Interest */}
           {amortizationScheduleData.length > 0 && (
-            <div className="chart-card">
-              <h3>Amortization Schedule</h3>
-              <p className="chart-description">
+            <div className="ds-card-light p-6">
+              <h3 className="text-white text-xl font-semibold m-0 mb-2">
+                Amortization Schedule
+              </h3>
+              <p className="text-white/70 text-sm m-0 mb-4 leading-relaxed">
                 See how each payment is split between principal and interest
               </p>
               <ResponsiveContainer width="100%" height={300}>
@@ -713,9 +749,11 @@ export default function AccountDetail() {
 
           {/* Cumulative Interest Paid */}
           {cumulativeInterestData.length > 0 && (
-            <div className="chart-card">
-              <h3>Cumulative Interest Paid</h3>
-              <p className="chart-description">
+            <div className="ds-card-light p-6">
+              <h3 className="text-white text-xl font-semibold m-0 mb-2">
+                Cumulative Interest Paid
+              </h3>
+              <p className="text-white/70 text-sm m-0 mb-4 leading-relaxed">
                 Track total interest paid over the life of the loan
               </p>
               <ResponsiveContainer width="100%" height={300}>
@@ -770,9 +808,11 @@ export default function AccountDetail() {
 
           {/* Interest vs Principal Ratio Over Time */}
           {interestPrincipalRatioData.length > 0 && (
-            <div className="chart-card">
-              <h3>Interest vs Principal Ratio</h3>
-              <p className="chart-description">
+            <div className="ds-card-light p-6">
+              <h3 className="text-white text-xl font-semibold m-0 mb-2">
+                Interest vs Principal Ratio
+              </h3>
+              <p className="text-white/70 text-sm m-0 mb-4 leading-relaxed">
                 Watch how the interest portion decreases and principal portion
                 increases over time
               </p>
@@ -821,9 +861,11 @@ export default function AccountDetail() {
 
           {/* Payment Status Distribution */}
           {paymentStatusData.length > 0 && (
-            <div className="chart-card">
-              <h3>Payment Status Overview</h3>
-              <p className="chart-description">
+            <div className="ds-card-light p-6">
+              <h3 className="text-white text-xl font-semibold m-0 mb-2">
+                Payment Status Overview
+              </h3>
+              <p className="text-white/70 text-sm m-0 mb-4 leading-relaxed">
                 Distribution of payment statuses across all periods
               </p>
               <ResponsiveContainer width="100%" height={300}>
@@ -854,51 +896,54 @@ export default function AccountDetail() {
       </div>
 
       {/* Historical Payments */}
-      <div className="payments-section">
-        <h2 className="section-title">Historical Payments</h2>
+      <div className="mb-12">
+        <h2 className="text-white text-[1.75rem] font-bold mb-8 pb-4 border-b border-white/10 w-full col-span-full">
+          Historical Payments
+        </h2>
         {paymentHistoryData.length > 0 ? (
-          <div className="payments-table-container">
-            <table className="payments-table">
-              <thead>
+          <div className="ds-card-light overflow-hidden">
+            <table className="w-full border-collapse">
+              <thead className="bg-white/5">
                 <tr>
-                  <th>Date</th>
-                  <th>Amount</th>
-                  <th>Notes</th>
+                  <th className="px-6 py-4 text-left text-white/90 font-semibold text-sm uppercase tracking-wide border-b border-white/10">
+                    Date
+                  </th>
+                  <th className="px-6 py-4 text-left text-white/90 font-semibold text-sm uppercase tracking-wide border-b border-white/10">
+                    Amount
+                  </th>
+                  <th className="px-6 py-4 text-left text-white/90 font-semibold text-sm uppercase tracking-wide border-b border-white/10">
+                    Notes
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {paymentHistoryData.map((payment, index) => (
-                  <tr key={index}>
-                    <td>{payment.dateStr}</td>
-                    <td className="amount-cell">
+                  <tr key={index} className="hover:bg-white/5 last:border-b-0">
+                    <td className="px-6 py-4 text-white/80 border-b border-white/5">
+                      {payment.dateStr}
+                    </td>
+                    <td className="px-6 py-4 font-semibold text-success-css border-b border-white/5">
                       {formatCurrency(payment.amount, payment.currency)}
                     </td>
-                    <td>{payment.notes ?? '-'}</td>
+                    <td className="px-6 py-4 text-white/80 border-b border-white/5">
+                      {payment.notes ?? '-'}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : (
-          <div className="empty-state">
-            <p>No payment history available</p>
+          <div className="ds-card-light py-12 px-12 text-center text-white/60">
+            <p className="m-0">No payment history available</p>
           </div>
         )}
       </div>
 
       {/* Payment Periods */}
-      <div className="periods-section">
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '1.5rem',
-            flexWrap: 'wrap',
-            gap: '1rem',
-          }}
-        >
-          <h2 className="section-title" style={{ margin: 0 }}>
+      <div className="mb-12">
+        <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+          <h2 className="text-white text-[1.75rem] font-bold pb-4 border-b border-white/10 w-full col-span-full m-0">
             Payment Periods
           </h2>
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -1054,16 +1099,18 @@ export default function AccountDetail() {
               return (
                 <div
                   key={period.periodNumber}
-                  className={`period-card ${period.status} ${
-                    isOverdue ? 'overdue' : ''
+                  className={`ds-card-light p-6 ${
+                    isOverdue
+                      ? 'border-danger-500/50 bg-danger-500/5'
+                      : 'border-white/10'
                   }`}
                 >
-                  <div className="period-header">
-                    <span className="period-number">
+                  <div className="flex justify-between items-center mb-5 pb-4 border-b border-white/10">
+                    <span className="text-white font-semibold text-lg">
                       Period #{period.periodNumber}
                     </span>
                     <span
-                      className="period-status"
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide uppercase text-white"
                       style={{
                         backgroundColor: getPaymentStatusColor(period.status),
                       }}
@@ -1071,28 +1118,30 @@ export default function AccountDetail() {
                       {period.status.toUpperCase()}
                     </span>
                   </div>
-                  <div className="period-details">
-                    <div className="period-detail-row">
-                      <span className="period-label">Due Date:</span>
-                      <span className="period-value">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70 text-sm">Due Date:</span>
+                      <span className="text-white font-semibold text-[0.95rem]">
                         {formatDate(dueDate)}
                       </span>
                     </div>
-                    <div className="period-detail-row">
-                      <span className="period-label">Amount Due:</span>
-                      <span className="period-value">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70 text-sm">Amount Due:</span>
+                      <span className="text-white font-semibold text-[0.95rem]">
                         {formatCurrency(period.amount, period.currency)}
                       </span>
                     </div>
-                    <div className="period-detail-row">
-                      <span className="period-label">Amount Paid:</span>
-                      <span className="period-value">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70 text-sm">
+                        Amount Paid:
+                      </span>
+                      <span className="text-white font-semibold text-[0.95rem]">
                         {formatCurrency(period.amountPaid, period.currency)}
                       </span>
                     </div>
-                    <div className="period-detail-row">
-                      <span className="period-label">Remaining:</span>
-                      <span className="period-value">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70 text-sm">Remaining:</span>
+                      <span className="text-white font-semibold text-[0.95rem]">
                         {formatCurrency(
                           period.amount - period.amountPaid,
                           period.currency
@@ -1100,27 +1149,27 @@ export default function AccountDetail() {
                       </span>
                     </div>
                     {period.capital > 0 && (
-                      <div className="period-detail-row">
-                        <span className="period-label">Capital:</span>
-                        <span className="period-value">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/70 text-sm">Capital:</span>
+                        <span className="text-white font-semibold text-[0.95rem]">
                           {formatCurrency(period.capital, period.currency)}
                         </span>
                       </div>
                     )}
                     {period.interest > 0 && (
-                      <div className="period-detail-row">
-                        <span className="period-label">Interest:</span>
-                        <span className="period-value">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/70 text-sm">Interest:</span>
+                        <span className="text-white font-semibold text-[0.95rem]">
                           {formatCurrency(period.interest, period.currency)}
                         </span>
                       </div>
                     )}
                     {period.remainingPrincipal !== undefined && (
-                      <div className="period-detail-row">
-                        <span className="period-label">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/70 text-sm">
                           Remaining Principal:
                         </span>
-                        <span className="period-value">
+                        <span className="text-white font-semibold text-[0.95rem]">
                           {formatCurrency(
                             period.remainingPrincipal,
                             period.currency
@@ -1129,12 +1178,15 @@ export default function AccountDetail() {
                       </div>
                     )}
                     {period.paymentLog.length > 0 && (
-                      <div className="period-payments">
-                        <span className="period-label">Payments:</span>
+                      <div className="mt-4 pt-4 border-t border-white/10 flex flex-col gap-2">
+                        <span className="text-white/70 text-sm">Payments:</span>
                         {period.paymentLog.map((payment, idx) => {
                           const paymentDate = toDate(payment.datePaid);
                           return (
-                            <div key={idx} className="period-payment-entry">
+                            <div
+                              key={idx}
+                              className="flex flex-col gap-1 px-2 py-2 bg-white/3 rounded-lg text-sm text-white/80"
+                            >
                               <span>
                                 {formatDate(paymentDate)} -{' '}
                                 {formatCurrency(
@@ -1143,7 +1195,7 @@ export default function AccountDetail() {
                                 )}
                               </span>
                               {payment.notes && (
-                                <span className="payment-note">
+                                <span className="text-white/50 text-xs italic">
                                   {payment.notes}
                                 </span>
                               )}
@@ -1158,8 +1210,8 @@ export default function AccountDetail() {
             })}
           </div>
         ) : (
-          <div className="empty-state">
-            <p>No payment periods available</p>
+          <div className="ds-card-light py-12 px-12 text-center text-white/60">
+            <p className="m-0">No payment periods available</p>
           </div>
         )}
       </div>

@@ -16,7 +16,6 @@ import {
 import { filterAccounts } from '../utils/filterAccounts';
 import { Modal } from '../components/Modal';
 import { CreateAccountForm } from '../components/CreateAccountForm';
-import './Dashboard.css';
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   loan: 'Loans',
@@ -333,12 +332,14 @@ export default function AccountsByType() {
 
   if (loading) {
     return (
-      <div className="dashboard">
-        <div className="dashboard-header">
-          <h2>{type ? ACCOUNT_TYPE_LABELS[type] : 'Accounts'}</h2>
+      <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-8">
+        <div className="flex justify-between items-center mb-10 pb-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent">
+          <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent drop-shadow-[0_2px_20px_rgba(255,255,255,0.1)]">
+            {type ? ACCOUNT_TYPE_LABELS[type] : 'Accounts'}
+          </h2>
         </div>
-        <div className="loading-state">
-          <div className="loading-spinner"></div>
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center text-white/80">
+          <div className="w-[50px] h-[50px] border-4 border-white/10 border-t-primary-500 rounded-full animate-spin mb-4"></div>
           <p>Loading accounts...</p>
         </div>
       </div>
@@ -347,27 +348,29 @@ export default function AccountsByType() {
 
   if (!type || !ACCOUNT_TYPE_LABELS[type]) {
     return (
-      <div className="dashboard">
-        <div className="dashboard-header">
-          <h2>Invalid Account Type</h2>
+      <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-8">
+        <div className="flex justify-between items-center mb-10 pb-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent">
+          <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent drop-shadow-[0_2px_20px_rgba(255,255,255,0.1)]">
+            Invalid Account Type
+          </h2>
         </div>
-        <p style={{ color: 'white' }}>
-          The requested account type does not exist.
-        </p>
+        <p className="text-white">The requested account type does not exist.</p>
       </div>
     );
   }
 
   return (
-    <div className="dashboard">
-      <div className="dashboard-header">
-        <h2>{ACCOUNT_TYPE_LABELS[type]}</h2>
+    <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-8">
+      <div className="flex justify-between items-center mb-10 pb-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent">
+        <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent drop-shadow-[0_2px_20px_rgba(255,255,255,0.1)]">
+          {ACCOUNT_TYPE_LABELS[type]}
+        </h2>
         <button
-          className="btn-add-new"
+          className="ds-button-gradient flex items-center gap-2 px-6 py-3.5 text-[0.95rem]"
           onClick={handleOpenCreateModal}
           title="Add New Account"
         >
-          <span className="btn-add-icon">+</span>
+          <span className="text-xl font-bold leading-none">+</span>
           <span>Add New</span>
         </button>
       </div>
@@ -469,7 +472,7 @@ export default function AccountsByType() {
             >
               <button
                 type="button"
-                className="btn-cancel"
+                className="px-8 py-3.5 bg-white/10 backdrop-blur-[10px] text-white border border-white/20 rounded-xl cursor-pointer text-base font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:bg-white/25 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={() => {
                   if (!saving) {
                     setDeletingAccount(null);
@@ -531,11 +534,10 @@ export default function AccountsByType() {
             No {ACCOUNT_TYPE_LABELS[type].toLowerCase()} found.
           </p>
           <button
-            className="btn-add-new"
+            className="ds-button-gradient flex items-center gap-2 px-6 py-3.5 text-[0.95rem] mx-auto"
             onClick={handleOpenCreateModal}
-            style={{ margin: '0 auto' }}
           >
-            <span className="btn-add-icon">+</span>
+            <span className="text-xl font-bold leading-none">+</span>
             <span>Add Your First Account</span>
           </button>
         </div>
@@ -558,20 +560,28 @@ export default function AccountsByType() {
         </div>
       ) : (
         <>
-          <div className="accounts-summary">
-            <div className="summary-card">
-              <h3>Total Accounts</h3>
-              <p className="summary-value">{filteredAccounts.length}</p>
+          <div className="grid grid-cols-3 gap-6 mb-8 md:grid-cols-1">
+            <div className="ds-card-light p-6">
+              <h3 className="text-white/70 text-sm font-semibold uppercase tracking-wide mb-2 m-0">
+                Total Accounts
+              </h3>
+              <p className="text-white text-2xl font-bold m-0">
+                {filteredAccounts.length}
+              </p>
             </div>
-            <div className="summary-card">
-              <h3>Active Accounts</h3>
-              <p className="summary-value">
+            <div className="ds-card-light p-6">
+              <h3 className="text-white/70 text-sm font-semibold uppercase tracking-wide mb-2 m-0">
+                Active Accounts
+              </h3>
+              <p className="text-white text-2xl font-bold m-0">
                 {filteredAccounts.filter((a) => a.status === 'active').length}
               </p>
             </div>
-            <div className="summary-card">
-              <h3>Total Remaining</h3>
-              <p className="summary-value">
+            <div className="ds-card-light p-6">
+              <h3 className="text-white/70 text-sm font-semibold uppercase tracking-wide mb-2 m-0">
+                Total Remaining
+              </h3>
+              <p className="text-white text-2xl font-bold m-0">
                 {formatCurrency(
                   filteredAccounts.reduce(
                     (sum, a) => sum + a.totalAmountRemaining.amount,
@@ -583,7 +593,7 @@ export default function AccountsByType() {
             </div>
           </div>
 
-          <div className="accounts-list">
+          <div className="flex flex-col gap-6">
             {filteredAccounts.map((account) => {
               const accountWithCalculated = getAccountWithCalculated(account);
               const daysRemaining =
@@ -591,12 +601,16 @@ export default function AccountsByType() {
               const isOverdue = daysRemaining < 0;
 
               return (
-                <div key={account.accountNumber} className="account-card">
-                  <div className="account-header">
+                <div key={account.accountNumber} className="ds-card-light p-6">
+                  <div className="flex justify-between items-start mb-6 pb-4 border-b border-white/10">
                     <div>
-                      <h3>{account.accountName}</h3>
-                      <p className="account-number">{account.accountNumber}</p>
-                      <p className="account-description">
+                      <h3 className="text-white text-xl font-bold mb-2 m-0">
+                        {account.accountName}
+                      </h3>
+                      <p className="text-white/60 text-sm font-mono mb-1 m-0">
+                        {account.accountNumber}
+                      </p>
+                      <p className="text-white/80 text-sm m-0">
                         {account.accountDescription}
                       </p>
                     </div>
@@ -608,7 +622,7 @@ export default function AccountsByType() {
                       }}
                     >
                       <span
-                        className="status-badge"
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide uppercase text-white"
                         style={{
                           backgroundColor: getStatusColor(account.status),
                         }}
@@ -725,50 +739,60 @@ export default function AccountsByType() {
                     </div>
                   </div>
 
-                  <div className="account-details">
-                    <div className="detail-row">
-                      <span className="detail-label">Type:</span>
-                      <span className="detail-value">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70 text-sm">Type:</span>
+                      <span className="text-white font-semibold text-sm">
                         {account.accountType.replace('_', ' ')}
                       </span>
                     </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Remaining Balance:</span>
-                      <span className="detail-value amount">
-                        {formatCurrency(
-                          account.totalAmountRemaining.amount,
-                          account.totalAmountRemaining.currency
-                        )}
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70 text-sm">
+                        Remaining Balance:
                       </span>
-                      {account.additionalAmounts?.[0] && (
-                        <span className="detail-value-secondary">
-                          (
+                      <div className="flex items-center gap-2">
+                        <span className="text-white font-semibold text-sm">
                           {formatCurrency(
-                            account.additionalAmounts[0].amount,
-                            account.additionalAmounts[0].currency
+                            account.totalAmountRemaining.amount,
+                            account.totalAmountRemaining.currency
                           )}
-                          )
                         </span>
-                      )}
+                        {account.additionalAmounts?.[0] && (
+                          <span className="text-white/50 text-xs">
+                            (
+                            {formatCurrency(
+                              account.additionalAmounts[0].amount,
+                              account.additionalAmounts[0].currency
+                            )}
+                            )
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Monthly Payment:</span>
-                      <span className="detail-value">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70 text-sm">
+                        Monthly Payment:
+                      </span>
+                      <span className="text-white font-semibold text-sm">
                         {formatCurrency(
                           account.monthlyPayment.amount,
                           account.monthlyPayment.currency
                         )}
                       </span>
                     </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Interest Rate:</span>
-                      <span className="detail-value">{account.rate}%</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70 text-sm">
+                        Interest Rate:
+                      </span>
+                      <span className="text-white font-semibold text-sm">
+                        {account.rate}%
+                      </span>
                     </div>
-                    <div className="detail-row">
-                      <span className="detail-label">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70 text-sm">
                         Capital/Interest Split:
                       </span>
-                      <span className="detail-value">
+                      <span className="text-white font-semibold text-sm">
                         {formatCurrency(
                           accountWithCalculated.monthlyCapital.amount,
                           accountWithCalculated.monthlyCapital.currency
@@ -780,44 +804,50 @@ export default function AccountsByType() {
                         )}
                       </span>
                     </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Next Due Date:</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70 text-sm">
+                        Next Due Date:
+                      </span>
                       <span
-                        className={`detail-value ${
+                        className={`font-semibold text-sm ${
                           isOverdue
-                            ? 'overdue'
+                            ? 'text-danger-500'
                             : daysRemaining <= 7
-                              ? 'due-soon'
-                              : ''
+                              ? 'text-warning-500'
+                              : 'text-white'
                         }`}
                       >
                         {formatDate(account.nextDueDate)} (
                         {accountWithCalculated.nextDueDateMonth})
                       </span>
                     </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Days Remaining:</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70 text-sm">
+                        Days Remaining:
+                      </span>
                       <span
-                        className={`detail-value ${
+                        className={`font-semibold text-sm ${
                           isOverdue
-                            ? 'overdue'
+                            ? 'text-danger-500'
                             : daysRemaining <= 7
-                              ? 'due-soon'
-                              : ''
+                              ? 'text-warning-500'
+                              : 'text-white'
                         }`}
                       >
                         {daysRemaining} days
                       </span>
                     </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Payments Made:</span>
-                      <span className="detail-value">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70 text-sm">
+                        Payments Made:
+                      </span>
+                      <span className="text-white font-semibold text-sm">
                         {account.paymentLog.length} payments
                       </span>
                     </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Total Paid:</span>
-                      <span className="detail-value">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/70 text-sm">Total Paid:</span>
+                      <span className="text-white font-semibold text-sm">
                         {formatCurrency(
                           accountWithCalculated.totalPaid.amount,
                           accountWithCalculated.totalPaid.currency
@@ -825,9 +855,11 @@ export default function AccountsByType() {
                       </span>
                     </div>
                     {accountWithCalculated.estimatedPayoffDate && (
-                      <div className="detail-row">
-                        <span className="detail-label">Estimated Payoff:</span>
-                        <span className="detail-value">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/70 text-sm">
+                          Estimated Payoff:
+                        </span>
+                        <span className="text-white font-semibold text-sm">
                           {formatDate(
                             accountWithCalculated.estimatedPayoffDate
                           )}

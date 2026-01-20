@@ -27,7 +27,6 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import './Dashboard.css';
 
 interface PeriodWithAccount {
   period: PaymentPeriod;
@@ -473,13 +472,17 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="dashboard">
-        <div className="dashboard-header">
-          <h2>Dashboard</h2>
+      <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-8">
+        <div className="flex justify-between items-center mb-10 pb-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent">
+          <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.1)]">
+            Dashboard
+          </h2>
         </div>
-        <div className="loading-state">
-          <div className="loading-spinner"></div>
-          <p>Loading accounts...</p>
+        <div className="flex flex-col items-center justify-center py-16 px-8 text-white gap-6">
+          <div className="w-[50px] h-[50px] border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+          <p className="text-lg text-white/90 font-medium">
+            Loading accounts...
+          </p>
         </div>
       </div>
     );
@@ -487,34 +490,42 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="dashboard">
-        <div className="dashboard-header">
-          <h2>Dashboard</h2>
+      <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-8">
+        <div className="flex justify-between items-center mb-10 pb-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent">
+          <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.1)]">
+            Dashboard
+          </h2>
         </div>
-        <div className="error-state">
-          <p>Error loading accounts: {error}</p>
+        <div className="text-center py-12 px-12 text-white/80 bg-danger-500/20 backdrop-blur-[20px] rounded-[20px] border border-danger-500/30">
+          <p className="text-xl m-0 text-danger-500">
+            Error loading accounts: {error}
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="dashboard">
-      <div className="dashboard-header">
+    <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-8">
+      <div className="flex justify-between items-center mb-10 pb-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent md:flex-col md:items-start md:gap-6 md:mb-8">
         <div>
-          <h2>Financial Overview</h2>
-          <p className="dashboard-subtitle">
+          <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.1)] md:text-3xl xs:text-[1.75rem]">
+            Financial Overview
+          </h2>
+          <p className="mt-2 mb-0 text-white/70 text-base font-normal">
             {daysAhead > 0
               ? `Viewing ${daysAhead} days before and after today`
               : 'Viewing all periods'}
           </p>
         </div>
         <button
-          className="btn-add-new"
+          className="ds-button-gradient flex items-center gap-2 px-6 py-3.5 text-[0.95rem] whitespace-nowrap"
           onClick={() => setIsNewAccountWizardOpen(true)}
           title="Create a new account"
         >
-          <span className="btn-add-icon">+</span>
+          <span className="text-2xl leading-none font-light flex items-center justify-center">
+            +
+          </span>
           <span>New account</span>
         </button>
       </div>
@@ -529,18 +540,20 @@ export default function Dashboard() {
       />
 
       {/* Key Metrics */}
-      <div className="metrics-grid">
-        <div className="metric-card income">
-          <div className="metric-label">Total Paid</div>
-          <div className="metric-value">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-6 mb-8 xs:grid-cols-1 xs:gap-3">
+        <div className="relative overflow-visible bg-gradient-to-br from-success-css/20 to-success-css/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-white/18 rounded-2xl p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#667eea] before:via-[#764ba2] before:via-[#f093fb] before:via-[#4facfe] before:to-[#00f2fe] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(31,38,135,0.5)] hover:border-white/30 xs:p-4">
+          <div className="text-sm text-white/70 font-semibold uppercase tracking-wide mb-2">
+            Total Paid
+          </div>
+          <div className="text-3xl font-bold text-white -tracking-[0.5px] mb-2 leading-tight xs:text-2xl">
             {formatCurrency(metrics.totalPaid, primaryCurrency)}
           </div>
-          <div className="metric-change positive">
+          <div className="text-xs text-success-css font-medium">
             {metrics.paidPeriodsCount} paid periods
           </div>
           {metrics.totalPaid > 0 && (
-            <div className="metric-split">
-              <div className="metric-split-bar">
+            <div className="flex items-center gap-3 mt-3 overflow-visible relative z-10">
+              <div className="flex-1 min-w-0 overflow-visible relative z-[1]">
                 <ResponsiveContainer width="100%" height={32}>
                   <BarChart
                     data={[
@@ -589,18 +602,18 @@ export default function Dashboard() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <div className="metric-split-legend">
-                <span className="metric-split-item">
-                  <span className="metric-split-dot interest" />
+              <div className="flex flex-col gap-1 text-xs text-white/70">
+                <span className="flex items-center gap-1 whitespace-nowrap">
+                  <span className="w-2 h-2 rounded-full bg-[#f093fb] inline-block"></span>
                   Interest{' '}
-                  <span className="metric-split-amount">
+                  <span className="font-semibold text-white">
                     {formatCurrency(metrics.totalInterest, primaryCurrency)}
                   </span>
                 </span>
-                <span className="metric-split-item">
-                  <span className="metric-split-dot principal" />
+                <span className="flex items-center gap-1 whitespace-nowrap">
+                  <span className="w-2 h-2 rounded-full bg-[#4facfe] inline-block"></span>
                   Principal{' '}
-                  <span className="metric-split-amount">
+                  <span className="font-semibold text-white">
                     {formatCurrency(metrics.totalPrincipal, primaryCurrency)}
                   </span>
                 </span>
@@ -608,15 +621,19 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-        <div className="metric-card outcome">
-          <div className="metric-label">Total Due</div>
-          <div className="metric-value">
+        <div className="relative overflow-visible bg-gradient-to-br from-danger-500/20 to-danger-500/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-white/18 rounded-2xl p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#667eea] before:via-[#764ba2] before:via-[#f093fb] before:via-[#4facfe] before:to-[#00f2fe] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(31,38,135,0.5)] hover:border-white/30 xs:p-4">
+          <div className="text-sm text-white/70 font-semibold uppercase tracking-wide mb-2">
+            Total Due
+          </div>
+          <div className="text-3xl font-bold text-white -tracking-[0.5px] mb-2 leading-tight xs:text-2xl">
             {formatCurrency(metrics.totalOutcomes, primaryCurrency)}
           </div>
-          <div className="metric-change">{filteredPeriods.length} periods</div>
+          <div className="text-xs text-white/60 font-medium">
+            {filteredPeriods.length} periods
+          </div>
           {metrics.dueInterest + metrics.duePrincipal > 0 && (
-            <div className="metric-split">
-              <div className="metric-split-bar">
+            <div className="flex items-center gap-3 mt-3 overflow-visible relative z-10">
+              <div className="flex-1 min-w-0 overflow-visible relative z-[1]">
                 <ResponsiveContainer width="100%" height={32}>
                   <BarChart
                     data={[
@@ -665,18 +682,18 @@ export default function Dashboard() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <div className="metric-split-legend">
-                <span className="metric-split-item">
-                  <span className="metric-split-dot interest" />
+              <div className="flex flex-col gap-1 text-xs text-white/70">
+                <span className="flex items-center gap-1 whitespace-nowrap">
+                  <span className="w-2 h-2 rounded-full bg-[#f093fb] inline-block"></span>
                   Interest due{' '}
-                  <span className="metric-split-amount">
+                  <span className="font-semibold text-white">
                     {formatCurrency(metrics.dueInterest, primaryCurrency)}
                   </span>
                 </span>
-                <span className="metric-split-item">
-                  <span className="metric-split-dot principal" />
+                <span className="flex items-center gap-1 whitespace-nowrap">
+                  <span className="w-2 h-2 rounded-full bg-[#4facfe] inline-block"></span>
                   Principal due{' '}
-                  <span className="metric-split-amount">
+                  <span className="font-semibold text-white">
                     {formatCurrency(metrics.duePrincipal, primaryCurrency)}
                   </span>
                 </span>
@@ -684,19 +701,21 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-        <div className="metric-card pending">
-          <div className="metric-label">Pending Amount</div>
-          <div className="metric-value">
+        <div className="relative overflow-visible bg-gradient-to-br from-warning-500/20 to-warning-500/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-white/18 rounded-2xl p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#667eea] before:via-[#764ba2] before:via-[#f093fb] before:via-[#4facfe] before:to-[#00f2fe] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(31,38,135,0.5)] hover:border-white/30 xs:p-4">
+          <div className="text-sm text-white/70 font-semibold uppercase tracking-wide mb-2">
+            Pending Amount
+          </div>
+          <div className="text-3xl font-bold text-white -tracking-[0.5px] mb-2 leading-tight xs:text-2xl">
             {formatCurrency(metrics.totalPending, primaryCurrency)}
           </div>
-          <div className="metric-change warning">
+          <div className="text-xs text-warning-500 font-medium">
             {metrics.pendingPeriodsCount + metrics.partialPeriodsCount} pending
             {metrics.overduePeriodsCount > 0 &&
               ` • ${metrics.overduePeriodsCount} overdue`}
           </div>
           {metrics.pendingInterest + metrics.pendingPrincipal > 0 && (
-            <div className="metric-split">
-              <div className="metric-split-bar">
+            <div className="flex items-center gap-3 mt-3 overflow-visible relative z-10">
+              <div className="flex-1 min-w-0 overflow-visible relative z-[1]">
                 <ResponsiveContainer width="100%" height={32}>
                   <BarChart
                     data={[
@@ -747,18 +766,18 @@ export default function Dashboard() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <div className="metric-split-legend">
-                <span className="metric-split-item">
-                  <span className="metric-split-dot interest" />
+              <div className="flex flex-col gap-1 text-xs text-white/70">
+                <span className="flex items-center gap-1 whitespace-nowrap">
+                  <span className="w-2 h-2 rounded-full bg-[#f093fb] inline-block"></span>
                   Est. interest{' '}
-                  <span className="metric-split-amount">
+                  <span className="font-semibold text-white">
                     {formatCurrency(metrics.pendingInterest, primaryCurrency)}
                   </span>
                 </span>
-                <span className="metric-split-item">
-                  <span className="metric-split-dot principal" />
+                <span className="flex items-center gap-1 whitespace-nowrap">
+                  <span className="w-2 h-2 rounded-full bg-[#4facfe] inline-block"></span>
                   Est. principal{' '}
-                  <span className="metric-split-amount">
+                  <span className="font-semibold text-white">
                     {formatCurrency(metrics.pendingPrincipal, primaryCurrency)}
                   </span>
                 </span>
@@ -770,10 +789,12 @@ export default function Dashboard() {
 
       {/* Charts Section */}
       {chartData.length > 0 && (
-        <div className="charts-section">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 w-full box-border xs:grid-cols-1 xs:gap-4">
           {/* Payment Timeline */}
-          <div className="chart-card">
-            <h3 className="chart-title">Payment Timeline</h3>
+          <div className="ds-card-medium p-8 xs:p-4">
+            <h3 className="m-0 mb-6 text-white text-xl font-bold -tracking-[0.3px] xs:text-lg">
+              Payment Timeline
+            </h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={chartData}>
                 <CartesianGrid
@@ -828,8 +849,10 @@ export default function Dashboard() {
 
           {/* Interest vs Principal */}
           {interestPrincipalData.some((d) => d.value > 0) && (
-            <div className="chart-card">
-              <h3 className="chart-title">Interest vs Principal</h3>
+            <div className="ds-card-medium p-8 xs:p-4">
+              <h3 className="m-0 mb-6 text-white text-xl font-bold -tracking-[0.3px] xs:text-lg">
+                Interest vs Principal
+              </h3>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
@@ -868,8 +891,10 @@ export default function Dashboard() {
 
           {/* Account Type Distribution */}
           {accountTypeData.length > 0 && (
-            <div className="chart-card">
-              <h3 className="chart-title">By Account Type</h3>
+            <div className="ds-card-medium p-8 xs:p-4">
+              <h3 className="m-0 mb-6 text-white text-xl font-bold -tracking-[0.3px] xs:text-lg">
+                By Account Type
+              </h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={accountTypeData}>
                   <CartesianGrid
@@ -912,26 +937,28 @@ export default function Dashboard() {
 
           {/* Top Accounts by Interest - Compact */}
           {topAccountsByInterest.length > 0 && (
-            <div className="chart-card top-accounts-compact">
-              <h3 className="chart-title">Top Accounts by Interest</h3>
-              <div className="top-accounts-compact-list">
+            <div className="flex flex-col min-h-[300px] ds-card-medium p-8 xs:p-4">
+              <h3 className="m-0 mb-6 text-white text-xl font-bold -tracking-[0.3px] xs:text-lg">
+                Top Accounts by Interest
+              </h3>
+              <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb:hover]:bg-white/30">
                 {topAccountsByInterest.map((account, index) => (
                   <div
                     key={account.accountNumber}
-                    className="top-account-compact-item"
+                    className="flex items-center gap-3 px-3 py-3 bg-white/8 border border-white/10 rounded-lg cursor-pointer transition-all duration-200 ease-in-out flex-shrink-0 hover:bg-white/12 hover:border-white/20 hover:translate-x-0.5"
                     onClick={() => {
                       void navigate(`/account/${account.accountNumber}`);
                     }}
                   >
-                    <span className="top-account-compact-rank">
+                    <span className="text-sm font-bold text-primary-500 min-w-[1.75rem] text-center flex-shrink-0">
                       #{index + 1}
                     </span>
-                    <div className="top-account-compact-info">
-                      <span className="top-account-compact-name">
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <span className="text-sm font-semibold text-white -tracking-[0.2px] whitespace-nowrap overflow-hidden text-ellipsis block">
                         {account.accountName}
                       </span>
                     </div>
-                    <span className="top-account-compact-amount">
+                    <span className="text-[0.95rem] font-bold text-[#f093fb] -tracking-[0.3px] whitespace-nowrap flex-shrink-0">
                       {formatCurrency(account.totalInterest, account.currency)}
                     </span>
                   </div>
@@ -944,9 +971,11 @@ export default function Dashboard() {
 
       {/* Pending Payments List */}
       {pendingPeriods.length > 0 && (
-        <div className="pending-payments-section">
-          <h3 className="section-title">Pending Payments</h3>
-          <div className="accounts-list">
+        <div className="mt-8">
+          <h3 className="m-0 mb-6 text-white text-2xl font-bold -tracking-[0.5px] xs:text-xl">
+            Pending Payments
+          </h3>
+          <div className="flex flex-col gap-4">
             {pendingPeriods.map((item) => {
               const { periodInfo, account, period } = item;
               const dueDate = toDate(period.dueDate);
@@ -959,80 +988,76 @@ export default function Dashboard() {
               return (
                 <div
                   key={periodKey}
-                  className={`account-row ${isExpanded ? 'expanded' : ''}`}
+                  className={`relative ds-card-medium overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-0.5 before:bg-gradient-to-r before:from-[#667eea] before:via-[#764ba2] before:via-[#f093fb] before:via-[#4facfe] before:to-[#00f2fe] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:border-white/25 hover:shadow-[0_8px_24px_0_rgba(31,38,135,0.3)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] ${
+                    isExpanded
+                      ? 'border-white/30 shadow-[0_12px_32px_0_rgba(31,38,135,0.4)] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.25)] before:opacity-100'
+                      : 'border-white/15'
+                  }`}
                 >
                   <div
-                    className="account-row-summary"
+                    className="flex items-center px-6 py-5 cursor-pointer gap-6 transition-colors duration-200 ease-in-out relative hover:bg-white/5 md:px-4 md:gap-4 xs:px-3.5 xs:gap-3"
                     onClick={() => toggleExpand(periodKey)}
                   >
-                    <div className="account-row-main">
-                      <div className="account-row-primary">
+                    <div className="grid grid-cols-[220px_140px_140px_180px_auto] items-center flex-1 gap-8 min-w-0 md:grid-cols-[200px_130px_130px_160px_auto] md:gap-6 xs:grid-cols-1 xs:gap-4 xs:w-full">
+                      <div className="flex flex-col gap-1 w-[220px] flex-shrink-0 md:w-[200px] xs:w-full">
                         <h3
-                          className="account-row-name"
+                          className="m-0 text-white text-lg font-bold -tracking-[0.3px] whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer transition-colors duration-200 hover:text-primary-500"
                           onClick={(e) => {
                             e.stopPropagation();
                             void navigate(`/account/${account.accountNumber}`);
                           }}
-                          style={{
-                            cursor: 'pointer',
-                            transition: 'color 0.2s',
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.color = '#667eea';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.color = '';
-                          }}
                         >
                           {account.accountName}
                         </h3>
-                        <p className="account-row-number">
+                        <p className="m-0 text-white/60 text-sm font-mono tracking-wide">
                           Period #{period.periodNumber} •{' '}
                           {account.accountNumber}
                         </p>
                       </div>
-                      <div className="account-row-balance">
-                        <span className="account-row-balance-label">
+                      <div className="flex flex-col gap-1 w-[140px] md:w-[130px] xs:w-full">
+                        <span className="text-xs text-white/60 font-semibold uppercase tracking-wide">
                           Amount Due
                         </span>
-                        <span className="account-row-balance-amount">
+                        <span className="text-xl font-bold text-[#4facfe] shadow-[0_2px_10px_rgba(79,172,254,0.3)] -tracking-[0.5px] xs:text-base">
                           {formatCurrency(
                             periodInfo.amountDue,
                             period.currency
                           )}
                         </span>
                       </div>
-                      <div className="account-row-payment">
-                        <span className="account-row-payment-label">
+                      <div className="flex flex-col gap-1 w-[140px] md:w-[130px] xs:w-full">
+                        <span className="text-xs text-white/60 font-semibold uppercase tracking-wide">
                           Amount Paid
                         </span>
-                        <span className="account-row-payment-amount">
+                        <span className="text-lg font-semibold text-white -tracking-[0.3px] xs:text-base">
                           {formatCurrency(
                             periodInfo.amountPaid,
                             period.currency
                           )}
                         </span>
                       </div>
-                      <div className="account-row-due">
-                        <span className="account-row-due-label">Due Date</span>
+                      <div className="flex flex-col gap-1 w-[180px] md:w-[160px] xs:w-full">
+                        <span className="text-xs text-white/60 font-semibold uppercase tracking-wide">
+                          Due Date
+                        </span>
                         <span
-                          className={`account-row-due-value ${
+                          className={`text-[0.95rem] font-semibold ${
                             isOverdue
-                              ? 'overdue'
+                              ? 'text-danger-500 font-bold'
                               : daysRemaining <= 7
-                                ? 'due-soon'
-                                : ''
+                                ? 'text-warning-400 font-bold'
+                                : 'text-white'
                           }`}
                         >
                           {formatDate(dueDate)}
                         </span>
                         <span
-                          className={`account-row-due-days ${
+                          className={`text-xs font-medium ${
                             isOverdue
-                              ? 'overdue'
+                              ? 'text-danger-500 font-semibold'
                               : daysRemaining <= 7
-                                ? 'due-soon'
-                                : ''
+                                ? 'text-warning-400 font-semibold'
+                                : 'text-white/70'
                           }`}
                         >
                           {daysRemaining < 0
@@ -1041,7 +1066,7 @@ export default function Dashboard() {
                         </span>
                       </div>
                       <span
-                        className="account-row-status"
+                        className="px-4 py-2 rounded-xl text-white text-xs font-bold uppercase tracking-wide shadow-[0_2px_8px_rgba(0,0,0,0.2)] backdrop-blur-[10px] border border-white/20 whitespace-nowrap flex-shrink-0 justify-self-start w-fit"
                         style={{
                           backgroundColor:
                             periodInfo.status === 'pending'
@@ -1054,9 +1079,9 @@ export default function Dashboard() {
                         {periodInfo.status.toUpperCase()}
                       </span>
                     </div>
-                    <div className="account-row-actions">
+                    <div className="flex items-center gap-3 flex-shrink-0">
                       <button
-                        className="account-row-log-payment"
+                        className="ds-button-gradient flex items-center gap-2 px-5 py-2.5 text-sm whitespace-nowrap border-none rounded-lg"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleLogPayment(account, period);
@@ -1069,6 +1094,7 @@ export default function Dashboard() {
                           viewBox="0 0 18 18"
                           fill="none"
                           xmlns="http://www.w3.org/2000/svg"
+                          className="stroke-[2.5]"
                         >
                           <path
                             d="M9 3V15M3 9H15"
@@ -1081,7 +1107,9 @@ export default function Dashboard() {
                         Log Payment
                       </button>
                       <button
-                        className={`account-row-expand ${isExpanded ? 'expanded' : ''}`}
+                        className={`bg-white/10 border border-white/20 rounded-lg w-9 h-9 flex items-center justify-center cursor-pointer text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex-shrink-0 p-0 hover:bg-white/20 hover:border-white/30 hover:scale-110 xs:w-8 xs:h-8 ${
+                          isExpanded ? 'rotate-180' : ''
+                        } ${isExpanded ? 'hover:rotate-180 hover:scale-110' : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleExpand(periodKey);
@@ -1094,6 +1122,7 @@ export default function Dashboard() {
                           viewBox="0 0 20 20"
                           fill="none"
                           xmlns="http://www.w3.org/2000/svg"
+                          className="transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
                         >
                           <path
                             d="M5 7.5L10 12.5L15 7.5"
@@ -1109,57 +1138,73 @@ export default function Dashboard() {
 
                   {/* Expanded Details View */}
                   <div
-                    className={`account-row-details ${isExpanded ? 'visible' : ''}`}
+                    className={`overflow-hidden transition-[max-height,opacity] duration-[400ms,300ms] ease-[cubic-bezier(0.4,0,0.2,1),ease-in-out] border-t border-white/10 ${
+                      isExpanded
+                        ? 'max-h-[2000px] opacity-100'
+                        : 'max-h-0 opacity-0'
+                    }`}
                   >
-                    <div className="account-row-details-content">
-                      <div className="account-row-details-header">
-                        <h4>Payment Period Details</h4>
-                        <p className="account-description">
+                    <div className="p-6 bg-black/20">
+                      <div className="mb-6 pb-4 border-b border-white/10">
+                        <h4 className="m-0 mb-2 text-white text-lg font-bold -tracking-[0.3px]">
+                          Payment Period Details
+                        </h4>
+                        <p className="m-0 text-white/80 text-[0.95rem] leading-relaxed">
                           {account.accountDescription}
                         </p>
                       </div>
-                      <div className="account-details-grid">
-                        <div className="detail-row">
-                          <span className="detail-label">Account:</span>
-                          <span className="detail-value">
+                      <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4 w-full box-border xs:grid-cols-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                            Account:
+                          </span>
+                          <span className="text-lg text-white font-bold -tracking-[0.3px]">
                             {account.accountName} ({account.accountNumber})
                           </span>
                         </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Period Number:</span>
-                          <span className="detail-value">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                            Period Number:
+                          </span>
+                          <span className="text-lg text-white font-bold -tracking-[0.3px]">
                             #{period.periodNumber}
                           </span>
                         </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Status:</span>
-                          <span className="detail-value">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                            Status:
+                          </span>
+                          <span className="text-lg text-white font-bold -tracking-[0.3px]">
                             {periodInfo.status.toUpperCase()}
                           </span>
                         </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Due Date:</span>
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                            Due Date:
+                          </span>
                           <span
-                            className={`detail-value ${
+                            className={`text-lg font-bold -tracking-[0.3px] ${
                               isOverdue
-                                ? 'overdue'
+                                ? 'text-danger-500 shadow-[0_2px_10px_rgba(255,107,107,0.3)] animate-pulse'
                                 : daysRemaining <= 7
-                                  ? 'due-soon'
-                                  : ''
+                                  ? 'text-warning-400 shadow-[0_2px_10px_rgba(255,217,61,0.3)]'
+                                  : 'text-white'
                             }`}
                           >
                             {formatDate(dueDate)}
                           </span>
                         </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Days Remaining:</span>
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                            Days Remaining:
+                          </span>
                           <span
-                            className={`detail-value ${
+                            className={`text-lg font-bold -tracking-[0.3px] ${
                               isOverdue
-                                ? 'overdue'
+                                ? 'text-danger-500 shadow-[0_2px_10px_rgba(255,107,107,0.3)] animate-pulse'
                                 : daysRemaining <= 7
-                                  ? 'due-soon'
-                                  : ''
+                                  ? 'text-warning-400 shadow-[0_2px_10px_rgba(255,217,61,0.3)]'
+                                  : 'text-white'
                             }`}
                           >
                             {daysRemaining < 0
@@ -1167,55 +1212,61 @@ export default function Dashboard() {
                               : `${daysRemaining} days left`}
                           </span>
                         </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Amount Due:</span>
-                          <span className="detail-value amount">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                            Amount Due:
+                          </span>
+                          <span className="text-xl text-[#4facfe] font-bold -tracking-[0.3px] shadow-[0_2px_10px_rgba(79,172,254,0.3)]">
                             {formatCurrency(
                               periodInfo.amountDue,
                               period.currency
                             )}
                           </span>
                         </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Amount Paid:</span>
-                          <span className="detail-value">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                            Amount Paid:
+                          </span>
+                          <span className="text-lg text-white font-bold -tracking-[0.3px]">
                             {formatCurrency(
                               periodInfo.amountPaid,
                               period.currency
                             )}
                           </span>
                         </div>
-                        <div className="detail-row">
-                          <span className="detail-label">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Amount Remaining:
                           </span>
-                          <span className="detail-value amount">
+                          <span className="text-xl text-[#4facfe] font-bold -tracking-[0.3px] shadow-[0_2px_10px_rgba(79,172,254,0.3)]">
                             {formatCurrency(
                               periodInfo.amountRemaining,
                               period.currency
                             )}
                           </span>
                         </div>
-                        <div className="detail-row">
-                          <span className="detail-label">Capital Portion:</span>
-                          <span className="detail-value">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                            Capital Portion:
+                          </span>
+                          <span className="text-lg text-white font-bold -tracking-[0.3px]">
                             {formatCurrency(period.capital, period.currency)}
                           </span>
                         </div>
-                        <div className="detail-row">
-                          <span className="detail-label">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Interest Portion:
                           </span>
-                          <span className="detail-value">
+                          <span className="text-lg text-white font-bold -tracking-[0.3px]">
                             {formatCurrency(period.interest, period.currency)}
                           </span>
                         </div>
                         {period.remainingPrincipal !== undefined && (
-                          <div className="detail-row">
-                            <span className="detail-label">
+                          <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                            <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                               Remaining Principal:
                             </span>
-                            <span className="detail-value">
+                            <span className="text-lg text-white font-bold -tracking-[0.3px]">
                               {formatCurrency(
                                 period.remainingPrincipal,
                                 period.currency
@@ -1235,8 +1286,8 @@ export default function Dashboard() {
 
       {/* Empty State */}
       {filteredPeriods.length === 0 && !loading && !loadingPeriods && (
-        <div className="empty-state">
-          <p>
+        <div className="text-center py-12 px-12 text-white/80 ds-card-light rounded-[20px]">
+          <p className="text-xl m-0">
             {searchQuery
               ? `No payment periods found matching "${searchQuery}" in the selected date range`
               : 'No payment periods found in the selected date range'}
@@ -1245,9 +1296,11 @@ export default function Dashboard() {
       )}
 
       {loadingPeriods && (
-        <div className="loading-state">
-          <div className="loading-spinner"></div>
-          <p>Loading payment periods...</p>
+        <div className="flex flex-col items-center justify-center py-16 px-8 text-white gap-6">
+          <div className="w-[50px] h-[50px] border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+          <p className="text-lg text-white/90 font-medium">
+            Loading payment periods...
+          </p>
         </div>
       )}
 

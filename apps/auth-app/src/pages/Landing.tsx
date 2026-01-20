@@ -15,7 +15,7 @@ export default function Landing() {
         </p>
         <div className="grid">
           <div className="badge">How it works</div>
-          <ol className="muted" style={{ paddingLeft: 16, margin: 0 }}>
+          <ol className="muted pl-4 m-0">
             <li>Caller sends users here with ?redirectTo=&lt;app-url&gt;.</li>
             <li>User logs in or signs up.</li>
             <li>We fetch an ID token and redirect with it as a query param.</li>

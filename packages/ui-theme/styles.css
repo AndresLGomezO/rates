@@ -24,11 +24,13 @@
   }
 
   body {
-    @apply m-0 min-h-screen h-full overflow-x-hidden relative;
+    @apply m-0 min-h-screen min-w-[320px] h-full overflow-x-hidden relative;
     @apply bg-background text-neutral-50 antialiased;
     font-family: theme('fontFamily.sans');
     line-height: 1.5;
     font-weight: 400;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -45,18 +47,58 @@
   a:hover {
     @apply text-primary-300;
   }
+
+  /* Modal open state - dims sidebar and main content */
+  body.modal-open .sidebar,
+  body.modal-open .main-content {
+    pointer-events: none;
+    opacity: 0.5;
+  }
 }
 
 /* Component layer - reusable UI components matching existing patterns */
 @layer components {
-  /* Glassmorphism card */
-  .ds-card {
-    @apply rounded-lg bg-surface/80 shadow-soft border border-white/5 backdrop-blur-md;
+  /* Glassmorphism card - light variant (bg-white/5) */
+  .ds-card-light {
+    @apply bg-white/[0.05] backdrop-blur-[20px] border border-white/10 rounded-2xl;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Glassmorphism panel */
+  .ds-card-light:hover {
+    @apply bg-white/[0.08] -translate-y-1;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Glassmorphism card - medium variant (bg-white/12) */
+  .ds-card-medium {
+    @apply bg-white/[0.12] backdrop-blur-[20px] backdrop-saturate-[180%] border border-white/[0.18] rounded-[20px];
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .ds-card-medium:hover {
+    @apply -translate-y-1 border-white/[0.30];
+    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+  }
+
+  /* Glassmorphism panel - modal/sidebar variant (bg-white/15) */
   .glass-panel {
-    @apply rounded-xl bg-surface shadow-soft border border-white/10 backdrop-blur-xl;
+    @apply bg-white/[0.15] backdrop-blur-[20px] backdrop-saturate-[180%] border border-white/[0.18] rounded-[24px];
+    box-shadow:
+      0 8px 32px 0 rgba(31, 38, 135, 0.37),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+  }
+
+  /* Glassmorphism sidebar */
+  .glass-sidebar {
+    @apply bg-white/10 backdrop-blur-[20px] backdrop-saturate-[180%] border-r border-white/[0.18];
+    box-shadow:
+      0 8px 32px 0 rgba(31, 38, 135, 0.37),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+  }
+
+  /* Legacy card class - kept for backward compatibility, maps to light variant */
+  .ds-card {
+    @apply ds-card-light;
   }
 
   /* Primary button */
@@ -82,6 +124,17 @@
     transition:
       background-color 0.2s ease,
       border-color 0.2s ease;
+  }
+
+  /* Gradient button - primary action button with purple gradient */
+  .ds-button-gradient {
+    @apply inline-flex items-center justify-center rounded-xl text-white border border-white/[0.25] cursor-pointer font-semibold;
+    @apply bg-gradient-to-br from-[#667eea] to-[#764ba2] backdrop-blur-[10px];
+    @apply shadow-[0_4px_12px_rgba(102,126,234,0.3)];
+    @apply transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)];
+    @apply hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(102,126,234,0.4)] hover:bg-gradient-to-br hover:from-[#7a8ef0] hover:to-[#8559b8];
+    @apply active:translate-y-0;
+    @apply disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0;
   }
 
   /* Input field */
@@ -185,10 +238,72 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     @apply bg-neutral-600;
   }
+
+  /* Modal body scrollbar styling */
+  .modal-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .modal-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+  }
+
+  .modal-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+  }
+
+  .modal-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  /* Sidebar scrollbar styling */
+  .sidebar-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .sidebar-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+  }
+
+  .sidebar-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+  }
+
+  .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  /* Main content scrollbar styling */
+  .main-scrollbar::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .main-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+  }
+
+  .main-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+  }
+
+  .main-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
 }
 
 /* Utility layer - additional utility classes */
 @layer utilities {
+  /* Flex centered - common pattern for centering content */
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+
   /* Gradient text */
   .text-gradient {
     @apply bg-clip-text text-transparent;

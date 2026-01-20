@@ -5,7 +5,6 @@ import type {
   CreateFinancialAccountInput,
   FinancialAccount,
 } from '@rates/firebase-client';
-import './CreateAccountForm.css';
 
 interface CreateAccountFormProps {
   accountType: AccountType;
@@ -215,29 +214,41 @@ export function CreateAccountForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="create-account-form">
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="accountNumber">
-            Account Number <span className="required">*</span>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-6">
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="accountNumber"
+            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+          >
+            Account Number <span className="text-danger-500">*</span>
           </label>
           <input
             id="accountNumber"
             type="text"
             value={formData.accountNumber}
             onChange={(e) => handleChange('accountNumber', e.target.value)}
-            className={errors.accountNumber ? 'error' : ''}
+            className={`bg-white/10 backdrop-blur-[10px] border rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+              errors.accountNumber
+                ? 'border-danger-500 bg-danger-500/10'
+                : 'border-white/20'
+            }`}
             placeholder="e.g., ACC-0001"
             disabled={mode === 'edit'}
           />
           {errors.accountNumber && (
-            <span className="error-message">{errors.accountNumber}</span>
+            <span className="text-danger-500 text-sm font-medium mt-1">
+              {errors.accountNumber}
+            </span>
           )}
         </div>
 
-        <div className="form-group">
-          <label htmlFor="status">
-            Status <span className="required">*</span>
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="status"
+            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+          >
+            Status <span className="text-danger-500">*</span>
           </label>
           <select
             id="status"
@@ -245,9 +256,14 @@ export function CreateAccountForm({
             onChange={(e) =>
               handleChange('status', e.target.value as AccountStatus)
             }
+            className="bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-xl px-4 py-3.5 pr-10 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg_xmlns=\\'http://www.w3.org/2000/svg\\'_width=\\'12\\'_height=\\'12\\'_viewBox=\\'0_0_12_12\\'%3E%3Cpath_fill=\\'white\\'_d=\\'M6_9L1_4h10z\\'/%3E%3C/svg%3E')] bg-no-repeat bg-[right_1rem_center] focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)]"
           >
             {ACCOUNT_STATUSES.map((status) => (
-              <option key={status} value={status}>
+              <option
+                key={status}
+                value={status}
+                className="bg-neutral-900 text-white"
+              >
                 {status.replace('_', ' ').toUpperCase()}
               </option>
             ))}
@@ -255,58 +271,87 @@ export function CreateAccountForm({
         </div>
       </div>
 
-      <div className="form-group">
-        <label htmlFor="accountName">
-          Account Name <span className="required">*</span>
+      <div className="flex flex-col gap-2">
+        <label
+          htmlFor="accountName"
+          className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+        >
+          Account Name <span className="text-danger-500">*</span>
         </label>
         <input
           id="accountName"
           type="text"
           value={formData.accountName}
           onChange={(e) => handleChange('accountName', e.target.value)}
-          className={errors.accountName ? 'error' : ''}
+          className={`bg-white/10 backdrop-blur-[10px] border rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+            errors.accountName
+              ? 'border-danger-500 bg-danger-500/10'
+              : 'border-white/20'
+          }`}
           placeholder="e.g., Personal Loan - Bank ABC"
         />
         {errors.accountName && (
-          <span className="error-message">{errors.accountName}</span>
+          <span className="text-danger-500 text-sm font-medium mt-1">
+            {errors.accountName}
+          </span>
         )}
       </div>
 
-      <div className="form-group">
-        <label htmlFor="accountDescription">
-          Description <span className="required">*</span>
+      <div className="flex flex-col gap-2">
+        <label
+          htmlFor="accountDescription"
+          className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+        >
+          Description <span className="text-danger-500">*</span>
         </label>
         <textarea
           id="accountDescription"
           value={formData.accountDescription}
           onChange={(e) => handleChange('accountDescription', e.target.value)}
-          className={errors.accountDescription ? 'error' : ''}
+          className={`bg-white/10 backdrop-blur-[10px] border rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 resize-y min-h-[80px] focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+            errors.accountDescription
+              ? 'border-danger-500 bg-danger-500/10'
+              : 'border-white/20'
+          }`}
           placeholder="e.g., Personal loan for home improvement"
           rows={3}
         />
         {errors.accountDescription && (
-          <span className="error-message">{errors.accountDescription}</span>
+          <span className="text-danger-500 text-sm font-medium mt-1">
+            {errors.accountDescription}
+          </span>
         )}
       </div>
 
-      <div className="form-group">
-        <label htmlFor="currency">
-          Currency <span className="required">*</span>
+      <div className="flex flex-col gap-2">
+        <label
+          htmlFor="currency"
+          className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+        >
+          Currency <span className="text-danger-500">*</span>
         </label>
         <select
           id="currency"
           value={formData.currency}
           onChange={(e) => handleChange('currency', e.target.value)}
+          className="bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-xl px-4 py-3.5 pr-10 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg_xmlns=\\'http://www.w3.org/2000/svg\\'_width=\\'12\\'_height=\\'12\\'_viewBox=\\'0_0_12_12\\'%3E%3Cpath_fill=\\'white\\'_d=\\'M6_9L1_4h10z\\'/%3E%3C/svg%3E')] bg-no-repeat bg-[right_1rem_center] focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)]"
         >
-          <option value="COP">COP (Colombian Peso)</option>
-          <option value="USD">USD (US Dollar)</option>
+          <option value="COP" className="bg-neutral-900 text-white">
+            COP (Colombian Peso)
+          </option>
+          <option value="USD" className="bg-neutral-900 text-white">
+            USD (US Dollar)
+          </option>
         </select>
       </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="totalAmountRemaining">
-            Total Amount Remaining <span className="required">*</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-6">
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="totalAmountRemaining"
+            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+          >
+            Total Amount Remaining <span className="text-danger-500">*</span>
           </label>
           <input
             id="totalAmountRemaining"
@@ -317,17 +362,26 @@ export function CreateAccountForm({
             onChange={(e) =>
               handleChange('totalAmountRemaining', e.target.value)
             }
-            className={errors.totalAmountRemaining ? 'error' : ''}
+            className={`bg-white/10 backdrop-blur-[10px] border rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+              errors.totalAmountRemaining
+                ? 'border-danger-500 bg-danger-500/10'
+                : 'border-white/20'
+            }`}
             placeholder="0.00"
           />
           {errors.totalAmountRemaining && (
-            <span className="error-message">{errors.totalAmountRemaining}</span>
+            <span className="text-danger-500 text-sm font-medium mt-1">
+              {errors.totalAmountRemaining}
+            </span>
           )}
         </div>
 
-        <div className="form-group">
-          <label htmlFor="monthlyPayment">
-            Monthly Payment <span className="required">*</span>
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="monthlyPayment"
+            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+          >
+            Monthly Payment <span className="text-danger-500">*</span>
           </label>
           <input
             id="monthlyPayment"
@@ -336,19 +390,28 @@ export function CreateAccountForm({
             min="0"
             value={formData.monthlyPayment}
             onChange={(e) => handleChange('monthlyPayment', e.target.value)}
-            className={errors.monthlyPayment ? 'error' : ''}
+            className={`bg-white/10 backdrop-blur-[10px] border rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+              errors.monthlyPayment
+                ? 'border-danger-500 bg-danger-500/10'
+                : 'border-white/20'
+            }`}
             placeholder="0.00"
           />
           {errors.monthlyPayment && (
-            <span className="error-message">{errors.monthlyPayment}</span>
+            <span className="text-danger-500 text-sm font-medium mt-1">
+              {errors.monthlyPayment}
+            </span>
           )}
         </div>
       </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="rate">
-            Interest Rate (%) <span className="required">*</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-6">
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="rate"
+            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+          >
+            Interest Rate (%) <span className="text-danger-500">*</span>
           </label>
           <input
             id="rate"
@@ -358,33 +421,55 @@ export function CreateAccountForm({
             max="100"
             value={formData.rate}
             onChange={(e) => handleChange('rate', e.target.value)}
-            className={errors.rate ? 'error' : ''}
+            className={`bg-white/10 backdrop-blur-[10px] border rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+              errors.rate
+                ? 'border-danger-500 bg-danger-500/10'
+                : 'border-white/20'
+            }`}
             placeholder="0.0"
           />
-          {errors.rate && <span className="error-message">{errors.rate}</span>}
+          {errors.rate && (
+            <span className="text-danger-500 text-sm font-medium mt-1">
+              {errors.rate}
+            </span>
+          )}
         </div>
 
-        <div className="form-group">
-          <label htmlFor="nextDueDate">
-            Next Due Date <span className="required">*</span>
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="nextDueDate"
+            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+          >
+            Next Due Date <span className="text-danger-500">*</span>
           </label>
           <input
             id="nextDueDate"
             type="date"
             value={formData.nextDueDate || getDefaultDueDate()}
             onChange={(e) => handleChange('nextDueDate', e.target.value)}
-            className={errors.nextDueDate ? 'error' : ''}
+            className={`bg-white/10 backdrop-blur-[10px] border rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+              errors.nextDueDate
+                ? 'border-danger-500 bg-danger-500/10'
+                : 'border-white/20'
+            }`}
             min={new Date().toISOString().split('T')[0]}
           />
           {errors.nextDueDate && (
-            <span className="error-message">{errors.nextDueDate}</span>
+            <span className="text-danger-500 text-sm font-medium mt-1">
+              {errors.nextDueDate}
+            </span>
           )}
         </div>
       </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="originalAmount">Original Amount (Optional)</label>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-6">
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="originalAmount"
+            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+          >
+            Original Amount (Optional)
+          </label>
           <input
             id="originalAmount"
             type="number"
@@ -392,36 +477,41 @@ export function CreateAccountForm({
             min="0"
             value={formData.originalAmount}
             onChange={(e) => handleChange('originalAmount', e.target.value)}
+            className="bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)]"
             placeholder="0.00"
           />
         </div>
 
-        <div className="form-group">
-          <label htmlFor="startDate">Start Date (Optional)</label>
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="startDate"
+            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+          >
+            Start Date (Optional)
+          </label>
           <input
             id="startDate"
             type="date"
             value={formData.startDate}
             onChange={(e) => handleChange('startDate', e.target.value)}
+            className="bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)]"
             max={new Date().toISOString().split('T')[0]}
           />
         </div>
       </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="numberOfPayments">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-6">
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="numberOfPayments"
+            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+          >
             Number of Payments
-            {accountType !== 'bill' && <span className="required">*</span>}
+            {accountType !== 'bill' && (
+              <span className="text-danger-500">*</span>
+            )}
             {accountType === 'bill' && (
-              <span
-                style={{
-                  fontSize: '0.85rem',
-                  fontWeight: 400,
-                  marginLeft: '0.5rem',
-                  color: 'rgba(255, 255, 255, 0.6)',
-                }}
-              >
+              <span className="text-sm font-normal ml-2 text-white/60">
                 (Optional for periodic bills)
               </span>
             )}
@@ -433,7 +523,11 @@ export function CreateAccountForm({
             min="1"
             value={formData.numberOfPayments}
             onChange={(e) => handleChange('numberOfPayments', e.target.value)}
-            className={errors.numberOfPayments ? 'error' : ''}
+            className={`bg-white/10 backdrop-blur-[10px] border rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+              errors.numberOfPayments
+                ? 'border-danger-500 bg-danger-500/10'
+                : 'border-white/20'
+            }`}
             placeholder={
               accountType === 'bill'
                 ? 'Leave empty for periodic bills'
@@ -441,37 +535,36 @@ export function CreateAccountForm({
             }
           />
           {errors.numberOfPayments && (
-            <span className="error-message">{errors.numberOfPayments}</span>
+            <span className="text-danger-500 text-sm font-medium mt-1">
+              {errors.numberOfPayments}
+            </span>
           )}
           {accountType === 'bill' && (
-            <small
-              style={{
-                fontSize: '0.85rem',
-                color: 'rgba(255, 255, 255, 0.6)',
-                marginTop: '0.25rem',
-                display: 'block',
-              }}
-            >
+            <small className="text-sm text-white/60 mt-1 block">
               Leave empty if this is a periodic bill (will generate periods
               automatically)
             </small>
           )}
         </div>
-        <div className="form-group" style={{ visibility: 'hidden' }}>
+        <div className="flex flex-col gap-2 invisible">
           {/* Empty div to maintain form-row layout */}
         </div>
       </div>
 
-      <div className="form-actions">
+      <div className="flex flex-col-reverse md:flex-row gap-4 justify-end mt-4 pt-6 border-t border-white/10">
         <button
           type="button"
-          className="btn-cancel"
+          className="px-8 py-3.5 rounded-xl text-base font-semibold cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] border-none bg-white/10 backdrop-blur-[10px] text-white border border-white/20 hover:bg-white/15 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 w-full md:w-auto"
           onClick={onCancel}
           disabled={isSubmitting}
         >
           Cancel
         </button>
-        <button type="submit" className="btn-submit" disabled={isSubmitting}>
+        <button
+          type="submit"
+          className="ds-button-gradient px-8 py-3.5 text-base border-none w-full md:w-auto"
+          disabled={isSubmitting}
+        >
           {isSubmitting
             ? mode === 'edit'
               ? 'Updating...'

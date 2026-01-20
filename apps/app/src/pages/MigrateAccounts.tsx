@@ -17,7 +17,6 @@ import {
 } from '../services/paymentPeriods';
 import type { FinancialAccount } from '@rates/firebase-client';
 import { BatchPaymentModal } from '../components/BatchPaymentModal';
-import './Dashboard.css';
 
 // Helper to decode user ID from token
 function getCurrentUserId(): string {
@@ -487,16 +486,20 @@ export default function MigrateAccounts() {
   };
 
   return (
-    <div className="dashboard-container">
-      <div className="dashboard-header">
-        <h1>Account Migration</h1>
-        <p>
-          Migrate your initial accounts from the spreadsheet to the database
-        </p>
+    <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-8">
+      <div className="flex justify-between items-center mb-10 pb-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent">
+        <div>
+          <h1 className="m-0 mb-2 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent drop-shadow-[0_2px_20px_rgba(255,255,255,0.1)]">
+            Account Migration
+          </h1>
+          <p className="m-0 text-white/70 text-base">
+            Migrate your initial accounts from the spreadsheet to the database
+          </p>
+        </div>
       </div>
 
-      <div className="dashboard-content">
-        <div className="migration-controls" style={{ marginBottom: '2rem' }}>
+      <div className="flex flex-col gap-8">
+        <div className="mb-8">
           <button
             onClick={handlePreview}
             disabled={isPreviewing || isRunning}

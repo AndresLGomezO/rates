@@ -8,7 +8,6 @@ import type {
 import { createFinancialAccount } from '../services/financialAccounts';
 import { Modal } from './Modal';
 import { formatCurrency } from '../utils/formatters';
-import './NewAccountWizard.css';
 
 type WizardStep = 'type' | 'details' | 'review' | 'success';
 
@@ -254,65 +253,89 @@ export function NewAccountWizard({
       onClose={handleClose}
       title={buildTitle(step, selectedType)}
     >
-      <div className="new-account-wizard">
-        <div className="wizard-progress" aria-label="Wizard progress">
-          <div className="wizard-steps">
+      <div className="flex flex-col gap-5 text-white">
+        <div
+          className="bg-white/8 border border-white/14 rounded-2xl px-4 pt-4 pb-3.5 backdrop-blur-[14px]"
+          aria-label="Wizard progress"
+        >
+          <div className="grid grid-cols-4 gap-3 items-center md-sm:grid-cols-2 md-sm:gap-2">
             {['Type', 'Details', 'Review', 'Done'].map((label, idx) => (
               <div
                 key={label}
-                className={[
-                  'wizard-step',
-                  idx < progressIndex ? 'done' : '',
-                  idx === progressIndex ? 'active' : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
+                className={`flex items-center gap-2.5 transition-opacity duration-200 ease-in-out ${
+                  idx < progressIndex || idx === progressIndex
+                    ? 'opacity-100'
+                    : 'opacity-65'
+                }`}
               >
-                <div className="wizard-step-dot" aria-hidden="true" />
-                <div className="wizard-step-label">{label}</div>
+                <div
+                  className={`w-2.5 h-2.5 rounded-full border transition-all duration-200 ease-in-out ${
+                    idx === progressIndex
+                      ? 'bg-gradient-to-br from-[#667eea] to-[#764ba2] border-white/35 shadow-[0_0_0_6px_rgba(102,126,234,0.18)]'
+                      : idx < progressIndex
+                        ? 'bg-[rgba(46,204,113,0.9)] border-[rgba(46,204,113,0.95)]'
+                        : 'bg-white/25 border-white/25'
+                  }`}
+                  aria-hidden="true"
+                />
+                <div className="text-sm font-[650] -tracking-[0.2px]">
+                  {label}
+                </div>
               </div>
             ))}
           </div>
-          <div className="wizard-progress-bar" aria-hidden="true">
+          <div
+            className="h-2 rounded-full bg-white/8 overflow-hidden mt-3 border border-white/12"
+            aria-hidden="true"
+          >
             <div
-              className="wizard-progress-bar-fill"
+              className="h-full rounded-full bg-gradient-to-r from-[#667eea] to-[#764ba2] transition-all duration-[250ms] ease-in-out"
               style={{ width: `${(progressIndex / 3) * 100}%` }}
             />
           </div>
         </div>
 
         {error && (
-          <div className="wizard-error" role="alert">
+          <div
+            className="px-4 py-3.5 bg-danger-500/15 border border-danger-500/35 rounded-[14px] text-[#ffb3b3] text-[0.95rem]"
+            role="alert"
+          >
             {error}
           </div>
         )}
 
         {step === 'type' && (
-          <div className="wizard-panel">
-            <div className="wizard-panel-header">
-              <h3>Choose an account type</h3>
-              <p>Pick the category that best describes this account.</p>
+          <div>
+            <div className="mb-4">
+              <h3 className="m-0 mb-1 text-xl -tracking-[0.3px]">
+                Choose an account type
+              </h3>
+              <p className="m-0 opacity-75 text-[0.95rem]">
+                Pick the category that best describes this account.
+              </p>
             </div>
 
-            <div className="type-grid" role="list">
+            <div
+              className="grid grid-cols-2 gap-3.5 mt-4 md-sm:grid-cols-1"
+              role="list"
+            >
               {(Object.keys(ACCOUNT_TYPE_LABELS) as AccountType[]).map(
                 (type) => (
                   <button
                     key={type}
                     type="button"
                     role="listitem"
-                    className={[
-                      'type-card',
-                      selectedType === type ? 'selected' : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
+                    className={`text-left p-4 rounded-2xl border cursor-pointer transition-all duration-200 ease-in-out text-white ${
+                      selectedType === type
+                        ? 'border-primary-500/75 bg-primary-500/18 shadow-[0_10px_26px_rgba(102,126,234,0.12)]'
+                        : 'border-white/14 bg-white/8 backdrop-blur-[14px] hover:-translate-y-0.5 hover:border-white/24 hover:bg-white/10 hover:shadow-[0_10px_24px_rgba(0,0,0,0.18)]'
+                    }`}
                     onClick={() => setSelectedType(type)}
                   >
-                    <div className="type-card-title">
+                    <div className="font-[750] text-lg -tracking-[0.3px]">
                       {ACCOUNT_TYPE_LABELS[type]}
                     </div>
-                    <div className="type-card-help">
+                    <div className="mt-1.5 opacity-75 text-[0.92rem] leading-[1.35]">
                       {ACCOUNT_TYPE_HELP[type]}
                     </div>
                   </button>
@@ -324,22 +347,28 @@ export function NewAccountWizard({
 
         {step === 'details' && (
           <form
-            className="wizard-panel"
             onSubmit={(e: FormEvent) => {
               e.preventDefault();
               handleNext();
             }}
           >
-            <div className="wizard-panel-header">
-              <h3>Account details</h3>
-              <p>Fill in the basics. You can always edit later.</p>
+            <div className="mb-4">
+              <h3 className="m-0 mb-1 text-xl -tracking-[0.3px]">
+                Account details
+              </h3>
+              <p className="m-0 opacity-75 text-[0.95rem]">
+                Fill in the basics. You can always edit later.
+              </p>
             </div>
 
-            <div className="wizard-form">
-              <div className="wizard-row">
-                <div className="wizard-field">
-                  <label htmlFor="wiz-accountNumber">
-                    Account Number <span className="required">*</span>
+            <div className="flex flex-col gap-3.75 mt-4">
+              <div className="grid grid-cols-2 gap-3.5 md-sm:grid-cols-1">
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="wiz-accountNumber"
+                    className="block font-[650] text-[0.92rem] mb-1.5 text-white/92"
+                  >
+                    Account Number <span className="text-danger-500">*</span>
                   </label>
                   <input
                     id="wiz-accountNumber"
@@ -352,19 +381,26 @@ export function NewAccountWizard({
                       }))
                     }
                     placeholder="e.g., ACC-0001"
-                    className={detailsErrors.accountNumber ? 'error' : ''}
+                    className={`w-full box-border px-3.5 py-3.5 rounded-xl border outline-none transition-all duration-200 ease-in-out text-white ${
+                      detailsErrors.accountNumber
+                        ? 'border-danger-500/75 shadow-[0_0_0_6px_rgba(255,107,107,0.16)] bg-black/25'
+                        : 'border-white/16 bg-black/20 focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)] focus:bg-black/25'
+                    }`}
                     autoFocus
                   />
                   {detailsErrors.accountNumber && (
-                    <div className="wizard-field-error">
+                    <div className="mt-1.5 text-[#ffb3b3] text-[0.88rem]">
                       {detailsErrors.accountNumber}
                     </div>
                   )}
                 </div>
 
-                <div className="wizard-field">
-                  <label htmlFor="wiz-status">
-                    Status <span className="required">*</span>
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="wiz-status"
+                    className="block font-[650] text-[0.92rem] mb-1.5 text-white/92"
+                  >
+                    Status <span className="text-danger-500">*</span>
                   </label>
                   <select
                     id="wiz-status"
@@ -375,6 +411,7 @@ export function NewAccountWizard({
                         status: e.target.value as AccountStatus,
                       }))
                     }
+                    className="w-full box-border px-3.5 py-3.5 rounded-xl border border-white/16 bg-black/20 text-white outline-none transition-all duration-200 ease-in-out focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)] focus:bg-black/25"
                   >
                     {ACCOUNT_STATUSES.map((status) => (
                       <option key={status} value={status}>
@@ -385,9 +422,12 @@ export function NewAccountWizard({
                 </div>
               </div>
 
-              <div className="wizard-field">
-                <label htmlFor="wiz-accountName">
-                  Account Name <span className="required">*</span>
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="wiz-accountName"
+                  className="block font-[650] text-[0.92rem] mb-1.5 text-white/92"
+                >
+                  Account Name <span className="text-danger-500">*</span>
                 </label>
                 <input
                   id="wiz-accountName"
@@ -397,18 +437,25 @@ export function NewAccountWizard({
                     setFormData((p) => ({ ...p, accountName: e.target.value }))
                   }
                   placeholder="e.g., Personal Loan - Bank ABC"
-                  className={detailsErrors.accountName ? 'error' : ''}
+                  className={`w-full box-border px-3.5 py-3.5 rounded-xl border outline-none transition-all duration-200 ease-in-out text-white ${
+                    detailsErrors.accountName
+                      ? 'border-danger-500/75 shadow-[0_0_0_6px_rgba(255,107,107,0.16)] bg-black/25'
+                      : 'border-white/16 bg-black/20 focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)] focus:bg-black/25'
+                  }`}
                 />
                 {detailsErrors.accountName && (
-                  <div className="wizard-field-error">
+                  <div className="mt-1.5 text-[#ffb3b3] text-[0.88rem]">
                     {detailsErrors.accountName}
                   </div>
                 )}
               </div>
 
-              <div className="wizard-field">
-                <label htmlFor="wiz-accountDescription">
-                  Description <span className="required">*</span>
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="wiz-accountDescription"
+                  className="block font-[650] text-[0.92rem] mb-1.5 text-white/92"
+                >
+                  Description <span className="text-danger-500">*</span>
                 </label>
                 <textarea
                   id="wiz-accountDescription"
@@ -421,19 +468,26 @@ export function NewAccountWizard({
                   }
                   placeholder="e.g., Personal loan for home improvement"
                   rows={3}
-                  className={detailsErrors.accountDescription ? 'error' : ''}
+                  className={`w-full box-border px-3.5 py-3.5 rounded-xl border outline-none transition-all duration-200 ease-in-out text-white resize-y ${
+                    detailsErrors.accountDescription
+                      ? 'border-danger-500/75 shadow-[0_0_0_6px_rgba(255,107,107,0.16)] bg-black/25'
+                      : 'border-white/16 bg-black/20 focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)] focus:bg-black/25'
+                  }`}
                 />
                 {detailsErrors.accountDescription && (
-                  <div className="wizard-field-error">
+                  <div className="mt-1.5 text-[#ffb3b3] text-[0.88rem]">
                     {detailsErrors.accountDescription}
                   </div>
                 )}
               </div>
 
-              <div className="wizard-row">
-                <div className="wizard-field">
-                  <label htmlFor="wiz-currency">
-                    Currency <span className="required">*</span>
+              <div className="grid grid-cols-2 gap-3.5 md-sm:grid-cols-1">
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="wiz-currency"
+                    className="block font-[650] text-[0.92rem] mb-1.5 text-white/92"
+                  >
+                    Currency <span className="text-danger-500">*</span>
                   </label>
                   <select
                     id="wiz-currency"
@@ -444,25 +498,30 @@ export function NewAccountWizard({
                         currency: e.target.value as 'COP' | 'USD',
                       }))
                     }
+                    className="w-full box-border px-3.5 py-3.5 rounded-xl border border-white/16 bg-black/20 text-white outline-none transition-all duration-200 ease-in-out focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)] focus:bg-black/25"
                   >
                     <option value="COP">COP (Colombian Peso)</option>
                     <option value="USD">USD (US Dollar)</option>
                   </select>
                 </div>
 
-                <div className="wizard-field hint">
-                  <div className="wizard-hint-title">Tip</div>
-                  <div className="wizard-hint-body">
+                <div className="rounded-[14px] border border-white/14 bg-white/6 px-3.5 py-3.5">
+                  <div className="font-[750] -tracking-[0.3px] mb-1">Tip</div>
+                  <div className="opacity-80 text-[0.92rem] leading-[1.35]">
                     Use an easy-to-remember account number. It becomes the
                     unique ID.
                   </div>
                 </div>
               </div>
 
-              <div className="wizard-row">
-                <div className="wizard-field">
-                  <label htmlFor="wiz-totalAmountRemaining">
-                    Total Amount Remaining <span className="required">*</span>
+              <div className="grid grid-cols-2 gap-3.5 md-sm:grid-cols-1">
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="wiz-totalAmountRemaining"
+                    className="block font-[650] text-[0.92rem] mb-1.5 text-white/92"
+                  >
+                    Total Amount Remaining{' '}
+                    <span className="text-danger-500">*</span>
                   </label>
                   <input
                     id="wiz-totalAmountRemaining"
@@ -477,20 +536,25 @@ export function NewAccountWizard({
                       }))
                     }
                     placeholder="0.00"
-                    className={
-                      detailsErrors.totalAmountRemaining ? 'error' : ''
-                    }
+                    className={`w-full box-border px-3.5 py-3.5 rounded-xl border outline-none transition-all duration-200 ease-in-out text-white ${
+                      detailsErrors.totalAmountRemaining
+                        ? 'border-danger-500/75 shadow-[0_0_0_6px_rgba(255,107,107,0.16)] bg-black/25'
+                        : 'border-white/16 bg-black/20 focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)] focus:bg-black/25'
+                    }`}
                   />
                   {detailsErrors.totalAmountRemaining && (
-                    <div className="wizard-field-error">
+                    <div className="mt-1.5 text-[#ffb3b3] text-[0.88rem]">
                       {detailsErrors.totalAmountRemaining}
                     </div>
                   )}
                 </div>
 
-                <div className="wizard-field">
-                  <label htmlFor="wiz-monthlyPayment">
-                    Monthly Payment <span className="required">*</span>
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="wiz-monthlyPayment"
+                    className="block font-[650] text-[0.92rem] mb-1.5 text-white/92"
+                  >
+                    Monthly Payment <span className="text-danger-500">*</span>
                   </label>
                   <input
                     id="wiz-monthlyPayment"
@@ -505,20 +569,27 @@ export function NewAccountWizard({
                       }))
                     }
                     placeholder="0.00"
-                    className={detailsErrors.monthlyPayment ? 'error' : ''}
+                    className={`w-full box-border px-3.5 py-3.5 rounded-xl border outline-none transition-all duration-200 ease-in-out text-white ${
+                      detailsErrors.monthlyPayment
+                        ? 'border-danger-500/75 shadow-[0_0_0_6px_rgba(255,107,107,0.16)] bg-black/25'
+                        : 'border-white/16 bg-black/20 focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)] focus:bg-black/25'
+                    }`}
                   />
                   {detailsErrors.monthlyPayment && (
-                    <div className="wizard-field-error">
+                    <div className="mt-1.5 text-[#ffb3b3] text-[0.88rem]">
                       {detailsErrors.monthlyPayment}
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="wizard-row">
-                <div className="wizard-field">
-                  <label htmlFor="wiz-rate">
-                    Interest Rate (%) <span className="required">*</span>
+              <div className="grid grid-cols-2 gap-3.5 md-sm:grid-cols-1">
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="wiz-rate"
+                    className="block font-[650] text-[0.92rem] mb-1.5 text-white/92"
+                  >
+                    Interest Rate (%) <span className="text-danger-500">*</span>
                   </label>
                   <input
                     id="wiz-rate"
@@ -531,18 +602,25 @@ export function NewAccountWizard({
                       setFormData((p) => ({ ...p, rate: e.target.value }))
                     }
                     placeholder="0.0"
-                    className={detailsErrors.rate ? 'error' : ''}
+                    className={`w-full box-border px-3.5 py-3.5 rounded-xl border outline-none transition-all duration-200 ease-in-out text-white ${
+                      detailsErrors.rate
+                        ? 'border-danger-500/75 shadow-[0_0_0_6px_rgba(255,107,107,0.16)] bg-black/25'
+                        : 'border-white/16 bg-black/20 focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)] focus:bg-black/25'
+                    }`}
                   />
                   {detailsErrors.rate && (
-                    <div className="wizard-field-error">
+                    <div className="mt-1.5 text-[#ffb3b3] text-[0.88rem]">
                       {detailsErrors.rate}
                     </div>
                   )}
                 </div>
 
-                <div className="wizard-field">
-                  <label htmlFor="wiz-nextDueDate">
-                    Next Due Date <span className="required">*</span>
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="wiz-nextDueDate"
+                    className="block font-[650] text-[0.92rem] mb-1.5 text-white/92"
+                  >
+                    Next Due Date <span className="text-danger-500">*</span>
                   </label>
                   <input
                     id="wiz-nextDueDate"
@@ -555,19 +633,26 @@ export function NewAccountWizard({
                       }))
                     }
                     min={new Date().toISOString().split('T')[0]}
-                    className={detailsErrors.nextDueDate ? 'error' : ''}
+                    className={`w-full box-border px-3.5 py-3.5 rounded-xl border outline-none transition-all duration-200 ease-in-out text-white ${
+                      detailsErrors.nextDueDate
+                        ? 'border-danger-500/75 shadow-[0_0_0_6px_rgba(255,107,107,0.16)] bg-black/25'
+                        : 'border-white/16 bg-black/20 focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)] focus:bg-black/25'
+                    }`}
                   />
                   {detailsErrors.nextDueDate && (
-                    <div className="wizard-field-error">
+                    <div className="mt-1.5 text-[#ffb3b3] text-[0.88rem]">
                       {detailsErrors.nextDueDate}
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="wizard-row">
-                <div className="wizard-field">
-                  <label htmlFor="wiz-originalAmount">
+              <div className="grid grid-cols-2 gap-3.5 md-sm:grid-cols-1">
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="wiz-originalAmount"
+                    className="block font-[650] text-[0.92rem] mb-1.5 text-white/92"
+                  >
                     Original Amount (Optional)
                   </label>
                   <input
@@ -583,11 +668,17 @@ export function NewAccountWizard({
                       }))
                     }
                     placeholder="0.00"
+                    className="w-full box-border px-3.5 py-3.5 rounded-xl border border-white/16 bg-black/20 text-white outline-none transition-all duration-200 ease-in-out focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)] focus:bg-black/25"
                   />
                 </div>
 
-                <div className="wizard-field">
-                  <label htmlFor="wiz-startDate">Start Date (Optional)</label>
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="wiz-startDate"
+                    className="block font-[650] text-[0.92rem] mb-1.5 text-white/92"
+                  >
+                    Start Date (Optional)
+                  </label>
                   <input
                     id="wiz-startDate"
                     type="date"
@@ -596,19 +687,23 @@ export function NewAccountWizard({
                       setFormData((p) => ({ ...p, startDate: e.target.value }))
                     }
                     max={new Date().toISOString().split('T')[0]}
+                    className="w-full box-border px-3.5 py-3.5 rounded-xl border border-white/16 bg-black/20 text-white outline-none transition-all duration-200 ease-in-out focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)] focus:bg-black/25"
                   />
                 </div>
               </div>
 
-              <div className="wizard-row">
-                <div className="wizard-field">
-                  <label htmlFor="wiz-numberOfPayments">
+              <div className="grid grid-cols-2 gap-3.5 md-sm:grid-cols-1">
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="wiz-numberOfPayments"
+                    className="block font-[650] text-[0.92rem] mb-1.5 text-white/92"
+                  >
                     Number of Payments
                     {selectedType !== 'bill' && (
-                      <span className="required">*</span>
+                      <span className="text-danger-500">*</span>
                     )}
                     {selectedType === 'bill' && (
-                      <span className="wizard-inline-help">
+                      <span className="ml-2 font-medium text-sm opacity-70">
                         (Optional for periodic bills)
                       </span>
                     )}
@@ -625,7 +720,11 @@ export function NewAccountWizard({
                         numberOfPayments: e.target.value,
                       }))
                     }
-                    className={detailsErrors.numberOfPayments ? 'error' : ''}
+                    className={`w-full box-border px-3.5 py-3.5 rounded-xl border outline-none transition-all duration-200 ease-in-out text-white ${
+                      detailsErrors.numberOfPayments
+                        ? 'border-danger-500/75 shadow-[0_0_0_6px_rgba(255,107,107,0.16)] bg-black/25'
+                        : 'border-white/16 bg-black/20 focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)] focus:bg-black/25'
+                    }`}
                     placeholder={
                       selectedType === 'bill'
                         ? 'Leave empty for periodic bills'
@@ -633,21 +732,23 @@ export function NewAccountWizard({
                     }
                   />
                   {detailsErrors.numberOfPayments && (
-                    <div className="wizard-field-error">
+                    <div className="mt-1.5 text-[#ffb3b3] text-[0.88rem]">
                       {detailsErrors.numberOfPayments}
                     </div>
                   )}
                   {selectedType === 'bill' && (
-                    <div className="wizard-field-note">
+                    <div className="mt-1.5 opacity-70 text-[0.86rem] leading-[1.3]">
                       Leave empty if this is a periodic bill (periods will be
                       generated automatically).
                     </div>
                   )}
                 </div>
 
-                <div className="wizard-field hint">
-                  <div className="wizard-hint-title">Preview</div>
-                  <div className="wizard-hint-body">
+                <div className="rounded-[14px] border border-white/14 bg-white/6 px-3.5 py-3.5">
+                  <div className="font-[750] -tracking-[0.3px] mb-1">
+                    Preview
+                  </div>
+                  <div className="opacity-80 text-[0.92rem] leading-[1.35]">
                     {formData.totalAmountRemaining
                       ? formatCurrency(
                           parseFloat(formData.totalAmountRemaining || '0'),
@@ -662,48 +763,48 @@ export function NewAccountWizard({
         )}
 
         {step === 'review' && selectedType && (
-          <div className="wizard-panel">
-            <div className="wizard-panel-header">
-              <h3>Review</h3>
-              <p>
+          <div>
+            <div className="mb-4">
+              <h3 className="m-0 mb-1 text-xl -tracking-[0.3px]">Review</h3>
+              <p className="m-0 opacity-75 text-[0.95rem]">
                 Make sure everything looks right before creating the account.
               </p>
             </div>
 
-            <div className="review-grid">
-              <div className="review-item">
-                <div className="review-label">Type</div>
-                <div className="review-value">
+            <div className="grid grid-cols-2 gap-3.5 mt-4 md-sm:grid-cols-1">
+              <div className="rounded-2xl border border-white/14 bg-white/8 px-4 py-3.75">
+                <div className="opacity-70 text-xs mb-1">Type</div>
+                <div className="font-[650] -tracking-[0.2px]">
                   {ACCOUNT_TYPE_LABELS[selectedType]}
                 </div>
               </div>
-              <div className="review-item">
-                <div className="review-label">Status</div>
-                <div className="review-value">
+              <div className="rounded-2xl border border-white/14 bg-white/8 px-4 py-3.75">
+                <div className="opacity-70 text-xs mb-1">Status</div>
+                <div className="font-[650] -tracking-[0.2px]">
                   {formData.status.replace('_', ' ').toUpperCase()}
                 </div>
               </div>
-              <div className="review-item">
-                <div className="review-label">Account Number</div>
-                <div className="review-value mono">
+              <div className="rounded-2xl border border-white/14 bg-white/8 px-4 py-3.75">
+                <div className="opacity-70 text-xs mb-1">Account Number</div>
+                <div className="font-[650] -tracking-[0.2px] font-mono">
                   {formData.accountNumber || '—'}
                 </div>
               </div>
-              <div className="review-item">
-                <div className="review-label">Account Name</div>
-                <div className="review-value">
+              <div className="rounded-2xl border border-white/14 bg-white/8 px-4 py-3.75">
+                <div className="opacity-70 text-xs mb-1">Account Name</div>
+                <div className="font-[650] -tracking-[0.2px]">
                   {formData.accountName || '—'}
                 </div>
               </div>
-              <div className="review-item full">
-                <div className="review-label">Description</div>
-                <div className="review-value">
+              <div className="col-span-2 rounded-2xl border border-white/14 bg-white/8 px-4 py-3.75 md-sm:col-span-1">
+                <div className="opacity-70 text-xs mb-1">Description</div>
+                <div className="font-[650] -tracking-[0.2px]">
                   {formData.accountDescription || '—'}
                 </div>
               </div>
-              <div className="review-item">
-                <div className="review-label">Total Remaining</div>
-                <div className="review-value">
+              <div className="rounded-2xl border border-white/14 bg-white/8 px-4 py-3.75">
+                <div className="opacity-70 text-xs mb-1">Total Remaining</div>
+                <div className="font-[650] -tracking-[0.2px]">
                   {formData.totalAmountRemaining
                     ? formatCurrency(
                         parseFloat(formData.totalAmountRemaining),
@@ -712,9 +813,9 @@ export function NewAccountWizard({
                     : '—'}
                 </div>
               </div>
-              <div className="review-item">
-                <div className="review-label">Monthly Payment</div>
-                <div className="review-value">
+              <div className="rounded-2xl border border-white/14 bg-white/8 px-4 py-3.75">
+                <div className="opacity-70 text-xs mb-1">Monthly Payment</div>
+                <div className="font-[650] -tracking-[0.2px]">
                   {formData.monthlyPayment
                     ? formatCurrency(
                         parseFloat(formData.monthlyPayment),
@@ -723,21 +824,21 @@ export function NewAccountWizard({
                     : '—'}
                 </div>
               </div>
-              <div className="review-item">
-                <div className="review-label">Rate</div>
-                <div className="review-value">
+              <div className="rounded-2xl border border-white/14 bg-white/8 px-4 py-3.75">
+                <div className="opacity-70 text-xs mb-1">Rate</div>
+                <div className="font-[650] -tracking-[0.2px]">
                   {formData.rate ? `${formData.rate}%` : '—'}
                 </div>
               </div>
-              <div className="review-item">
-                <div className="review-label">Next Due Date</div>
-                <div className="review-value">
+              <div className="rounded-2xl border border-white/14 bg-white/8 px-4 py-3.75">
+                <div className="opacity-70 text-xs mb-1">Next Due Date</div>
+                <div className="font-[650] -tracking-[0.2px]">
                   {formData.nextDueDate || getDefaultDueDate()}
                 </div>
               </div>
-              <div className="review-item">
-                <div className="review-label"># Payments</div>
-                <div className="review-value">
+              <div className="rounded-2xl border border-white/14 bg-white/8 px-4 py-3.75">
+                <div className="opacity-70 text-xs mb-1"># Payments</div>
+                <div className="font-[650] -tracking-[0.2px]">
                   {formData.numberOfPayments || '—'}
                 </div>
               </div>
@@ -746,20 +847,22 @@ export function NewAccountWizard({
         )}
 
         {step === 'success' && (
-          <div className="wizard-panel">
-            <div className="wizard-success">
-              <div className="wizard-success-icon">✓</div>
-              <div className="wizard-success-title">
+          <div>
+            <div className="mt-1 px-6 py-8 rounded-[18px] bg-success-css/12 border border-success-css/28 text-center flex flex-col items-center gap-3">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[rgba(46,204,113,0.9)] to-[rgba(39,174,96,0.9)] border-2 border-success-css/50 flex items-center justify-center text-2xl font-bold text-white shadow-[0_8px_24px_rgba(46,204,113,0.3)] animate-success-pulse">
+                ✓
+              </div>
+              <div className="font-extrabold text-[1.4rem] -tracking-[0.3px] m-0">
                 Account Created Successfully!
               </div>
-              <div className="wizard-success-subtitle">
+              <div className="m-0 opacity-85 text-[0.95rem] leading-relaxed max-w-[480px]">
                 Your{' '}
                 {selectedType
                   ? ACCOUNT_TYPE_LABELS[selectedType].toLowerCase()
                   : 'account'}{' '}
                 has been created and is ready to use.
                 {createdAccountId && (
-                  <div className="wizard-success-account-id">
+                  <div className="mt-3 px-3 py-2 bg-black/20 rounded-lg font-mono text-xs opacity-90 border border-white/10">
                     Account ID: {createdAccountId}
                   </div>
                 )}
@@ -768,22 +871,22 @@ export function NewAccountWizard({
           </div>
         )}
 
-        <div className="wizard-footer">
+        <div className="flex items-center gap-3 pt-4 border-t border-white/12">
           {step === 'success' ? (
             <>
               <button
                 type="button"
-                className="wizard-btn secondary"
+                className="px-5 py-3.5 rounded-xl border border-white/18 cursor-pointer font-[650] transition-all duration-200 ease-in-out bg-white/10 text-white hover:bg-white/16 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={handleClose}
                 disabled={saving}
               >
                 Close
               </button>
-              <div className="wizard-footer-spacer" />
+              <div className="flex-1" />
               {createdAccountId && (
                 <button
                   type="button"
-                  className="wizard-btn primary"
+                  className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(102,126,234,0.28)] hover:shadow-[0_10px_24px_rgba(102,126,234,0.34)]"
                   onClick={() => {
                     handleClose();
                     void navigate(`/account/${createdAccountId}`);
@@ -798,19 +901,19 @@ export function NewAccountWizard({
             <>
               <button
                 type="button"
-                className="wizard-btn secondary"
+                className="px-5 py-3.5 rounded-xl border border-white/18 cursor-pointer font-[650] transition-all duration-200 ease-in-out bg-white/10 text-white hover:bg-white/16 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={step === 'type' ? handleClose : handleBack}
                 disabled={saving}
               >
                 {step === 'type' ? 'Cancel' : 'Back'}
               </button>
 
-              <div className="wizard-footer-spacer" />
+              <div className="flex-1" />
 
               {step === 'type' && (
                 <button
                   type="button"
-                  className="wizard-btn primary"
+                  className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(102,126,234,0.28)] hover:shadow-[0_10px_24px_rgba(102,126,234,0.34)]"
                   onClick={handleNext}
                   disabled={!canContinueFromType}
                 >
@@ -821,7 +924,7 @@ export function NewAccountWizard({
               {step === 'details' && (
                 <button
                   type="submit"
-                  className="wizard-btn primary"
+                  className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(102,126,234,0.28)] hover:shadow-[0_10px_24px_rgba(102,126,234,0.34)]"
                   onClick={handleNext}
                   disabled={!canContinueFromDetails}
                   title={
@@ -837,7 +940,7 @@ export function NewAccountWizard({
               {step === 'review' && (
                 <button
                   type="button"
-                  className="wizard-btn primary"
+                  className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(102,126,234,0.28)] hover:shadow-[0_10px_24px_rgba(102,126,234,0.34)]"
                   onClick={() => void handleCreate()}
                   disabled={saving}
                 >

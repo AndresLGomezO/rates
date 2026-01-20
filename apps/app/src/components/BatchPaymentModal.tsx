@@ -5,7 +5,6 @@ import {
   batchLogPaymentsToPeriods,
   getPaymentPeriods,
 } from '../services/paymentPeriods';
-import './LogPaymentModal.css';
 
 interface BatchPaymentModalProps {
   isOpen: boolean;
@@ -286,47 +285,43 @@ export function BatchPaymentModal({
         onSubmit={(e) => {
           void handleSubmit(e);
         }}
-        className="log-payment-form"
+        className="flex flex-col gap-6 py-4"
       >
-        <div className="payment-account-info">
-          <div className="info-row">
-            <span className="info-label">Account Number:</span>
-            <span className="info-value">{account.accountNumber}</span>
+        <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+          <div className="flex justify-between items-center py-3 border-b border-white/5 last:border-b-0">
+            <span className="text-sm text-white/70 font-medium">
+              Account Number:
+            </span>
+            <span className="text-base text-white/95 font-semibold">
+              {account.accountNumber}
+            </span>
           </div>
-          <div className="info-row">
-            <span className="info-label">Pending Periods:</span>
-            <span className="info-value">{periods.length}</span>
+          <div className="flex justify-between items-center py-3 border-b border-white/5 last:border-b-0">
+            <span className="text-sm text-white/70 font-medium">
+              Pending Periods:
+            </span>
+            <span className="text-base text-white/95 font-semibold">
+              {periods.length}
+            </span>
           </div>
         </div>
 
         {loading ? (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: '2rem',
-              color: 'rgba(255, 255, 255, 0.7)',
-            }}
-          >
+          <div className="text-center py-8 text-white/70">
             Loading periods...
           </div>
         ) : periods.length === 0 ? (
-          <div
-            style={{
-              padding: '1rem',
-              backgroundColor: 'rgba(255, 152, 0, 0.1)',
-              borderRadius: '8px',
-              border: '1px solid rgba(255, 152, 0, 0.3)',
-              marginBottom: '1rem',
-              color: 'rgba(255, 255, 255, 0.9)',
-            }}
-          >
+          <div className="p-4 bg-warning-500/10 rounded-lg border border-warning-500/30 mb-4 text-white/90">
             No pending periods found for this account.
           </div>
         ) : (
           <>
-            <div className="form-group">
-              <label htmlFor="start-period">
-                From Period <span className="required">*</span>
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="start-period"
+                className="text-[0.95rem] font-semibold text-white/90 flex items-center gap-1"
+              >
+                From Period <span className="text-danger-500">*</span>
               </label>
               <select
                 id="start-period"
@@ -341,6 +336,7 @@ export function BatchPaymentModal({
                 }}
                 required
                 disabled={isSubmitting}
+                className="bg-white/8 border border-white/15 rounded-lg px-4 py-3 text-base text-white/95 font-inherit transition-all duration-200 ease-in-out focus:outline-none focus:border-primary-500/50 focus:bg-white/12 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer [&>option]:bg-[rgba(30,30,30,0.95)] [&>option]:text-white/95"
               >
                 {availablePeriodNumbers.map((num) => (
                   <option key={num} value={num}>
@@ -350,18 +346,14 @@ export function BatchPaymentModal({
               </select>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="end-period">
-                To Period <span className="required">*</span>
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="end-period"
+                className="text-[0.95rem] font-semibold text-white/90 flex items-center gap-1"
+              >
+                To Period <span className="text-danger-500">*</span>
                 {currentPeriodNumber !== null && (
-                  <span
-                    style={{
-                      fontSize: '0.85rem',
-                      color: 'rgba(255, 255, 255, 0.6)',
-                      fontWeight: 400,
-                      marginLeft: '0.5rem',
-                    }}
-                  >
+                  <span className="text-sm text-white/60 font-normal ml-2">
                     (Max: Period #{currentPeriodNumber})
                   </span>
                 )}
@@ -385,6 +377,7 @@ export function BatchPaymentModal({
                 }}
                 required
                 disabled={isSubmitting}
+                className="bg-white/8 border border-white/15 rounded-lg px-4 py-3 text-base text-white/95 font-inherit transition-all duration-200 ease-in-out focus:outline-none focus:border-primary-500/50 focus:bg-white/12 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer [&>option]:bg-[rgba(30,30,30,0.95)] [&>option]:text-white/95"
               >
                 {availablePeriodNumbers
                   .filter((num) => num >= startPeriod)
@@ -397,62 +390,36 @@ export function BatchPaymentModal({
             </div>
 
             {periodsInRange.length > 0 && (
-              <div
-                style={{
-                  padding: '1rem',
-                  backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(33, 150, 243, 0.3)',
-                  marginBottom: '1rem',
-                  color: 'rgba(255, 255, 255, 0.9)',
-                }}
-              >
-                <div
-                  style={{
-                    marginBottom: '0.5rem',
-                    fontWeight: 600,
-                    color: '#2196f3',
-                  }}
-                >
+              <div className="p-4 bg-[rgba(33,150,243,0.1)] rounded-lg border border-[rgba(33,150,243,0.3)] mb-4 text-white/90">
+                <div className="mb-2 font-semibold text-[#2196f3]">
                   Preview:
                 </div>
-                <div style={{ fontSize: '0.9rem' }}>
+                <div className="text-sm">
                   <div>
                     <strong>{periodsInRange.length}</strong> period
                     {periodsInRange.length !== 1 ? 's' : ''} will be marked as
                     paid
                   </div>
-                  <div style={{ marginTop: '0.5rem' }}>
+                  <div className="mt-2">
                     Total amount:{' '}
-                    <strong style={{ color: '#4facfe' }}>
+                    <strong className="text-[#4facfe]">
                       {formatCurrency(
                         totalAmount,
                         account.monthlyPayment.currency
                       )}
                     </strong>
                   </div>
-                  <div
-                    style={{
-                      marginTop: '0.5rem',
-                      fontSize: '0.85rem',
-                      color: 'rgba(255, 255, 255, 0.7)',
-                    }}
-                  >
+                  <div className="mt-2 text-xs text-white/70">
                     Periods: {startPeriod} to {endPeriod}
                   </div>
                 </div>
               </div>
             )}
 
-            <div className="form-group">
+            <div className="flex flex-col gap-2">
               <label
                 htmlFor="use-custom-date"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
-                }}
+                className="flex items-center gap-2 cursor-pointer"
               >
                 <input
                   id="use-custom-date"
@@ -460,13 +427,9 @@ export function BatchPaymentModal({
                   checked={useCustomDate}
                   onChange={(e) => setUseCustomDate(e.target.checked)}
                   disabled={isSubmitting}
-                  style={{
-                    width: '18px',
-                    height: '18px',
-                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  }}
+                  className="w-[18px] h-[18px] cursor-pointer disabled:cursor-not-allowed"
                 />
-                <span>
+                <span className="text-[0.95rem] font-semibold text-white/90">
                   Use custom payment date (otherwise uses each period's due
                   date)
                 </span>
@@ -474,9 +437,12 @@ export function BatchPaymentModal({
             </div>
 
             {useCustomDate && (
-              <div className="form-group">
-                <label htmlFor="custom-payment-date">
-                  Payment Date <span className="required">*</span>
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="custom-payment-date"
+                  className="text-[0.95rem] font-semibold text-white/90 flex items-center gap-1"
+                >
+                  Payment Date <span className="text-danger-500">*</span>
                 </label>
                 <input
                   id="custom-payment-date"
@@ -486,12 +452,18 @@ export function BatchPaymentModal({
                   required={useCustomDate}
                   max={new Date().toISOString().split('T')[0]}
                   disabled={isSubmitting}
+                  className="bg-white/8 border border-white/15 rounded-lg px-4 py-3 text-base text-white/95 font-inherit transition-all duration-200 ease-in-out focus:outline-none focus:border-primary-500/50 focus:bg-white/12 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
             )}
 
-            <div className="form-group">
-              <label htmlFor="batch-notes">Notes (Optional)</label>
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="batch-notes"
+                className="text-[0.95rem] font-semibold text-white/90 flex items-center gap-1"
+              >
+                Notes (Optional)
+              </label>
               <textarea
                 id="batch-notes"
                 value={notes}
@@ -499,73 +471,48 @@ export function BatchPaymentModal({
                 rows={3}
                 placeholder="Add notes for all payments (e.g., 'Historical payments migration')..."
                 disabled={isSubmitting}
+                className="bg-white/8 border border-white/15 rounded-lg px-4 py-3 text-base text-white/95 font-inherit transition-all duration-200 ease-in-out resize-y min-h-[80px] focus:outline-none focus:border-primary-500/50 focus:bg-white/12 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] disabled:opacity-60 disabled:cursor-not-allowed placeholder:text-white/40"
               />
             </div>
 
             {error && (
-              <div className="form-error">
-                <span className="error-icon">⚠️</span>
+              <div className="flex items-center gap-2 px-4 py-3 bg-danger-500/15 border border-danger-500/30 rounded-lg text-danger-500 text-sm">
+                <span className="text-lg">⚠️</span>
                 {error}
               </div>
             )}
 
             {result && (
               <div
-                style={{
-                  padding: '1rem',
-                  borderRadius: '8px',
-                  marginBottom: '1rem',
-                  backgroundColor:
-                    result.failed > 0
-                      ? 'rgba(244, 67, 54, 0.1)'
-                      : 'rgba(76, 175, 80, 0.1)',
-                  border: `1px solid ${
-                    result.failed > 0
-                      ? 'rgba(244, 67, 54, 0.3)'
-                      : 'rgba(76, 175, 80, 0.3)'
-                  }`,
-                  color: 'rgba(255, 255, 255, 0.9)',
-                }}
+                className={`p-4 rounded-lg mb-4 text-white/90 ${
+                  result.failed > 0
+                    ? 'bg-danger-500/10 border border-danger-500/30'
+                    : 'bg-success-css/10 border border-success-css/30'
+                }`}
               >
                 <div
-                  style={{
-                    fontWeight: 600,
-                    marginBottom: '0.5rem',
-                    color: result.failed > 0 ? '#f44336' : '#4caf50',
-                  }}
+                  className={`font-semibold mb-2 ${
+                    result.failed > 0 ? 'text-danger-500' : 'text-success-css'
+                  }`}
                 >
                   Batch Payment Results:
                 </div>
                 <div>
-                  <div style={{ color: '#4caf50' }}>
+                  <div className="text-success-css">
                     ✓ Successfully logged: {result.success} payment
                     {result.success !== 1 ? 's' : ''}
                   </div>
                   {result.failed > 0 && (
-                    <div style={{ color: '#f44336', marginTop: '0.5rem' }}>
+                    <div className="text-danger-500 mt-2">
                       ✗ Failed: {result.failed} payment
                       {result.failed !== 1 ? 's' : ''}
                     </div>
                   )}
                 </div>
                 {result.failed > 0 && (
-                  <details
-                    style={{
-                      marginTop: '0.5rem',
-                      fontSize: '0.85rem',
-                      color: 'rgba(255, 255, 255, 0.8)',
-                    }}
-                  >
-                    <summary style={{ cursor: 'pointer' }}>
-                      Error details
-                    </summary>
-                    <ul
-                      style={{
-                        marginTop: '0.5rem',
-                        paddingLeft: '1.5rem',
-                        color: 'rgba(255, 255, 255, 0.7)',
-                      }}
-                    >
+                  <details className="mt-2 text-sm text-white/80">
+                    <summary className="cursor-pointer">Error details</summary>
+                    <ul className="mt-2 pl-6 text-white/70">
                       {result.details
                         .filter((d) => !d.success)
                         .map((d) => (
@@ -579,11 +526,11 @@ export function BatchPaymentModal({
               </div>
             )}
 
-            <div className="form-actions">
+            <div className="flex gap-4 justify-end mt-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="btn-secondary"
+                className="px-6 py-3 rounded-lg text-base font-semibold cursor-pointer transition-all duration-200 ease-in-out border-none bg-white/10 text-white/90 border border-white/20 hover:bg-white/15 hover:border-white/30 disabled:opacity-60 disabled:cursor-not-allowed"
                 disabled={isSubmitting}
               >
                 {result ? 'Close' : 'Cancel'}
@@ -591,7 +538,7 @@ export function BatchPaymentModal({
               {!result && (
                 <button
                   type="submit"
-                  className="btn-primary"
+                  className="px-6 py-3 rounded-lg text-base font-semibold cursor-pointer transition-all duration-200 ease-in-out border-none bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] text-white shadow-[0_4px_12px_rgba(99,102,241,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(99,102,241,0.4)] disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 font-inherit"
                   disabled={isSubmitting || periodsInRange.length === 0}
                 >
                   {isSubmitting

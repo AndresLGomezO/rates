@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import '../components/PublicLayout.css';
 
 export default function Login() {
   const { isAuthenticated, redirectToAuth } = useAuth();
@@ -14,18 +13,20 @@ export default function Login() {
   }, [isAuthenticated, navigate]);
 
   return (
-    <div className="login-page">
-      <h1>Welcome to Rates</h1>
-      <p>Please sign in to continue</p>
-      <div className="login-actions">
+    <div className="text-center">
+      <h1 className="m-0 mb-2 text-[2rem] text-[#1e1e1e]">Welcome to Rates</h1>
+      <p className="m-0 mb-8 text-[#666] text-base">
+        Please sign in to continue
+      </p>
+      <div className="flex flex-col gap-4">
         <button
-          className="btn-primary"
+          className="px-6 py-3.5 border-none rounded-md text-base font-medium cursor-pointer transition-all duration-200 bg-primary-500 text-white hover:bg-[#5568d3]"
           onClick={() => void redirectToAuth('login')}
         >
           Sign In
         </button>
         <button
-          className="btn-secondary"
+          className="px-6 py-3.5 border-2 border-primary-500 rounded-md text-base font-medium cursor-pointer transition-all duration-200 bg-transparent text-primary-500 hover:bg-primary-500/10"
           onClick={() => void redirectToAuth('signup')}
         >
           Create Account

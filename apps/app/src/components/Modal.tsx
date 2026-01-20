@@ -1,5 +1,4 @@
 import { type PropsWithChildren, useEffect } from 'react';
-import './Modal.css';
 
 interface ModalProps extends PropsWithChildren {
   isOpen: boolean;
@@ -42,13 +41,21 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed top-0 left-0 right-0 bottom-0 w-screen h-screen bg-black/60 backdrop-blur-[4px] flex items-center justify-center z-modal animate-fadeIn p-4"
+      onClick={onClose}
+    >
+      <div
+        className="relative flex flex-col max-w-[800px] w-full max-h-[90vh] overflow-hidden glass-panel animate-slideUp md:max-w-full md:m-4 md:max-h-[95vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
         {title && (
-          <div className="modal-header">
-            <h2>{title}</h2>
+          <div className="relative flex justify-between items-center pb-6 pt-8 px-8 border-b border-white/10 md:pb-4 md:pt-6 md:px-6 after:content-[''] after:absolute after:bottom-0 after:left-8 after:right-8 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent md:after:left-6 md:after:right-6">
+            <h2 className="m-0 text-[1.75rem] font-bold leading-none tracking-[-0.5px] bg-clip-text text-transparent bg-gradient-to-br from-white to-white/80 md:text-2xl">
+              {title}
+            </h2>
             <button
-              className="modal-close"
+              className="flex items-center justify-center w-10 h-10 p-0 bg-white/10 backdrop-blur-[10px] border border-white/20 text-white text-[2rem] leading-none rounded-xl cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/20 hover:scale-110 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:scale-95"
               onClick={onClose}
               aria-label="Close"
             >
@@ -56,7 +63,9 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
             </button>
           </div>
         )}
-        <div className="modal-body">{children}</div>
+        <div className="flex-1 overflow-y-auto p-8 modal-scrollbar md:p-6">
+          {children}
+        </div>
       </div>
     </div>
   );

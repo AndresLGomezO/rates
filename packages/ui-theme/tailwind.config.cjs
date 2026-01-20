@@ -40,10 +40,6 @@ module.exports = {
             cyan: '#4facfe',     // From PrivateLayout.css gradient, Dashboard.css
             teal: '#00f2fe',     // From PrivateLayout.css gradient
             purple: '#8b5cf6',   // From Dashboard.css .account-row-log-payment
-            'purple-dark': '#7c3aed',  // From Dashboard.css hover state
-            'purple-light': '#a855f7', // From Dashboard.css hover state
-            'indigo-alt': '#7a8ef0',   // From NewAccountWizard.css
-            'purple-alt': '#8559b8',   // From NewAccountWizard.css
           },
         },
 
@@ -179,45 +175,15 @@ module.exports = {
         'surface-light': 'rgba(255, 255, 255, 0.05)',
         'surface-medium': 'rgba(255, 255, 255, 0.1)',
         'surface-heavy': 'rgba(255, 255, 255, 0.15)',
-        // Specific opacity values from CSS (mapped as utilities)
-        'glass-03': 'rgba(255, 255, 255, 0.03)',
-        'glass-05': 'rgba(255, 255, 255, 0.05)',
-        'glass-06': 'rgba(255, 255, 255, 0.06)',
-        'glass-08': 'rgba(255, 255, 255, 0.08)',
-        'glass-10': 'rgba(255, 255, 255, 0.1)',
-        'glass-12': 'rgba(255, 255, 255, 0.12)',
-        'glass-14': 'rgba(255, 255, 255, 0.14)',
-        'glass-15': 'rgba(255, 255, 255, 0.15)',
-        'glass-16': 'rgba(255, 255, 255, 0.16)',
-        'glass-18': 'rgba(255, 255, 255, 0.18)',
-        'glass-20': 'rgba(255, 255, 255, 0.2)',
-        'glass-24': 'rgba(255, 255, 255, 0.24)',
-        'glass-25': 'rgba(255, 255, 255, 0.25)',
-        'glass-30': 'rgba(255, 255, 255, 0.3)',
-        'glass-35': 'rgba(255, 255, 255, 0.35)',
-        'glass-40': 'rgba(255, 255, 255, 0.4)',
-        'glass-50': 'rgba(255, 255, 255, 0.5)',
-        'glass-60': 'rgba(255, 255, 255, 0.6)',
-        'glass-70': 'rgba(255, 255, 255, 0.7)',
-        'glass-75': 'rgba(255, 255, 255, 0.75)',
-        'glass-80': 'rgba(255, 255, 255, 0.8)',
-        'glass-85': 'rgba(255, 255, 255, 0.85)',
-        'glass-90': 'rgba(255, 255, 255, 0.9)',
-        'glass-92': 'rgba(255, 255, 255, 0.92)',
-        'glass-95': 'rgba(255, 255, 255, 0.95)',
+        // Note: Components use arbitrary opacity values (bg-white/10, bg-white/15, etc.)
+        // instead of theme values, so glass-* variants are not needed
         // Black opacity variants
         'black-10': 'rgba(0, 0, 0, 0.1)',
         'black-18': 'rgba(0, 0, 0, 0.18)',
         'black-20': 'rgba(0, 0, 0, 0.2)',
         'black-25': 'rgba(0, 0, 0, 0.25)',
         'black-60': 'rgba(0, 0, 0, 0.6)',
-        // Legacy app colors
-        'app-dark': '#242424',           // From apps/app/src/index.css :root
-        'app-link': '#646cff',           // From apps/app/src/index.css a
-        'app-link-hover': '#535bf2',     // From apps/app/src/index.css a:hover
-        'app-light-text': '#213547',      // From apps/app/src/index.css light mode
-        'app-light-bg': '#ffffff',       // From apps/app/src/index.css light mode
-        'app-light-link': '#747bff',      // From apps/app/src/index.css light mode a:hover
+        // Note: Legacy app colors removed - not used in codebase
         // Muted gray
         'muted': '#9e9e9e',              // From CSS_AUDIT.md
         'muted-rgba': 'rgba(158, 158, 158, 1)', // From CSS_AUDIT.md
@@ -256,43 +222,17 @@ module.exports = {
       },
 
       fontSize: {
-        // Base sizes with line heights - mapped from CSS usage
-        // Small text / labels (0.65rem - 0.95rem)
-        'xs': ['0.65rem', { lineHeight: '1rem' }],      // From Dashboard.css (0.65rem used)
-        'xs-sm': ['0.7rem', { lineHeight: '1rem' }],   // From Dashboard.css .metric-split-legend
-        'xs-md': ['0.75rem', { lineHeight: '1rem' }],  // From Dashboard.css .metric-label (0.75rem)
-        'xs-lg': ['0.8rem', { lineHeight: '1.2rem' }], // From Dashboard.css .metric-change
-        'sm-xs': ['0.85rem', { lineHeight: '1.2rem' }], // From Dashboard.css .metric-label, NewAccountWizard.css
+        // Base sizes with line heights - standard Tailwind sizes
+        // Components use standard Tailwind sizes (text-xs, text-sm, text-base, etc.)
+        // or arbitrary values (text-[0.95rem]) instead of custom variants
+        'xs': ['0.65rem', { lineHeight: '1rem' }],      // Custom: From Dashboard.css (0.65rem used)
         'sm': ['0.875rem', { lineHeight: '1.25rem' }],
-        'sm-md': ['0.88rem', { lineHeight: '1.3rem' }], // From NewAccountWizard.css
-        'sm-lg': ['0.9rem', { lineHeight: '1.25rem' }],  // From Dashboard.css .btn-secondary, .account-row-log-payment
-        'sm-xl': ['0.92rem', { lineHeight: '1.35rem' }], // From NewAccountWizard.css
-        'sm-2xl': ['0.95rem', { lineHeight: '1.5rem' }], // From Dashboard.css .summary-card h3, .account-row-main
-        
-        // Base / Body text (1rem)
         'base': ['1rem', { lineHeight: '1.5rem' }],     // Standard body text
-        'base-sm': ['1.05rem', { lineHeight: '1.5rem' }], // From NewAccountWizard.css
-        'base-lg': ['1.1rem', { lineHeight: '1.5rem' }],  // From Dashboard.css .account-row-main
-        'base-xl': ['1.2rem', { lineHeight: '1.5rem' }],  // From Dashboard.css .account-row-main, NewAccountWizard.css
-        
-        // Headings (1.25rem - 2.5rem)
         'lg': ['1.125rem', { lineHeight: '1.75rem' }],
-        'xl': ['1.25rem', { lineHeight: '1.75rem' }],   // From Dashboard.css .top-accounts-compact-header
-        'xl-sm': ['1.3rem', { lineHeight: '1.5rem' }],  // From Dashboard.css .account-row-main
-        'xl-md': ['1.4rem', { lineHeight: '1.5rem' }],  // From NewAccountWizard.css
-        '2xl': ['1.5rem', { lineHeight: '2rem' }],      // From Dashboard.css .account-row-main
-        '2xl-sm': ['1.75rem', { lineHeight: '2rem' }],  // From Dashboard.css .top-accounts-compact-value
+        'xl': ['1.25rem', { lineHeight: '1.75rem' }],
+        '2xl': ['1.5rem', { lineHeight: '2rem' }],
         '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
-        '3xl-sm': ['2rem', { lineHeight: '1.2rem' }],   // From Dashboard.css .metric-value, .top-accounts-compact-value
         '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
-        '4xl-sm': ['2.5rem', { lineHeight: '1' }],      // From Dashboard.css .dashboard-header h2, .summary-value
-        
-        // Auth-app pixel sizes (converted to rem)
-        'auth-xs': ['0.75rem', { lineHeight: '1rem' }],   // 12px from auth-app
-        'auth-sm': ['0.875rem', { lineHeight: '1.25rem' }], // 14px from auth-app
-        'auth-base': ['0.9375rem', { lineHeight: '1.5rem' }], // 15px from auth-app
-        'auth-md': ['1rem', { lineHeight: '1.5rem' }],   // 16px from auth-app
-        'auth-lg': ['1.5rem', { lineHeight: '1.75rem' }], // 24px from auth-app .title
       },
 
       letterSpacing: {
@@ -341,25 +281,9 @@ module.exports = {
         20: '5rem',       // 80px
         24: '6rem',       // 96px
         
-        // Custom spacing values from CSS (fractional rem values)
-        // Found in: Dashboard.css, NewAccountWizard.css, various components
-        '0.35': '0.35rem',   // 5.6px - From CSS gaps
-        '0.4': '0.4rem',     // 6.4px - From CSS gaps
-        '0.45': '0.45rem',   // 7.2px - From CSS gaps
-        '0.6': '0.6rem',     // 9.6px - From NewAccountWizard.css gaps
-        '0.65': '0.65rem',   // 10.4px - From CSS gaps
-        '0.7': '0.7rem',     // 11.2px - From CSS gaps
-        '0.8': '0.8rem',     // 12.8px - From CSS gaps
-        '0.85': '0.85rem',   // 13.6px - From NewAccountWizard.css padding
-        '0.9': '0.9rem',     // 14.4px - From NewAccountWizard.css gaps
-        '0.95': '0.95rem',   // 15.2px - From NewAccountWizard.css gaps, padding
-        
-        // Pixel values from auth-app (converted to rem)
-        'px-10': '10px',      // From auth-app .input padding
-        'px-12': '12px',      // From auth-app .input padding, .badge padding
-        'px-16': '16px',      // From auth-app .card gap, .grid gap
-        'px-24': '24px',      // From auth-app .card padding
-        'px-32': '32px',      // From auth-app .page padding
+        // Note: Components use arbitrary values (e.g., gap-[0.4rem]) instead of custom spacing entries
+        // Custom fractional values removed - not used in codebase
+        // Invalid px-* entries removed - Tailwind spacing config uses numeric keys only
       },
 
       // ============================================================================
@@ -457,9 +381,9 @@ module.exports = {
       // ANIMATIONS & KEYFRAMES
       // ============================================================================
       animation: {
-        'fadeIn': 'fadeIn 0.3s ease-in-out',           // From Modal.css overlay
-        'fadeIn-slow': 'fadeIn 0.6s ease-out',         // From Dashboard.css .dashboard
-        'slideUp': 'slideUp 0.3s ease-out',            // From Modal.css modal content
+        'fadeIn': 'fadeIn 0.2s ease-out',              // From Modal.css overlay
+        'fadeIn-slow': 'fadeInTransform 0.6s ease-out', // From Dashboard.css .dashboard (with transform)
+        'slideUp': 'slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // From Modal.css modal content
         'slideDown': 'slideDown 0.3s ease-out',       // From PrivateLayout.css submenu
         'spin': 'spin 1s linear infinite',             // From Dashboard.css, AccountDetail.css loading spinner
         'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite', // From Dashboard.css overdue values
@@ -477,9 +401,13 @@ module.exports = {
           '0%': { opacity: '0', transform: 'translateY(20px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        pulse: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.7' },
+        },
         slideUp: {
-          '0%': { transform: 'translateY(10px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
+          '0%': { transform: 'translateY(20px) scale(0.95)', opacity: '0' },
+          '100%': { transform: 'translateY(0) scale(1)', opacity: '1' },
         },
         slideDown: {
           '0%': { transform: 'translateY(-10px)', opacity: '0' },
@@ -507,5 +435,40 @@ module.exports = {
       },
     },
   },
+  // Safelist for dynamic classes that might be purged
+  // These classes are used with template literals and conditional rendering
+  safelist: [
+    // Status colors (used dynamically in components)
+    'text-success-500',
+    'text-success-css',
+    'bg-success-500/10',
+    'bg-success-css/10',
+    'border-success-500/30',
+    'border-success-css/30',
+    'text-warning-500',
+    'bg-warning-500/10',
+    'border-warning-500/30',
+    'text-danger-500',
+    'bg-danger-500/5',
+    'bg-danger-500/10',
+    'bg-danger-500/15',
+    'bg-danger-500/20',
+    'border-danger-500/30',
+    'border-danger-500/35',
+    'border-danger-500/50',
+    'text-primary-500',
+    'bg-primary-500/10',
+    'bg-primary-500/18',
+    'border-primary-500/30',
+    'border-primary-500/75',
+    'text-accent-500',
+    'bg-accent-500/10',
+    'border-accent-500/30',
+    // Status badge variants
+    'status-badge-success',
+    'status-badge-warning',
+    'status-badge-danger',
+    'status-badge-info',
+  ],
   plugins: [],
 };

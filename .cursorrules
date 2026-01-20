@@ -1,262 +1,96 @@
-# Rates Project - Cursor Rules
-
-## 1. Project Identity
-
-This is a **financial accounts management monorepo** built with React, TypeScript, and Firebase. The project consists of:
-- **Main app** (`apps/app`): Financial accounts dashboard with payment tracking, amortization calculations, and account management
-- **Auth app** (`apps/auth-app`): Standalone authentication microservice with token validation
-- **Shared package** (`packages/firebase-client`): Centralized Firebase client SDK wrapper
-
-**Tech Stack**: React 18.3.1 + TypeScript 5.7.2 + Vite 6.0.5 + Firebase 11.1.0 + React Router v7.9.2
-
-**Paradigm**: Functional components with React Hooks. No class components. TypeScript strict mode enabled.
-
----
-
-## 2. Code Style Rules
-
-### Naming Conventions
-
-- **Files**: 
-  - Components: `PascalCase.tsx` (e.g., `Dashboard.tsx`, `CreateAccountForm.tsx`)
-  - Utilities: `camelCase.ts` (e.g., `formatters.ts`, `paymentUtils.ts`)
-  - Types: `camelCase.types.ts` (e.g., `AccountDetail.types.ts`)
-  - CSS: `PascalCase.css` matching component name (e.g., `Dashboard.css`)
-
-- **Components**: PascalCase (e.g., `Dashboard`, `LogPaymentModal`)
-- **Functions**: camelCase (e.g., `getUserFinancialAccounts`, `formatCurrency`)
-- **Variables**: camelCase (e.g., `accountNumber`, `paymentPeriods`)
-- **Constants**: UPPER_SNAKE_CASE (e.g., `FINANCIAL_ACCOUNTS_COLLECTION`)
-- **Types/Interfaces**: PascalCase (e.g., `FinancialAccount`, `PaymentPeriod`)
-
-### Import Ordering
-
-1. External dependencies (React, Firebase, third-party)
-2. Internal packages (`@rates/firebase-client`)
-3. Internal utilities (`@/utils/*`)
-4. Internal services (`@/services/*`)
-5. Internal components (`@/components/*`)
-6. Internal contexts (`@/contexts/*`)
-7. Types/interfaces
-8. CSS imports (last)
-
-Example:
-```typescript
-import { useState, useEffect } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
-import { getFirestore } from '@rates/firebase-client';
-import { formatCurrency } from '@/utils/formatters';
-import { getUserFinancialAccounts } from '@/services/financialAccounts';
-import { Modal } from '@/components/Modal';
-import { useAuth } from '@/contexts/AuthContext';
-import type { FinancialAccount } from '@rates/firebase-client';
-import './Dashboard.css';
-```
-
-### Component Patterns
-
-- **Always use functional components** with hooks
-- **Never use class components**
-- Use `PropsWithChildren` for children props
-- Prefer composition over inheritance
-- Use controlled components for forms (no uncontrolled inputs)
-
-### TypeScript Patterns
-
-- **Strict mode**: Always enabled (`strict: true` in tsconfig)
-- Use explicit return types for exported functions
-- Prefer `interface` over `type` for object shapes (unless union/intersection needed)
-- Use `type` for unions, intersections, and utility types
-- Avoid `any`; use `unknown` when type is truly unknown
-- Use optional chaining (`?.`) and nullish coalescing (`??`)
-
----
-
-## 3. File References
-
-For detailed context, refer to these documentation files:
-
-- **@docs/PROJECT_OVERVIEW.md** - Project structure, tech stack, dependencies, configuration
-- **@docs/COMPONENTS.md** - Component inventory, architecture, props, patterns
-- **@docs/STYLING.md** - CSS approach, design system, responsive patterns, animations
-- **@docs/INTEGRATIONS.md** - API architecture, Firebase setup, auth flows, environment variables
-- **@docs/STATE_MANAGEMENT.md** - State patterns, Context usage, data fetching, forms
-- **@docs/UTILITIES.md** - Utility functions, hooks, constants, type definitions
-- **@docs/TESTING.md** - Testing patterns (when tests are added), linting, type checking
-- **@docs/DEPLOYMENT.md** - Build process, deployment, Docker, environment strategy
-
----
-
-## 4. Code Generation Preferences
-
-### TypeScript Strictness
-
-- Enable all strict checks (`strict: true`)
-- Use explicit types for function parameters and return values
-- Prefer type inference for local variables when types are obvious
-- Use `as const` for literal types when needed
-- Leverage discriminated unions for state management
-
-### Error Handling
-
-- Use try-catch blocks for async operations
-- Store errors in component state (`error: string | null`)
-- Display errors inline with user-friendly messages
-- Use `getFriendlyError` utility (auth-app) for Firebase errors
-- Never throw errors without handling them in UI
-
-Pattern:
-```typescript
-const [error, setError] = useState<string | null>(null);
-
-try {
-  await someAsyncOperation();
-} catch (err) {
-  setError(err instanceof Error ? err.message : 'An error occurred');
-}
-```
-
-### Commenting & Documentation
-
-- Add JSDoc comments for exported functions
-- Document complex business logic (amortization calculations, payment flows)
-- Use inline comments sparingly; prefer self-documenting code
-- Document non-obvious type constraints or edge cases
-- Comment "why" not "what" when logic is complex
-
-Example:
-```typescript
-/**
- * Calculates capital and interest breakdown for a payment.
- * Uses monthly interest rate (not annual) for calculations.
- */
-export function calculatePaymentBreakdown(
-  principal: number,
-  rate: number,
-  paymentAmount: number
-): PaymentBreakdown {
-  // Implementation
-}
-```
-
----
-
-## 5. Forbidden Patterns
-
-### State Management Libraries
-
-- ❌ **DO NOT** suggest Redux, Zustand, MobX, or any external state management library
-- ✅ **DO** use React Context API for global state (auth only)
-- ✅ **DO** use `useState` and `useEffect` for component-local state
-- ✅ **DO** use URL query parameters for filter/search state
-
-### Styling Libraries
-
-- ❌ **DO NOT** suggest CSS-in-JS libraries (styled-components, emotion, etc.)
-- ❌ **DO NOT** suggest Tailwind CSS or utility-first frameworks
-- ❌ **DO NOT** suggest Sass/SCSS/LESS preprocessors
-- ✅ **DO** use plain CSS files colocated with components
-- ✅ **DO** use CSS variables for theming when needed
-- ✅ **DO** follow existing glassmorphism design patterns
-
-### Form Libraries
-
-- ❌ **DO NOT** suggest React Hook Form, Formik, or React Final Form
-- ❌ **DO NOT** suggest validation schema libraries (Zod, Yup, Joi)
-- ✅ **DO** use controlled components with `useState`
-- ✅ **DO** implement custom validation functions
-- ✅ **DO** store validation errors in component state
-
-### Component Patterns
-
-- ❌ **DO NOT** use class components
-- ❌ **DO NOT** use Higher-Order Components (HOCs)
-- ❌ **DO NOT** use render props pattern
-- ✅ **DO** use functional components with hooks
-- ✅ **DO** use composition via children props
-
-### UI Libraries
-
-- ❌ **DO NOT** suggest Material-UI, Chakra UI, Ant Design, or similar component libraries
-- ✅ **DO** use custom components (Modal, SearchBar, Filters, etc.)
-- ✅ **DO** use Recharts for data visualization (already in use)
-
-### Testing Libraries (Future)
-
-- When adding tests, prefer **Vitest** over Jest
-- Use **React Testing Library** for component tests
-- Use **MSW (Mock Service Worker)** for API mocking
-- Use **Playwright** for E2E tests (not Cypress)
-
-### Other Anti-Patterns
-
-- ❌ **DO NOT** use `any` type (use `unknown` if needed)
-- ❌ **DO NOT** use `@ts-ignore` or `@ts-expect-error` without justification
-- ❌ **DO NOT** create global variables or modify prototypes
-- ❌ **DO NOT** use `var` (use `const` or `let`)
-- ❌ **DO NOT** suggest axios or fetch wrappers (use native `fetch` for HTTP)
-- ❌ **DO NOT** suggest date libraries (use native Date and Intl APIs)
-
----
-
-## 6. Project-Specific Patterns
-
-### Firebase Usage
-
-- Always use `@rates/firebase-client` package for Firebase access in main app
-- Use service modules (`services/financialAccounts.ts`, `services/paymentPeriods.ts`) for data operations
-- Never access Firestore directly from components; use service layer
-- Handle emulator vs production mode via environment variables
-
-### Authentication
-
-- Main app: Token-based auth via `AuthContext` with cookie storage
-- Auth app: Firebase Auth with Admin SDK for token validation
-- Always validate tokens server-side via `/api/validate` endpoint
-- Use nonce-based redirects for app-to-app communication
-
-### Data Fetching
-
-- No React Query, SWR, or similar libraries
-- Fetch data in `useEffect` hooks
-- Refetch after mutations by calling load functions again
-- No automatic caching; manage state in components
-
-### Forms
-
-- All forms are controlled components
-- Validation happens on submit (not on change, unless clearing errors)
-- Store form data in component state objects
-- Use `Record<string, string>` for validation errors
-
-### URL State
-
-- Use `useSearchParams` for filters and search
-- Store filter state in URL query parameters (shareable/bookmarkable)
-- Sync URL params with component state via `useEffect`
-
----
-
-## 7. Code Quality
-
-- Run `pnpm check` before committing (format, lint, type-check)
-- Fix all ESLint errors and warnings
-- Ensure TypeScript compiles without errors (`pnpm type-check`)
-- Follow Prettier formatting (no custom config, use defaults)
-- Keep functions small and focused (single responsibility)
-- Extract complex logic into utility functions
-- Use `useMemo` and `useCallback` for expensive computations
-
----
-
-## Summary
-
-This project follows a **minimalist, type-safe approach**:
-- React hooks + Context API (no external state libraries)
-- Plain CSS (no CSS-in-JS or preprocessors)
-- Controlled forms (no form libraries)
-- TypeScript strict mode (no `any`, explicit types)
-- Service layer pattern (no direct Firebase calls from components)
-- URL-driven state (filters/search in query params)
-
-When in doubt, refer to existing code patterns and the documentation files listed above.
+## Project Identity
+- This is the **Rates** monorepo: a Firebase-backed financial accounts SPA for tracking accounts, payment periods, and amortization; plus a separate auth SPA for login + token validation.
+- Tech stack (one line): **React 18 + Vite 6 + TypeScript 5 (strict) + Firebase (Auth/Firestore/Storage) + Tailwind CSS** in a pnpm workspace.
+- Language/paradigm: **TypeScript**, functional/immutable-leaning style, **React hooks + functional components** (no class components).
+- Styling: **Tailwind CSS is the styling solution** (utility-first). Global CSS is limited to Tailwind setup + the shared design system in `packages/ui-theme/styles.css`.
+
+## Code Style Rules
+- Naming conventions:
+  - Files:
+    - React components/pages: `PascalCase.tsx` (e.g. `Modal.tsx`, `AccountDetail.tsx`)
+    - Non-component TS modules: `camelCase.ts` (e.g. `paymentUtils.ts`, `tokenValidation.ts`)
+    - Types alongside a page: `Something.types.ts` (existing pattern: `AccountDetail.types.ts`)
+  - Components: `PascalCase` function components (exported).
+  - Hooks: `useSomething` (custom hooks only when extracted, otherwise keep local).
+  - Functions/variables: `camelCase`; booleans as `isX/hasX/shouldX/canX`.
+  - Constants: `SCREAMING_SNAKE_CASE` for true constants (e.g. collection names).
+- Preferred patterns:
+  - **Functional components only**; prefer composition over inheritance/HOCs.
+  - Keep “controller” logic in pages, isolate Firebase operations in `services/*`, keep pure logic in `utils/*`.
+  - Use React built-ins for state: `useState`, `useEffect`, `useMemo`, `useCallback`; Context is primarily for auth.
+  - URL state via React Router `useSearchParams` for filters/search.
+- Import ordering (top → bottom):
+  - React and core libs (`react`, `react-router*`)
+  - Third-party libs (Firebase SDK, recharts, etc.)
+  - Workspace packages (`@rates/*`)
+  - Local absolute imports via alias (`@/*`)
+  - Local relative imports (`./`, `../`)
+  - Types: prefer `import type { ... }` when possible
+
+## Tailwind CSS Rules (strict)
+- ALWAYS use Tailwind utility classes for component styling.
+- NEVER use inline styles (`style={{ ... }}`) unless absolutely necessary (document why).
+- NEVER create new CSS files for component styling.
+- Class ordering convention (enforce manually even if lint exists):
+  - Position → Display → Sizing → Spacing → Typography → Colors → Borders → Effects → States
+  - Example: `absolute flex w-full h-10 p-4 text-sm text-gray-800 bg-white border rounded-lg shadow-md hover:bg-gray-50`
+- Conditional classes:
+  - Use a `cn()` utility (recommended implementation: `clsx` + `tailwind-merge`) instead of ad-hoc string concatenation.
+  - When adding variants, prefer **CVA (class-variance-authority)** + `cn()` to keep variants readable.
+- Prefer Tailwind built-ins over arbitrary values (`[...]`). Only use arbitrary values when the design system cannot express it.
+- Prefer theme values from Tailwind config (shared preset in `packages/ui-theme/tailwind.config.cjs`) over hardcoded colors/spacing.
+- Responsive usage is **mobile-first**:
+  - Base classes apply to mobile; add `sm:`, `md:`, `lg:`, `xl:` overrides as needed.
+- Dark mode:
+  - If/when used, follow Tailwind conventions (`dark:` utilities). Do not introduce separate dark-mode CSS files.
+
+## File References (docs)
+- Structure/questions: `@docs/PROJECT_OVERVIEW.md`
+- Components: `@docs/COMPONENTS.md`
+- Tailwind configuration + styling patterns: `@docs/STYLING.md`
+- API/integrations: `@docs/INTEGRATIONS.md`
+- State management: `@docs/STATE_MANAGEMENT.md`
+- Utilities: `@docs/UTILITIES.md`
+- Testing: `@docs/TESTING.md`
+- Deployment: `@docs/DEPLOYMENT.md`
+- Tailwind migration status: `@docs/TAILWIND_MIGRATION_TRACKER.md`
+
+## Code Generation Preferences
+- TypeScript:
+  - Assume **strict** TypeScript; avoid `any` (use `unknown` + narrowing when needed).
+  - Prefer explicit return types on exported functions and public helpers when non-trivial.
+- Error handling:
+  - Use `try/catch/finally` for async flows with `loading` + `error` state.
+  - Surface user-facing errors in UI; log developer diagnostics sparingly.
+  - Don’t swallow errors; include context (operation + identifiers).
+- Comments/docs:
+  - Prefer self-documenting code; add comments only for non-obvious logic, edge cases, or security decisions.
+  - Keep documentation in `docs/*` for cross-cutting behavior; don’t duplicate large docs in code.
+- Components:
+  - Always include Tailwind classes (following the ordering convention).
+  - Prefer accessible markup (labels, buttons, roles) and include hover/focus states for interactive elements.
+- Styling utilities:
+  - Use `cn()` for conditional classes.
+  - Use **CVA** for component variants when a component has multiple style variants (e.g., `variant`, `size`, `intent`).
+  - Use **tailwind-merge** to resolve class conflicts (especially with variants and conditionals).
+
+## Forbidden Patterns
+- No new component-level CSS files.
+- No inline `style={{}}` props (except last resort; document why).
+- No CSS-in-JS (`styled-components`, `@emotion/*`, etc.).
+- No `@apply` except inside the shared base/global styles (`packages/ui-theme/styles.css`).
+- No `!important` in Tailwind classes.
+- No custom CSS classes when a Tailwind utility exists.
+- No hardcoded color/spacing values when theme tokens exist (use configured theme colors/spacing).
+- No external state libraries (Redux, Zustand, MobX, Recoil) unless explicitly approved (project uses React built-ins).
+- No server-state libraries (React Query/SWR/Apollo) unless explicitly approved (project uses manual fetching via `services/*`).
+- Don’t introduce heavy utility libraries (e.g. lodash) without strong justification.
+
+## Component Generation Template
+When creating a new component:
+- Import `cn` if you need conditional classes.
+- Define a `Props` interface in TypeScript.
+- Use a function component (`export function ComponentName(props: Props) { ... }`).
+- Apply Tailwind classes in the required class-ordering convention.
+- Add responsive classes (mobile-first) where appropriate.
+- Add hover/focus/active/disabled states for interactive elements.
