@@ -474,12 +474,12 @@ export default function Dashboard() {
     return (
       <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-8">
         <div className="flex justify-between items-center mb-10 pb-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent">
-          <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.1)]">
+          <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.05)]">
             Dashboard
           </h2>
         </div>
         <div className="flex flex-col items-center justify-center py-16 px-8 text-white gap-6">
-          <div className="w-[50px] h-[50px] border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+          <div className="w-[50px] h-[50px] border-4 border-neutral-600/40 border-t-neutral-500/60 rounded-full animate-spin"></div>
           <p className="text-lg text-white/90 font-medium">
             Loading accounts...
           </p>
@@ -492,7 +492,7 @@ export default function Dashboard() {
     return (
       <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-8">
         <div className="flex justify-between items-center mb-10 pb-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent">
-          <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.1)]">
+          <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.05)]">
             Dashboard
           </h2>
         </div>
@@ -507,9 +507,9 @@ export default function Dashboard() {
 
   return (
     <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-8">
-      <div className="flex justify-between items-center mb-10 pb-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent md:flex-col md:items-start md:gap-6 md:mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 pb-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-neutral-600/30 after:to-transparent gap-6 md:gap-0 md:mb-8">
         <div>
-          <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.1)] md:text-3xl xs:text-[1.75rem]">
+          <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.05)] md:text-3xl xs:text-[1.75rem]">
             Financial Overview
           </h2>
           <p className="mt-2 mb-0 text-white/70 text-base font-normal">
@@ -540,8 +540,8 @@ export default function Dashboard() {
       />
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-6 mb-8 xs:grid-cols-1 xs:gap-3">
-        <div className="relative overflow-visible bg-gradient-to-br from-success-css/20 to-success-css/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-white/18 rounded-2xl p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#667eea] before:via-[#764ba2] before:via-[#f093fb] before:via-[#4facfe] before:to-[#00f2fe] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(31,38,135,0.5)] hover:border-white/30 xs:p-4">
+      <div className="grid grid-cols-1 gap-3 mb-8 w-full md:grid-cols-3 md:gap-6">
+        <div className="relative overflow-visible bg-gradient-to-br from-success-css/20 to-success-css/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-neutral-700/30 rounded-2xl p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:via-[#1e3a8a] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:border-neutral-600/40 min-w-0 xs:p-4">
           <div className="text-sm text-white/70 font-semibold uppercase tracking-wide mb-2">
             Total Paid
           </div>
@@ -590,13 +590,13 @@ export default function Dashboard() {
                     <Bar
                       dataKey="interest"
                       stackId="paid"
-                      fill="#f093fb"
+                      fill="#2563eb"
                       radius={[6, 0, 0, 6]}
                     />
                     <Bar
                       dataKey="principal"
                       stackId="paid"
-                      fill="#4facfe"
+                      fill="#1e40af"
                       radius={[0, 6, 6, 0]}
                     />
                   </BarChart>
@@ -604,14 +604,14 @@ export default function Dashboard() {
               </div>
               <div className="flex flex-col gap-1 text-xs text-white/70">
                 <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-2 h-2 rounded-full bg-[#f093fb] inline-block"></span>
+                  <span className="w-2 h-2 rounded-full bg-[#2563eb] inline-block"></span>
                   Interest{' '}
                   <span className="font-semibold text-white">
                     {formatCurrency(metrics.totalInterest, primaryCurrency)}
                   </span>
                 </span>
                 <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-2 h-2 rounded-full bg-[#4facfe] inline-block"></span>
+                  <span className="w-2 h-2 rounded-full bg-[#1e40af] inline-block"></span>
                   Principal{' '}
                   <span className="font-semibold text-white">
                     {formatCurrency(metrics.totalPrincipal, primaryCurrency)}
@@ -621,7 +621,7 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-        <div className="relative overflow-visible bg-gradient-to-br from-danger-500/20 to-danger-500/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-white/18 rounded-2xl p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#667eea] before:via-[#764ba2] before:via-[#f093fb] before:via-[#4facfe] before:to-[#00f2fe] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(31,38,135,0.5)] hover:border-white/30 xs:p-4">
+        <div className="relative overflow-visible bg-gradient-to-br from-danger-500/20 to-danger-500/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-neutral-700/30 rounded-2xl p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:via-[#1e3a8a] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:border-neutral-600/40 min-w-0 xs:p-4">
           <div className="text-sm text-white/70 font-semibold uppercase tracking-wide mb-2">
             Total Due
           </div>
@@ -670,13 +670,13 @@ export default function Dashboard() {
                     <Bar
                       dataKey="interest"
                       stackId="due"
-                      fill="#f093fb"
+                      fill="#2563eb"
                       radius={[6, 0, 0, 6]}
                     />
                     <Bar
                       dataKey="principal"
                       stackId="due"
-                      fill="#4facfe"
+                      fill="#1e40af"
                       radius={[0, 6, 6, 0]}
                     />
                   </BarChart>
@@ -684,14 +684,14 @@ export default function Dashboard() {
               </div>
               <div className="flex flex-col gap-1 text-xs text-white/70">
                 <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-2 h-2 rounded-full bg-[#f093fb] inline-block"></span>
+                  <span className="w-2 h-2 rounded-full bg-[#2563eb] inline-block"></span>
                   Interest due{' '}
                   <span className="font-semibold text-white">
                     {formatCurrency(metrics.dueInterest, primaryCurrency)}
                   </span>
                 </span>
                 <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-2 h-2 rounded-full bg-[#4facfe] inline-block"></span>
+                  <span className="w-2 h-2 rounded-full bg-[#1e40af] inline-block"></span>
                   Principal due{' '}
                   <span className="font-semibold text-white">
                     {formatCurrency(metrics.duePrincipal, primaryCurrency)}
@@ -701,7 +701,7 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-        <div className="relative overflow-visible bg-gradient-to-br from-warning-500/20 to-warning-500/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-white/18 rounded-2xl p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#667eea] before:via-[#764ba2] before:via-[#f093fb] before:via-[#4facfe] before:to-[#00f2fe] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(31,38,135,0.5)] hover:border-white/30 xs:p-4">
+        <div className="relative overflow-visible bg-gradient-to-br from-warning-500/20 to-warning-500/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-neutral-700/30 rounded-2xl p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:via-[#1e3a8a] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:border-neutral-600/40 min-w-0 xs:p-4">
           <div className="text-sm text-white/70 font-semibold uppercase tracking-wide mb-2">
             Pending Amount
           </div>
@@ -754,13 +754,13 @@ export default function Dashboard() {
                     <Bar
                       dataKey="interest"
                       stackId="pending"
-                      fill="#f093fb"
+                      fill="#2563eb"
                       radius={[6, 0, 0, 6]}
                     />
                     <Bar
                       dataKey="principal"
                       stackId="pending"
-                      fill="#4facfe"
+                      fill="#1e40af"
                       radius={[0, 6, 6, 0]}
                     />
                   </BarChart>
@@ -768,14 +768,14 @@ export default function Dashboard() {
               </div>
               <div className="flex flex-col gap-1 text-xs text-white/70">
                 <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-2 h-2 rounded-full bg-[#f093fb] inline-block"></span>
+                  <span className="w-2 h-2 rounded-full bg-[#2563eb] inline-block"></span>
                   Est. interest{' '}
                   <span className="font-semibold text-white">
                     {formatCurrency(metrics.pendingInterest, primaryCurrency)}
                   </span>
                 </span>
                 <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-2 h-2 rounded-full bg-[#4facfe] inline-block"></span>
+                  <span className="w-2 h-2 rounded-full bg-[#1e40af] inline-block"></span>
                   Est. principal{' '}
                   <span className="font-semibold text-white">
                     {formatCurrency(metrics.pendingPrincipal, primaryCurrency)}
@@ -870,7 +870,7 @@ export default function Dashboard() {
                     {interestPrincipalData.map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={index === 0 ? '#f093fb' : '#4facfe'}
+                        fill={index === 0 ? '#2563eb' : '#1e40af'}
                       />
                     ))}
                   </Pie>
@@ -929,7 +929,7 @@ export default function Dashboard() {
                       formatCurrency(value, primaryCurrency)
                     }
                   />
-                  <Bar dataKey="value" fill="#667eea" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="value" fill="#1e40af" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -945,7 +945,7 @@ export default function Dashboard() {
                 {topAccountsByInterest.map((account, index) => (
                   <div
                     key={account.accountNumber}
-                    className="flex items-center gap-3 px-3 py-3 bg-white/8 border border-white/10 rounded-lg cursor-pointer transition-all duration-200 ease-in-out flex-shrink-0 hover:bg-white/12 hover:border-white/20 hover:translate-x-0.5"
+                    className="flex items-center gap-3 px-3 py-3 bg-white/8 border border-neutral-700/30 rounded-lg cursor-pointer transition-all duration-200 ease-in-out flex-shrink-0 hover:bg-white/12 hover:border-neutral-600/40 hover:translate-x-0.5"
                     onClick={() => {
                       void navigate(`/account/${account.accountNumber}`);
                     }}
@@ -958,7 +958,7 @@ export default function Dashboard() {
                         {account.accountName}
                       </span>
                     </div>
-                    <span className="text-[0.95rem] font-bold text-[#f093fb] -tracking-[0.3px] whitespace-nowrap flex-shrink-0">
+                    <span className="text-[0.95rem] font-bold text-[#2563eb] -tracking-[0.3px] whitespace-nowrap flex-shrink-0">
                       {formatCurrency(account.totalInterest, account.currency)}
                     </span>
                   </div>
@@ -988,9 +988,9 @@ export default function Dashboard() {
               return (
                 <div
                   key={periodKey}
-                  className={`relative ds-card-medium overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-0.5 before:bg-gradient-to-r before:from-[#667eea] before:via-[#764ba2] before:via-[#f093fb] before:via-[#4facfe] before:to-[#00f2fe] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:border-white/25 hover:shadow-[0_8px_24px_0_rgba(31,38,135,0.3)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] ${
+                  className={`relative ds-card-medium overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-0.5 before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:via-[#1e3a8a] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:border-neutral-600/50 hover:shadow-[0_8px_24px_0_rgba(10,14,26,0.5)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] ${
                     isExpanded
-                      ? 'border-white/30 shadow-[0_12px_32px_0_rgba(31,38,135,0.4)] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.25)] before:opacity-100'
+                      ? 'border-neutral-600/50 shadow-[0_12px_32px_0_rgba(10,14,26,0.6)] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] before:opacity-100'
                       : 'border-white/15'
                   }`}
                 >
@@ -1018,7 +1018,7 @@ export default function Dashboard() {
                         <span className="text-xs text-white/60 font-semibold uppercase tracking-wide">
                           Amount Due
                         </span>
-                        <span className="text-xl font-bold text-[#4facfe] shadow-[0_2px_10px_rgba(79,172,254,0.3)] -tracking-[0.5px] xs:text-base">
+                        <span className="text-xl font-bold text-[#2563eb] shadow-[0_2px_10px_rgba(37,99,235,0.3)] -tracking-[0.5px] xs:text-base">
                           {formatCurrency(
                             periodInfo.amountDue,
                             period.currency
@@ -1066,7 +1066,7 @@ export default function Dashboard() {
                         </span>
                       </div>
                       <span
-                        className="px-4 py-2 rounded-xl text-white text-xs font-bold uppercase tracking-wide shadow-[0_2px_8px_rgba(0,0,0,0.2)] backdrop-blur-[10px] border border-white/20 whitespace-nowrap flex-shrink-0 justify-self-start w-fit"
+                        className="px-4 py-2 rounded-xl text-white text-xs font-bold uppercase tracking-wide shadow-[0_2px_8px_rgba(0,0,0,0.2)] backdrop-blur-[10px] border border-neutral-600/40 whitespace-nowrap flex-shrink-0 justify-self-start w-fit"
                         style={{
                           backgroundColor:
                             periodInfo.status === 'pending'
@@ -1107,7 +1107,7 @@ export default function Dashboard() {
                         Log Payment
                       </button>
                       <button
-                        className={`bg-white/10 border border-white/20 rounded-lg w-9 h-9 flex items-center justify-center cursor-pointer text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex-shrink-0 p-0 hover:bg-white/20 hover:border-white/30 hover:scale-110 xs:w-8 xs:h-8 ${
+                        className={`bg-white/10 border border-neutral-600/40 rounded-lg w-9 h-9 flex items-center justify-center cursor-pointer text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex-shrink-0 p-0 hover:bg-white/20 hover:border-neutral-600/40 hover:scale-110 xs:w-8 xs:h-8 ${
                           isExpanded ? 'rotate-180' : ''
                         } ${isExpanded ? 'hover:rotate-180 hover:scale-110' : ''}`}
                         onClick={(e) => {
@@ -1138,14 +1138,14 @@ export default function Dashboard() {
 
                   {/* Expanded Details View */}
                   <div
-                    className={`overflow-hidden transition-[max-height,opacity] duration-[400ms,300ms] ease-[cubic-bezier(0.4,0,0.2,1),ease-in-out] border-t border-white/10 ${
+                    className={`overflow-hidden transition-[max-height,opacity] duration-[400ms,300ms] ease-[cubic-bezier(0.4,0,0.2,1),ease-in-out] border-t border-neutral-700/30 ${
                       isExpanded
                         ? 'max-h-[2000px] opacity-100'
                         : 'max-h-0 opacity-0'
                     }`}
                   >
                     <div className="p-6 bg-black/20">
-                      <div className="mb-6 pb-4 border-b border-white/10">
+                      <div className="mb-6 pb-4 border-b border-neutral-700/30">
                         <h4 className="m-0 mb-2 text-white text-lg font-bold -tracking-[0.3px]">
                           Payment Period Details
                         </h4>
@@ -1154,7 +1154,7 @@ export default function Dashboard() {
                         </p>
                       </div>
                       <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4 w-full box-border xs:grid-cols-1">
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Account:
                           </span>
@@ -1162,7 +1162,7 @@ export default function Dashboard() {
                             {account.accountName} ({account.accountNumber})
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Period Number:
                           </span>
@@ -1170,7 +1170,7 @@ export default function Dashboard() {
                             #{period.periodNumber}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Status:
                           </span>
@@ -1178,7 +1178,7 @@ export default function Dashboard() {
                             {periodInfo.status.toUpperCase()}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Due Date:
                           </span>
@@ -1194,7 +1194,7 @@ export default function Dashboard() {
                             {formatDate(dueDate)}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Days Remaining:
                           </span>
@@ -1212,18 +1212,18 @@ export default function Dashboard() {
                               : `${daysRemaining} days left`}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Amount Due:
                           </span>
-                          <span className="text-xl text-[#4facfe] font-bold -tracking-[0.3px] shadow-[0_2px_10px_rgba(79,172,254,0.3)]">
+                          <span className="text-xl text-[#2563eb] font-bold -tracking-[0.3px] shadow-[0_2px_10px_rgba(37,99,235,0.3)]">
                             {formatCurrency(
                               periodInfo.amountDue,
                               period.currency
                             )}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Amount Paid:
                           </span>
@@ -1234,18 +1234,18 @@ export default function Dashboard() {
                             )}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Amount Remaining:
                           </span>
-                          <span className="text-xl text-[#4facfe] font-bold -tracking-[0.3px] shadow-[0_2px_10px_rgba(79,172,254,0.3)]">
+                          <span className="text-xl text-[#2563eb] font-bold -tracking-[0.3px] shadow-[0_2px_10px_rgba(37,99,235,0.3)]">
                             {formatCurrency(
                               periodInfo.amountRemaining,
                               period.currency
                             )}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Capital Portion:
                           </span>
@@ -1253,7 +1253,7 @@ export default function Dashboard() {
                             {formatCurrency(period.capital, period.currency)}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Interest Portion:
                           </span>
@@ -1262,7 +1262,7 @@ export default function Dashboard() {
                           </span>
                         </div>
                         {period.remainingPrincipal !== undefined && (
-                          <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-white/20 hover:translate-x-1">
+                          <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                             <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                               Remaining Principal:
                             </span>
@@ -1297,7 +1297,7 @@ export default function Dashboard() {
 
       {loadingPeriods && (
         <div className="flex flex-col items-center justify-center py-16 px-8 text-white gap-6">
-          <div className="w-[50px] h-[50px] border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+          <div className="w-[50px] h-[50px] border-4 border-neutral-600/40 border-t-neutral-500/60 rounded-full animate-spin"></div>
           <p className="text-lg text-white/90 font-medium">
             Loading payment periods...
           </p>

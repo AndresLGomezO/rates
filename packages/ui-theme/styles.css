@@ -66,7 +66,7 @@
 
   .ds-card-light:hover {
     @apply bg-white/[0.08] -translate-y-1;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 24px rgba(10, 14, 26, 0.4);
   }
 
   /* Glassmorphism card - medium variant (bg-white/12) */
@@ -77,23 +77,23 @@
 
   .ds-card-medium:hover {
     @apply -translate-y-1 border-white/[0.30];
-    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+    box-shadow: 0 12px 40px 0 rgba(10, 14, 26, 0.6);
   }
 
   /* Glassmorphism panel - modal/sidebar variant (bg-white/15) */
   .glass-panel {
     @apply bg-white/[0.15] backdrop-blur-[20px] backdrop-saturate-[180%] border border-white/[0.18] rounded-[24px];
     box-shadow:
-      0 8px 32px 0 rgba(31, 38, 135, 0.37),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+      0 8px 32px 0 rgba(10, 14, 26, 0.5),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
   }
 
   /* Glassmorphism sidebar */
   .glass-sidebar {
     @apply bg-white/10 backdrop-blur-[20px] backdrop-saturate-[180%] border-r border-white/[0.18];
     box-shadow:
-      0 8px 32px 0 rgba(31, 38, 135, 0.37),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+      0 8px 32px 0 rgba(10, 14, 26, 0.5),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
   }
 
   /* Legacy card class - kept for backward compatibility, maps to light variant */
@@ -126,13 +126,13 @@
       border-color 0.2s ease;
   }
 
-  /* Gradient button - primary action button with purple gradient */
+  /* Gradient button - primary action button with navy gradient */
   .ds-button-gradient {
     @apply inline-flex items-center justify-center rounded-xl text-white border border-white/[0.25] cursor-pointer font-semibold;
-    @apply bg-gradient-to-br from-[#667eea] to-[#764ba2] backdrop-blur-[10px];
-    @apply shadow-[0_4px_12px_rgba(102,126,234,0.3)];
+    @apply bg-gradient-to-br from-[#1e40af] to-[#334155] backdrop-blur-[10px];
+    @apply shadow-[0_4px_12px_rgba(30,64,175,0.4)];
     @apply transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)];
-    @apply hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(102,126,234,0.4)] hover:bg-gradient-to-br hover:from-[#7a8ef0] hover:to-[#8559b8];
+    @apply hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(30,64,175,0.5)] hover:bg-gradient-to-br hover:from-[#2563eb] hover:to-[#475569];
     @apply active:translate-y-0;
     @apply disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0;
   }

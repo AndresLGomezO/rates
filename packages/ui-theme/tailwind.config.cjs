@@ -19,75 +19,75 @@ module.exports = {
         // ============================================================================
         // PRIMARY / BRAND COLORS
         // ============================================================================
-        // Core purple/indigo gradient palette from glassmorphism design
-        // Found in: Dashboard.css, PrivateLayout.css, NewAccountWizard.css
+        // Deep navy blue palette - bank-inspired, sophisticated, trustworthy
+        // Replaces purple/indigo with elegant navy tones
         primary: {
-          50: '#f5f7ff',   // Lightest purple tint
-          100: '#e6ecff',
-          200: '#c4d0ff',
-          300: '#9db1ff',
-          400: '#6a84ff',
-          500: '#6366f1',   // Main primary: #6366f1 (indigo-500)
-          600: '#4f46e5',   // Darker indigo
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
-          // Gradient colors used in buttons and backgrounds
+          50: '#e8edf5',   // Lightest navy tint
+          100: '#d1dceb',
+          200: '#a3b9d7',
+          300: '#7596c3',
+          400: '#4773af',
+          500: '#1e3a8a',   // Main primary: Deep navy blue (bank-inspired)
+          600: '#1e40af',   // Rich navy
+          700: '#1e3a8a',   // Darker navy
+          800: '#172554',   // Deep navy
+          900: '#0f172a',   // Darkest navy (almost black)
+          // Gradient colors - sophisticated navy to slate transitions
           gradient: {
-            start: '#667eea',    // From Dashboard.css .btn-add-new, .account-row::before
-            end: '#764ba2',      // From Dashboard.css .btn-add-new
-            pink: '#f093fb',     // From PrivateLayout.css gradient, Dashboard.css
-            cyan: '#4facfe',     // From PrivateLayout.css gradient, Dashboard.css
-            teal: '#00f2fe',     // From PrivateLayout.css gradient
-            purple: '#8b5cf6',   // From Dashboard.css .account-row-log-payment
+            start: '#1e40af',    // Rich navy start
+            end: '#334155',      // Slate end
+            navy: '#1e3a8a',     // Deep navy
+            slate: '#475569',    // Medium slate
+            dark: '#0f172a',     // Darkest
+            blue: '#2563eb',      // Bright blue accent
           },
         },
 
         // ============================================================================
-        // ACCENT COLORS (Cyan/Teal)
+        // ACCENT COLORS (Gold/Amber - Premium, Wealth)
         // ============================================================================
-        // Used for highlights, info states, auth-app primary
-        // Found in: auth-app/src/index.css, Dashboard.css metric cards
+        // Sophisticated gold/amber palette replacing cyan/teal
+        // Used for highlights, premium features, auth-app primary
         accent: {
-          50: '#ecfeff',
-          100: '#cffafe',
-          200: '#a5f3fc',
-          300: '#67e8f9',
-          400: '#22d3ee',
-          500: '#06b6d4',   // Main accent: #06b6d4 (auth-app button gradient start)
-          600: '#0891b2',   // From auth-app/src/index.css .badge
-          700: '#0e7490',
-          800: '#155e75',
-          900: '#164e63',
-          // Auth-app specific
-          'auth-blue': '#0369a1',  // From auth-app/src/index.css .badge
-          'auth-cyan': '#38bdf8',  // From auth-app/src/index.css input focus
+          50: '#fffbeb',
+          100: '#fef3c7',
+          200: '#fde68a',
+          300: '#fcd34d',
+          400: '#fbbf24',
+          500: '#d97706',   // Main accent: Rich gold (premium feel)
+          600: '#b45309',   // Darker gold
+          700: '#92400e',   // Deep amber
+          800: '#78350f',   // Dark amber
+          900: '#451a03',   // Darkest amber
+          // Auth-app specific - maintaining some blue for auth flows
+          'auth-blue': '#1e40af',  // Navy blue for auth
+          'auth-cyan': '#3b82f6',  // Bright blue for focus states
         },
 
         // ============================================================================
         // SEMANTIC COLORS
         // ============================================================================
         
-        // Success - Green palette
+        // Success - Deep emerald/teal palette (professional, sophisticated)
         // Found in: Dashboard.css .metric-card.income, NewAccountWizard.css success states
         success: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          200: '#bbf7d0',   // From auth-app/src/index.css .success border
-          300: '#86efac',
-          400: '#4ade80',
-          500: '#22c55e',   // Standard success
-          600: '#16a34a',
-          700: '#15803d',
-          800: '#166534',   // From auth-app/src/index.css .success text
-          900: '#14532d',
-          // Specific values from CSS
-          'css': '#4caf50',              // From Dashboard.css .metric-change.positive, formatters.ts
-          'css-rgba': 'rgba(46, 204, 113, 0.9)',  // From NewAccountWizard.css
-          'light': '#ecfdf3',            // From auth-app/src/index.css .success background
+          50: '#ecfdf5',
+          100: '#d1fae5',
+          200: '#a7f3d0',
+          300: '#6ee7b7',
+          400: '#34d399',
+          500: '#10b981',   // Professional emerald green
+          600: '#059669',
+          700: '#047857',
+          800: '#065f46',   // Deep emerald
+          900: '#064e3b',
+          // Specific values from CSS - updated to match new palette
+          'css': '#10b981',              // Professional emerald
+          'css-rgba': 'rgba(16, 185, 129, 0.9)',  // Updated emerald
+          'light': '#d1fae5',            // Light emerald background
         },
 
-        // Warning - Orange/Yellow palette
+        // Warning - Amber/Gold palette (sophisticated, premium)
         // Found in: Dashboard.css .metric-card.pending, .metric-change.warning
         warning: {
           50: '#fffbeb',
@@ -95,16 +95,16 @@ module.exports = {
           200: '#fde68a',
           300: '#fcd34d',
           400: '#fbbf24',
-          500: '#f59e0b',
-          600: '#d97706',
-          700: '#b45309',
-          800: '#92400e',
-          900: '#78350f',
-          // Specific values from CSS
-          'css': '#ff9800',              // From Dashboard.css .metric-change.warning, formatters.ts
-          'css-rgba': 'rgba(255, 152, 0, 0.2)',   // From Dashboard.css .metric-card.pending
-          'yellow': '#ffd93d',           // From CSS_AUDIT.md
-          'yellow-rgba': 'rgba(255, 193, 7, 1)', // From CSS_AUDIT.md
+          500: '#d97706',   // Rich amber (matches accent)
+          600: '#b45309',
+          700: '#92400e',
+          800: '#78350f',
+          900: '#451a03',
+          // Specific values from CSS - updated to sophisticated amber
+          'css': '#d97706',              // Rich amber
+          'css-rgba': 'rgba(217, 119, 6, 0.2)',   // Amber with opacity
+          'yellow': '#fbbf24',           // Bright amber
+          'yellow-rgba': 'rgba(251, 191, 36, 1)', // Bright amber solid
         },
 
         // Danger - Red palette
@@ -129,64 +129,65 @@ module.exports = {
           'text-light': '#ffb3b3',        // From NewAccountWizard.css
         },
 
-        // Info - Blue palette
+        // Info - Deep blue palette (trust, stability)
         // Found in: Dashboard.css metric cards, formatters.ts
         info: {
-          500: '#2196f3',   // From formatters.ts account status 'paid_off'
-          600: '#667eea',   // Used as metric primary in Dashboard.css
-          'css-rgba': 'rgba(33, 150, 243, 1)', // From CSS_AUDIT.md
+          500: '#2563eb',   // Bright blue (trustworthy)
+          600: '#1e40af',   // Deep navy blue
+          700: '#1e3a8a',   // Darker navy
+          'css-rgba': 'rgba(37, 99, 235, 1)', // Updated blue
         },
 
         // ============================================================================
         // NEUTRAL COLORS
         // ============================================================================
-        // Gray scale for text, borders, surfaces
+        // Sophisticated slate/gray scale - darker, more refined
         // Found throughout all CSS files
         neutral: {
-          50: '#f9fafb',
-          100: '#f3f4f6',
-          200: '#e5e7eb',
-          300: '#d1d5db',
-          400: '#9ca3af',
-          500: '#6b7280',
-          600: '#4b5563',
-          700: '#374151',
-          800: '#1f2937',
-          900: '#111827',
-          // Auth-app specific neutrals (light theme)
-          'auth-text': '#0f172a',        // From auth-app/src/index.css :root
-          'auth-text-muted': '#475569',  // From auth-app/src/index.css .muted
-          'auth-border': '#e2e8f0',      // From auth-app/src/index.css .input border
-          'auth-bg': '#f8fafc',          // From auth-app/src/index.css :root, body gradient
-          'auth-surface': '#ffffff',      // From auth-app/src/index.css .card
-          'auth-gray': '#666',            // From CSS_AUDIT.md
-          'auth-gray-dark': '#1e1e1e',    // From CSS_AUDIT.md
-          'auth-gray-light': '#e2e8f0',   // From auth-app/src/index.css
+          50: '#f8fafc',
+          100: '#f1f5f9',
+          200: '#e2e8f0',
+          300: '#cbd5e1',
+          400: '#94a3b8',
+          500: '#64748b',
+          600: '#475569',
+          700: '#334155',
+          800: '#1e293b',
+          900: '#0f172a',
+          // Auth-app specific neutrals (light theme - kept lighter for contrast)
+          'auth-text': '#0f172a',        // Dark text
+          'auth-text-muted': '#475569',  // Muted slate
+          'auth-border': '#e2e8f0',      // Light border
+          'auth-bg': '#f8fafc',          // Light background
+          'auth-surface': '#ffffff',      // White surface
+          'auth-gray': '#64748b',        // Medium slate
+          'auth-gray-dark': '#1e293b',    // Dark slate
+          'auth-gray-light': '#e2e8f0',   // Light slate
         },
 
         // ============================================================================
         // BACKGROUND & SURFACE COLORS (Glassmorphism)
         // ============================================================================
-        // Dark theme backgrounds with opacity for glassmorphism effect
+        // Darker, sophisticated backgrounds - bank-inspired charcoal and navy
         // Found in: PrivateLayout.css, Dashboard.css, Modal.css
-        background: '#020617',           // Base dark background
-        surface: 'rgba(15, 23, 42, 0.85)', // Main glass surface
-        // White opacity variants for glassmorphism layers
-        'surface-light': 'rgba(255, 255, 255, 0.05)',
-        'surface-medium': 'rgba(255, 255, 255, 0.1)',
-        'surface-heavy': 'rgba(255, 255, 255, 0.15)',
+        background: '#0a0e1a',           // Base dark background (darker charcoal with navy tint)
+        surface: 'rgba(15, 23, 42, 0.9)', // Main glass surface (darker, more opaque)
+        // White opacity variants for glassmorphism layers (slightly reduced for darker feel)
+        'surface-light': 'rgba(255, 255, 255, 0.04)',
+        'surface-medium': 'rgba(255, 255, 255, 0.08)',
+        'surface-heavy': 'rgba(255, 255, 255, 0.12)',
         // Note: Components use arbitrary opacity values (bg-white/10, bg-white/15, etc.)
         // instead of theme values, so glass-* variants are not needed
-        // Black opacity variants
-        'black-10': 'rgba(0, 0, 0, 0.1)',
-        'black-18': 'rgba(0, 0, 0, 0.18)',
-        'black-20': 'rgba(0, 0, 0, 0.2)',
-        'black-25': 'rgba(0, 0, 0, 0.25)',
-        'black-60': 'rgba(0, 0, 0, 0.6)',
+        // Black opacity variants (enhanced for darker theme)
+        'black-10': 'rgba(0, 0, 0, 0.15)',
+        'black-18': 'rgba(0, 0, 0, 0.25)',
+        'black-20': 'rgba(0, 0, 0, 0.3)',
+        'black-25': 'rgba(0, 0, 0, 0.35)',
+        'black-60': 'rgba(0, 0, 0, 0.7)',
         // Note: Legacy app colors removed - not used in codebase
-        // Muted gray
-        'muted': '#9e9e9e',              // From CSS_AUDIT.md
-        'muted-rgba': 'rgba(158, 158, 158, 1)', // From CSS_AUDIT.md
+        // Muted gray (updated to slate)
+        'muted': '#64748b',              // Medium slate
+        'muted-rgba': 'rgba(100, 116, 139, 1)', // Medium slate solid
       },
 
       // ============================================================================
@@ -310,30 +311,30 @@ module.exports = {
       // BOX SHADOWS
       // ============================================================================
       boxShadow: {
-        // Glassmorphism shadows
-        'soft': '0 10px 40px rgba(15, 23, 42, 0.35)',           // From styles.css
-        'soft-lg': '0 15px 50px rgba(15, 23, 42, 0.4)',         // From styles.css
-        'soft-md': '0 4px 12px rgba(0, 0, 0, 0.1)',             // From Dashboard.css .btn-secondary
-        'soft-sm': '0 15px 40px rgba(15, 23, 42, 0.08)',        // From auth-app .card
+        // Glassmorphism shadows - darker, more sophisticated
+        'soft': '0 10px 40px rgba(10, 14, 26, 0.5)',           // Darker background shadow
+        'soft-lg': '0 15px 50px rgba(10, 14, 26, 0.6)',         // Larger dark shadow
+        'soft-md': '0 4px 12px rgba(0, 0, 0, 0.2)',             // Medium shadow
+        'soft-sm': '0 15px 40px rgba(10, 14, 26, 0.15)',        // Subtle shadow
         
-        // Glassmorphism with color tints
-        'glass-purple': '0 4px 12px rgba(102, 126, 234, 0.3)',  // From Dashboard.css .btn-add-new
-        'glass-purple-lg': '0 6px 20px rgba(79, 70, 229, 0.35)', // From Dashboard.css .btn-secondary:hover
-        'glass-purple-xl': '0 6px 16px rgba(99, 102, 241, 0.4)', // From Dashboard.css .account-row-log-payment:hover
-        'glass-cyan': '0 10px 30px rgba(14, 165, 233, 0.35)',   // From auth-app .button
+        // Glassmorphism with color tints - navy and gold
+        'glass-navy': '0 4px 12px rgba(30, 58, 138, 0.4)',     // Navy shadow
+        'glass-navy-lg': '0 6px 20px rgba(30, 64, 175, 0.45)', // Large navy shadow
+        'glass-navy-xl': '0 6px 16px rgba(30, 58, 138, 0.5)',  // Extra large navy shadow
+        'glass-gold': '0 10px 30px rgba(217, 119, 6, 0.35)',   // Gold accent shadow
         
         // Inset shadows for depth
-        'inset': 'inset 0 0 0 1px rgba(148, 163, 184, 0.3)',   // From styles.css
-        'inset-glass': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.2)', // From Dashboard.css .account-row
+        'inset': 'inset 0 0 0 1px rgba(71, 85, 105, 0.4)',   // Darker slate inset
+        'inset-glass': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.15)', // Softer white inset for darker theme
         
-        // Focus rings
-        'focus': '0 0 0 1px rgba(99, 102, 241, 0.6), 0 0 0 4px rgba(99, 102, 241, 0.25)',
-        'focus-accent': '0 0 0 1px rgba(6, 182, 212, 0.6), 0 0 0 4px rgba(6, 182, 212, 0.25)',
-        'focus-cyan': '0 0 0 2px #38bdf8',                     // From auth-app .input:focus
+        // Focus rings - navy and gold
+        'focus': '0 0 0 1px rgba(30, 58, 138, 0.7), 0 0 0 4px rgba(30, 58, 138, 0.3)',
+        'focus-accent': '0 0 0 1px rgba(217, 119, 6, 0.7), 0 0 0 4px rgba(217, 119, 6, 0.3)',
+        'focus-blue': '0 0 0 2px #2563eb',                     // Bright blue focus
         
-        // Complex glassmorphism shadows
-        'glass-complex': '0 8px 32px 0 rgba(31, 38, 135, 0.37), inset 0 1px 0 0 rgba(255, 255, 255, 0.2)', // From PrivateLayout.css .sidebar
-        'glass-complex-lg': '0 12px 40px 0 rgba(31, 38, 135, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.3)', // From Dashboard.css .summary-card:hover
+        // Complex glassmorphism shadows - darker, sophisticated
+        'glass-complex': '0 8px 32px 0 rgba(10, 14, 26, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.15)', // Darker sidebar shadow
+        'glass-complex-lg': '0 12px 40px 0 rgba(10, 14, 26, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.2)', // Darker card hover shadow
       },
 
       // ============================================================================

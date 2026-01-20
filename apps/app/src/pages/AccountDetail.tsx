@@ -436,7 +436,7 @@ export default function AccountDetail() {
     return (
       <div className="py-8 px-8 max-w-[1400px] mx-auto animate-fadeIn-slow box-border md:p-4">
         <div className="flex flex-col items-center justify-center min-h-[400px] text-center text-white/80">
-          <div className="w-[50px] h-[50px] border-4 border-white/10 border-t-primary-500 rounded-full animate-spin mb-4"></div>
+          <div className="w-[50px] h-[50px] border-4 border-neutral-600/30 border-t-primary-500 rounded-full animate-spin mb-4"></div>
           <p>Loading account details...</p>
         </div>
       </div>
@@ -453,7 +453,7 @@ export default function AccountDetail() {
             onClick={() => {
               void navigate('/dashboard');
             }}
-            className="flex items-center gap-2 px-5 py-3 bg-white/10 backdrop-blur-[10px] text-white border border-white/20 rounded-[10px] cursor-pointer text-sm font-semibold transition-all duration-300 ease-in-out mt-4 hover:bg-white/15 hover:-translate-x-1"
+            className="flex items-center gap-2 px-5 py-3 bg-white/10 backdrop-blur-[10px] text-white border border-neutral-600/40 rounded-[10px] cursor-pointer text-sm font-semibold transition-all duration-300 ease-in-out mt-4 hover:bg-white/15 hover:-translate-x-1"
           >
             Go Back
           </button>
@@ -486,7 +486,7 @@ export default function AccountDetail() {
   return (
     <div className="py-8 px-8 max-w-[1400px] mx-auto animate-fadeIn-slow box-border md:p-4">
       {/* Header */}
-      <div className="flex justify-between items-start mb-10 pb-6 border-b border-white/10 gap-8 flex-wrap md:flex-col">
+      <div className="flex justify-between items-start mb-10 pb-6 border-b border-neutral-700/30 gap-8 flex-wrap md:flex-col">
         <div className="flex-1 min-w-0">
           <button
             onClick={() => {
@@ -496,7 +496,7 @@ export default function AccountDetail() {
                 void navigate('/dashboard');
               }
             }}
-            className="flex items-center gap-2 px-5 py-3 bg-white/10 backdrop-blur-[10px] text-white border border-white/20 rounded-[10px] cursor-pointer text-sm font-semibold transition-all duration-300 ease-in-out mb-6 hover:bg-white/15 hover:-translate-x-1"
+            className="flex items-center gap-2 px-5 py-3 bg-white/10 backdrop-blur-[10px] text-white border border-neutral-600/40 rounded-[10px] cursor-pointer text-sm font-semibold transition-all duration-300 ease-in-out mb-6 hover:bg-white/15 hover:-translate-x-1"
           >
             <svg
               width="20"
@@ -557,7 +557,7 @@ export default function AccountDetail() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-6 mb-12 md:grid-cols-1">
+      <div className="grid grid-cols-1 gap-6 mb-12 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]">
         <div className="ds-card-light p-6">
           <div className="text-white/70 text-sm font-semibold uppercase tracking-wide mb-3">
             Remaining Balance
@@ -602,7 +602,7 @@ export default function AccountDetail() {
           </div>
           <div className="w-full h-2 bg-white/10 rounded overflow-hidden mt-3">
             <div
-              className="h-full bg-gradient-to-r from-[#667eea] to-[#764ba2] rounded transition-all duration-500 ease-in-out"
+              className="h-full bg-gradient-to-r from-[#1e40af] to-[#334155] rounded transition-all duration-500 ease-in-out"
               style={{ width: `${metrics.progressPercentage}%` }}
             ></div>
           </div>
@@ -634,11 +634,11 @@ export default function AccountDetail() {
 
       {/* Charts Section */}
       <div className="mb-12 flex flex-col w-full">
-        <h2 className="text-white text-[1.75rem] font-bold mb-8 pb-4 border-b border-white/10 w-full col-span-full">
+        <h2 className="text-white text-[1.75rem] font-bold mb-8 pb-4 border-b border-neutral-700/30 w-full col-span-full">
           Loan Payment Insights
         </h2>
 
-        <div className="grid grid-cols-2 gap-6 w-full box-border md:grid-cols-1 md:gap-4">
+        <div className="grid grid-cols-1 gap-6 w-full box-border md:grid-cols-2 md:gap-6">
           {/* Principal Reduction Over Time */}
           {chartData.length > 0 && (
             <div className="ds-card-light p-6">
@@ -658,10 +658,10 @@ export default function AccountDetail() {
                       x2="0"
                       y2="1"
                     >
-                      <stop offset="5%" stopColor="#667eea" stopOpacity={0.8} />
+                      <stop offset="5%" stopColor="#1e40af" stopOpacity={0.8} />
                       <stop
                         offset="95%"
-                        stopColor="#667eea"
+                        stopColor="#1e40af"
                         stopOpacity={0.1}
                       />
                     </linearGradient>
@@ -689,7 +689,7 @@ export default function AccountDetail() {
                   <Area
                     type="monotone"
                     dataKey="balance"
-                    stroke="#667eea"
+                    stroke="#1e40af"
                     fillOpacity={1}
                     fill="url(#principalGradient)"
                     name="Principal Balance"
@@ -733,13 +733,13 @@ export default function AccountDetail() {
                   <Bar
                     dataKey="principal"
                     stackId="a"
-                    fill="#667eea"
+                    fill="#1e40af"
                     name="Principal"
                   />
                   <Bar
                     dataKey="interest"
                     stackId="a"
-                    fill="#f093fb"
+                    fill="#2563eb"
                     name="Interest"
                   />
                 </BarChart>
@@ -766,10 +766,10 @@ export default function AccountDetail() {
                       x2="0"
                       y2="1"
                     >
-                      <stop offset="5%" stopColor="#f093fb" stopOpacity={0.8} />
+                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.8} />
                       <stop
                         offset="95%"
-                        stopColor="#f093fb"
+                        stopColor="#2563eb"
                         stopOpacity={0.1}
                       />
                     </linearGradient>
@@ -796,7 +796,7 @@ export default function AccountDetail() {
                   <Area
                     type="monotone"
                     dataKey="cumulativeInterest"
-                    stroke="#f093fb"
+                    stroke="#2563eb"
                     fillOpacity={1}
                     fill="url(#interestGradient)"
                     name="Cumulative Interest"
@@ -841,18 +841,18 @@ export default function AccountDetail() {
                   <Line
                     type="monotone"
                     dataKey="interestPortion"
-                    stroke="#f093fb"
+                    stroke="#2563eb"
                     strokeWidth={2}
                     name="Interest Portion"
-                    dot={{ fill: '#f093fb', r: 3 }}
+                    dot={{ fill: '#2563eb', r: 3 }}
                   />
                   <Line
                     type="monotone"
                     dataKey="principalPortion"
-                    stroke="#667eea"
+                    stroke="#1e40af"
                     strokeWidth={2}
                     name="Principal Portion"
-                    dot={{ fill: '#667eea', r: 3 }}
+                    dot={{ fill: '#1e40af', r: 3 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -897,7 +897,7 @@ export default function AccountDetail() {
 
       {/* Historical Payments */}
       <div className="mb-12">
-        <h2 className="text-white text-[1.75rem] font-bold mb-8 pb-4 border-b border-white/10 w-full col-span-full">
+        <h2 className="text-white text-[1.75rem] font-bold mb-8 pb-4 border-b border-neutral-700/30 w-full col-span-full">
           Historical Payments
         </h2>
         {paymentHistoryData.length > 0 ? (
@@ -905,13 +905,13 @@ export default function AccountDetail() {
             <table className="w-full border-collapse">
               <thead className="bg-white/5">
                 <tr>
-                  <th className="px-6 py-4 text-left text-white/90 font-semibold text-sm uppercase tracking-wide border-b border-white/10">
+                  <th className="px-6 py-4 text-left text-white/90 font-semibold text-sm uppercase tracking-wide border-b border-neutral-700/30">
                     Date
                   </th>
-                  <th className="px-6 py-4 text-left text-white/90 font-semibold text-sm uppercase tracking-wide border-b border-white/10">
+                  <th className="px-6 py-4 text-left text-white/90 font-semibold text-sm uppercase tracking-wide border-b border-neutral-700/30">
                     Amount
                   </th>
-                  <th className="px-6 py-4 text-left text-white/90 font-semibold text-sm uppercase tracking-wide border-b border-white/10">
+                  <th className="px-6 py-4 text-left text-white/90 font-semibold text-sm uppercase tracking-wide border-b border-neutral-700/30">
                     Notes
                   </th>
                 </tr>
@@ -919,13 +919,13 @@ export default function AccountDetail() {
               <tbody>
                 {paymentHistoryData.map((payment, index) => (
                   <tr key={index} className="hover:bg-white/5 last:border-b-0">
-                    <td className="px-6 py-4 text-white/80 border-b border-white/5">
+                    <td className="px-6 py-4 text-white/80 border-b border-neutral-700/20">
                       {payment.dateStr}
                     </td>
-                    <td className="px-6 py-4 font-semibold text-success-css border-b border-white/5">
+                    <td className="px-6 py-4 font-semibold text-success-css border-b border-neutral-700/20">
                       {formatCurrency(payment.amount, payment.currency)}
                     </td>
-                    <td className="px-6 py-4 text-white/80 border-b border-white/5">
+                    <td className="px-6 py-4 text-white/80 border-b border-neutral-700/20">
                       {payment.notes ?? '-'}
                     </td>
                   </tr>
@@ -943,7 +943,7 @@ export default function AccountDetail() {
       {/* Payment Periods */}
       <div className="mb-12">
         <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-          <h2 className="text-white text-[1.75rem] font-bold pb-4 border-b border-white/10 w-full col-span-full m-0">
+          <h2 className="text-white text-[1.75rem] font-bold pb-4 border-b border-neutral-700/30 w-full col-span-full m-0">
             Payment Periods
           </h2>
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -1089,7 +1089,7 @@ export default function AccountDetail() {
           </div>
         )}
         {paymentPeriods.length > 0 ? (
-          <div className="periods-grid">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {paymentPeriods.map((period) => {
               const dueDate = toDate(period.dueDate);
               const isOverdue =
@@ -1105,7 +1105,7 @@ export default function AccountDetail() {
                       : 'border-white/10'
                   }`}
                 >
-                  <div className="flex justify-between items-center mb-5 pb-4 border-b border-white/10">
+                  <div className="flex justify-between items-center mb-5 pb-4 border-b border-neutral-700/30">
                     <span className="text-white font-semibold text-lg">
                       Period #{period.periodNumber}
                     </span>
@@ -1178,7 +1178,7 @@ export default function AccountDetail() {
                       </div>
                     )}
                     {period.paymentLog.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-white/10 flex flex-col gap-2">
+                      <div className="mt-4 pt-4 border-t border-neutral-700/30 flex flex-col gap-2">
                         <span className="text-white/70 text-sm">Payments:</span>
                         {period.paymentLog.map((payment, idx) => {
                           const paymentDate = toDate(payment.datePaid);

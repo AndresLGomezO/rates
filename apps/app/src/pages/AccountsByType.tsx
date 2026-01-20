@@ -339,7 +339,7 @@ export default function AccountsByType() {
           </h2>
         </div>
         <div className="flex flex-col items-center justify-center min-h-[400px] text-center text-white/80">
-          <div className="w-[50px] h-[50px] border-4 border-white/10 border-t-primary-500 rounded-full animate-spin mb-4"></div>
+          <div className="w-[50px] h-[50px] border-4 border-neutral-600/30 border-t-primary-500 rounded-full animate-spin mb-4"></div>
           <p>Loading accounts...</p>
         </div>
       </div>
@@ -472,7 +472,7 @@ export default function AccountsByType() {
             >
               <button
                 type="button"
-                className="px-8 py-3.5 bg-white/10 backdrop-blur-[10px] text-white border border-white/20 rounded-xl cursor-pointer text-base font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:bg-white/25 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="px-8 py-3.5 bg-white/10 backdrop-blur-[10px] text-white border border-neutral-600/40 rounded-xl cursor-pointer text-base font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:bg-white/25 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={() => {
                   if (!saving) {
                     setDeletingAccount(null);
@@ -560,7 +560,7 @@ export default function AccountsByType() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-6 mb-8 md:grid-cols-1">
+          <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-3">
             <div className="ds-card-light p-6">
               <h3 className="text-white/70 text-sm font-semibold uppercase tracking-wide mb-2 m-0">
                 Total Accounts
@@ -602,7 +602,7 @@ export default function AccountsByType() {
 
               return (
                 <div key={account.accountNumber} className="ds-card-light p-6">
-                  <div className="flex justify-between items-start mb-6 pb-4 border-b border-white/10">
+                  <div className="flex justify-between items-start mb-6 pb-4 border-b border-neutral-700/30">
                     <div>
                       <h3 className="text-white text-xl font-bold mb-2 m-0">
                         {account.accountName}

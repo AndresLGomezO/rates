@@ -136,8 +136,8 @@ export function Filters({
               key={status.value}
               className={`flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-[20px] text-[0.85rem] font-medium md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] xs:px-3 xs:py-[0.4rem] xs:text-xs ${
                 statusFilters.includes(status.value)
-                  ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(102,126,234,0.3)] to-[rgba(118,75,162,0.3)] border border-[rgba(102,126,234,0.5)] shadow-[0_2px_8px_rgba(102,126,234,0.2)] hover:shadow-[0_4px_12px_rgba(102,126,234,0.3)] hover:from-[rgba(102,126,234,0.4)] hover:to-[rgba(118,75,162,0.4)]'
-                  : 'px-4 py-2 text-white/90 bg-white/10 border border-white/20 hover:bg-white/15 hover:border-white/30 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+                  ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)] border border-[rgba(30,64,175,0.5)] shadow-[0_2px_8px_rgba(30,64,175,0.3)] hover:shadow-[0_4px_12px_rgba(30,64,175,0.4)] hover:from-[rgba(30,64,175,0.4)] hover:to-[rgba(51,65,85,0.4)]'
+                  : 'px-4 py-2 text-white/90 bg-white/10 border border-neutral-600/40 hover:bg-white/15 hover:border-neutral-500/50 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
               }`}
               onClick={() => toggleStatus(status.value)}
               type="button"
@@ -163,8 +163,8 @@ export function Filters({
                 key={type.value}
                 className={`flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-[20px] text-[0.85rem] font-medium md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] xs:px-3 xs:py-[0.4rem] xs:text-xs ${
                   typeFilters.includes(type.value)
-                    ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(102,126,234,0.3)] to-[rgba(118,75,162,0.3)] border border-[rgba(102,126,234,0.5)] shadow-[0_2px_8px_rgba(102,126,234,0.2)] hover:shadow-[0_4px_12px_rgba(102,126,234,0.3)] hover:from-[rgba(102,126,234,0.4)] hover:to-[rgba(118,75,162,0.4)]'
-                    : 'px-4 py-2 text-white/90 bg-white/10 border border-white/20 hover:bg-white/15 hover:border-white/30 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+                    ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)] border border-[rgba(30,64,175,0.5)] shadow-[0_2px_8px_rgba(30,64,175,0.3)] hover:shadow-[0_4px_12px_rgba(30,64,175,0.4)] hover:from-[rgba(30,64,175,0.4)] hover:to-[rgba(51,65,85,0.4)]'
+                    : 'px-4 py-2 text-white/90 bg-white/10 border border-neutral-600/40 hover:bg-white/15 hover:border-neutral-500/50 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
                 }`}
                 onClick={() => toggleType(type.value)}
                 type="button"
@@ -201,8 +201,8 @@ export function Filters({
               key={currency}
               className={`flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-[20px] text-[0.85rem] font-medium md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] xs:px-3 xs:py-[0.4rem] xs:text-xs ${
                 currencyFilter === currency
-                  ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(102,126,234,0.3)] to-[rgba(118,75,162,0.3)] border border-[rgba(102,126,234,0.5)] shadow-[0_2px_8px_rgba(102,126,234,0.2)] hover:shadow-[0_4px_12px_rgba(102,126,234,0.3)] hover:from-[rgba(102,126,234,0.4)] hover:to-[rgba(118,75,162,0.4)]'
-                  : 'px-4 py-2 text-white/90 bg-white/10 border border-white/20 hover:bg-white/15 hover:border-white/30 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+                  ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)] border border-[rgba(30,64,175,0.5)] shadow-[0_2px_8px_rgba(30,64,175,0.3)] hover:shadow-[0_4px_12px_rgba(30,64,175,0.4)] hover:from-[rgba(30,64,175,0.4)] hover:to-[rgba(51,65,85,0.4)]'
+                  : 'px-4 py-2 text-white/90 bg-white/10 border border-neutral-600/40 hover:bg-white/15 hover:border-neutral-500/50 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
               }`}
               onClick={() => setCurrency(currency)}
               type="button"
@@ -225,8 +225,8 @@ export function Filters({
                 key={days}
                 className={`flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-[20px] text-[0.85rem] font-medium md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] xs:px-3 xs:py-[0.4rem] xs:text-xs ${
                   daysAhead === days
-                    ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(102,126,234,0.3)] to-[rgba(118,75,162,0.3)] border border-[rgba(102,126,234,0.5)] shadow-[0_2px_8px_rgba(102,126,234,0.2)] hover:shadow-[0_4px_12px_rgba(102,126,234,0.3)] hover:from-[rgba(102,126,234,0.4)] hover:to-[rgba(118,75,162,0.4)]'
-                    : 'px-4 py-2 text-white/90 bg-white/10 border border-white/20 hover:bg-white/15 hover:border-white/30 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+                    ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)] border border-[rgba(30,64,175,0.5)] shadow-[0_2px_8px_rgba(30,64,175,0.3)] hover:shadow-[0_4px_12px_rgba(30,64,175,0.4)] hover:from-[rgba(30,64,175,0.4)] hover:to-[rgba(51,65,85,0.4)]'
+                    : 'px-4 py-2 text-white/90 bg-white/10 border border-neutral-600/40 hover:bg-white/15 hover:border-neutral-500/50 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
                 }`}
                 onClick={() => setDaysAhead(days)}
                 type="button"

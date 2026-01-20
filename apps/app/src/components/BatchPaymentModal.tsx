@@ -287,8 +287,8 @@ export function BatchPaymentModal({
         }}
         className="flex flex-col gap-6 py-4"
       >
-        <div className="bg-white/5 rounded-xl p-5 border border-white/10">
-          <div className="flex justify-between items-center py-3 border-b border-white/5 last:border-b-0">
+        <div className="bg-white/5 rounded-xl p-5 border border-neutral-700/30">
+          <div className="flex justify-between items-center py-3 border-b border-neutral-700/20 last:border-b-0">
             <span className="text-sm text-white/70 font-medium">
               Account Number:
             </span>
@@ -296,7 +296,7 @@ export function BatchPaymentModal({
               {account.accountNumber}
             </span>
           </div>
-          <div className="flex justify-between items-center py-3 border-b border-white/5 last:border-b-0">
+          <div className="flex justify-between items-center py-3 border-b border-neutral-700/20 last:border-b-0">
             <span className="text-sm text-white/70 font-medium">
               Pending Periods:
             </span>
@@ -402,7 +402,7 @@ export function BatchPaymentModal({
                   </div>
                   <div className="mt-2">
                     Total amount:{' '}
-                    <strong className="text-[#4facfe]">
+                    <strong className="text-[#2563eb]">
                       {formatCurrency(
                         totalAmount,
                         account.monthlyPayment.currency
@@ -538,7 +538,7 @@ export function BatchPaymentModal({
               {!result && (
                 <button
                   type="submit"
-                  className="px-6 py-3 rounded-lg text-base font-semibold cursor-pointer transition-all duration-200 ease-in-out border-none bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] text-white shadow-[0_4px_12px_rgba(99,102,241,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(99,102,241,0.4)] disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 font-inherit"
+                  className="px-6 py-3 rounded-lg text-base font-semibold cursor-pointer transition-all duration-200 ease-in-out border-none bg-gradient-to-br from-[#1e40af] to-[#334155] text-white shadow-[0_4px_12px_rgba(30,64,175,0.4)] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(30,64,175,0.5)] disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 font-inherit"
                   disabled={isSubmitting || periodsInRange.length === 0}
                 >
                   {isSubmitting
