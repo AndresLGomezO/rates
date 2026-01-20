@@ -11,6 +11,7 @@ import { getPaymentPeriods } from '../services/paymentPeriods';
 import { formatCurrency, toDate, formatDate } from '../utils/formatters';
 import { calculateDaysRemaining } from '../utils/paymentUtils';
 import { LogPaymentModal } from '../components/LogPaymentModal';
+import { NewAccountWizard } from '../components/NewAccountWizard';
 import {
   LineChart,
   Line,
@@ -46,6 +47,10 @@ interface DashboardMetrics {
   totalOutcomes: number;
   totalInterest: number;
   totalPrincipal: number;
+  dueInterest: number;
+  duePrincipal: number;
+  pendingInterest: number;
+  pendingPrincipal: number;
   totalPaid: number;
   totalPending: number;
   totalAccounts: number;
@@ -86,6 +91,7 @@ export default function Dashboard() {
   const [expandedAccounts, setExpandedAccounts] = useState<Set<string>>(
     new Set()
   );
+  const [isNewAccountWizardOpen, setIsNewAccountWizardOpen] = useState(false);
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search') ?? '';
   const daysAhead = parseInt(searchParams.get('daysAhead') ?? '15', 10);
@@ -285,6 +291,27 @@ export default function Dashboard() {
       0
     );
 
+    // Total due interest/principal across visible periods
+    const dueInterest = filteredPeriods.reduce(
+      (sum, p) => sum + p.period.interest,
+      0
+    );
+    const duePrincipal = filteredPeriods.reduce(
+      (sum, p) => sum + p.period.capital,
+      0
+    );
+
+    // Estimate pending interest/principal based on remaining amount ratio
+    let pendingInterest = 0;
+    let pendingPrincipal = 0;
+    [...pendingPeriods, ...partialPeriods].forEach((p) => {
+      const { amountDue, amountRemaining } = p.periodInfo;
+      if (amountDue <= 0 || amountRemaining <= 0) return;
+      const ratio = amountRemaining / amountDue;
+      pendingInterest += p.period.interest * ratio;
+      pendingPrincipal += p.period.capital * ratio;
+    });
+
     const uniqueAccounts = new Set(
       filteredPeriods.map((p) => p.account.accountNumber)
     );
@@ -295,6 +322,10 @@ export default function Dashboard() {
       totalOutcomes,
       totalInterest,
       totalPrincipal,
+      dueInterest,
+      duePrincipal,
+      pendingInterest,
+      pendingPrincipal,
       totalPaid,
       totalPending,
       totalAccounts: uniqueAccounts.size,
@@ -478,7 +509,24 @@ export default function Dashboard() {
               : 'Viewing all periods'}
           </p>
         </div>
+        <button
+          className="btn-add-new"
+          onClick={() => setIsNewAccountWizardOpen(true)}
+          title="Create a new account"
+        >
+          <span className="btn-add-icon">+</span>
+          <span>New account</span>
+        </button>
       </div>
+
+      <NewAccountWizard
+        isOpen={isNewAccountWizardOpen}
+        onClose={() => setIsNewAccountWizardOpen(false)}
+        onCreated={() => {
+          // Refresh dashboard data in the background after creation
+          void loadAccounts();
+        }}
+      />
 
       {/* Key Metrics */}
       <div className="metrics-grid">
@@ -490,6 +538,75 @@ export default function Dashboard() {
           <div className="metric-change positive">
             {metrics.paidPeriodsCount} paid periods
           </div>
+          {metrics.totalPaid > 0 && (
+            <div className="metric-split">
+              <div className="metric-split-bar">
+                <ResponsiveContainer width="100%" height={32}>
+                  <BarChart
+                    data={[
+                      {
+                        name: 'Paid',
+                        interest: metrics.totalInterest,
+                        principal: metrics.totalPrincipal,
+                      },
+                    ]}
+                    layout="vertical"
+                    margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+                  >
+                    <XAxis type="number" hide />
+                    <YAxis type="category" dataKey="name" hide />
+                    <Tooltip
+                      cursor={{ fill: 'rgba(255,255,255,0.06)' }}
+                      contentStyle={{
+                        backgroundColor: 'rgba(0,0,0,0.85)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        borderRadius: 8,
+                        fontSize: 12,
+                        zIndex: 9999,
+                      }}
+                      wrapperStyle={{
+                        zIndex: 9999,
+                        pointerEvents: 'none',
+                      }}
+                      position={{ y: -10 }}
+                      formatter={(value: number, name: string) => [
+                        formatCurrency(value, primaryCurrency),
+                        name === 'interest' ? 'Interest' : 'Principal',
+                      ]}
+                    />
+                    <Bar
+                      dataKey="interest"
+                      stackId="paid"
+                      fill="#f093fb"
+                      radius={[6, 0, 0, 6]}
+                    />
+                    <Bar
+                      dataKey="principal"
+                      stackId="paid"
+                      fill="#4facfe"
+                      radius={[0, 6, 6, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="metric-split-legend">
+                <span className="metric-split-item">
+                  <span className="metric-split-dot interest" />
+                  Interest{' '}
+                  <span className="metric-split-amount">
+                    {formatCurrency(metrics.totalInterest, primaryCurrency)}
+                  </span>
+                </span>
+                <span className="metric-split-item">
+                  <span className="metric-split-dot principal" />
+                  Principal{' '}
+                  <span className="metric-split-amount">
+                    {formatCurrency(metrics.totalPrincipal, primaryCurrency)}
+                  </span>
+                </span>
+              </div>
+            </div>
+          )}
         </div>
         <div className="metric-card outcome">
           <div className="metric-label">Total Due</div>
@@ -497,6 +614,75 @@ export default function Dashboard() {
             {formatCurrency(metrics.totalOutcomes, primaryCurrency)}
           </div>
           <div className="metric-change">{filteredPeriods.length} periods</div>
+          {metrics.dueInterest + metrics.duePrincipal > 0 && (
+            <div className="metric-split">
+              <div className="metric-split-bar">
+                <ResponsiveContainer width="100%" height={32}>
+                  <BarChart
+                    data={[
+                      {
+                        name: 'Due',
+                        interest: metrics.dueInterest,
+                        principal: metrics.duePrincipal,
+                      },
+                    ]}
+                    layout="vertical"
+                    margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+                  >
+                    <XAxis type="number" hide />
+                    <YAxis type="category" dataKey="name" hide />
+                    <Tooltip
+                      cursor={{ fill: 'rgba(255,255,255,0.06)' }}
+                      contentStyle={{
+                        backgroundColor: 'rgba(0,0,0,0.85)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        borderRadius: 8,
+                        fontSize: 12,
+                        zIndex: 9999,
+                      }}
+                      wrapperStyle={{
+                        zIndex: 9999,
+                        pointerEvents: 'none',
+                      }}
+                      position={{ y: -10 }}
+                      formatter={(value: number, name: string) => [
+                        formatCurrency(value, primaryCurrency),
+                        name === 'interest' ? 'Interest due' : 'Principal due',
+                      ]}
+                    />
+                    <Bar
+                      dataKey="interest"
+                      stackId="due"
+                      fill="#f093fb"
+                      radius={[6, 0, 0, 6]}
+                    />
+                    <Bar
+                      dataKey="principal"
+                      stackId="due"
+                      fill="#4facfe"
+                      radius={[0, 6, 6, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="metric-split-legend">
+                <span className="metric-split-item">
+                  <span className="metric-split-dot interest" />
+                  Interest due{' '}
+                  <span className="metric-split-amount">
+                    {formatCurrency(metrics.dueInterest, primaryCurrency)}
+                  </span>
+                </span>
+                <span className="metric-split-item">
+                  <span className="metric-split-dot principal" />
+                  Principal due{' '}
+                  <span className="metric-split-amount">
+                    {formatCurrency(metrics.duePrincipal, primaryCurrency)}
+                  </span>
+                </span>
+              </div>
+            </div>
+          )}
         </div>
         <div className="metric-card pending">
           <div className="metric-label">Pending Amount</div>
@@ -508,35 +694,77 @@ export default function Dashboard() {
             {metrics.overduePeriodsCount > 0 &&
               ` • ${metrics.overduePeriodsCount} overdue`}
           </div>
-        </div>
-        <div className="metric-card interest">
-          <div className="metric-label">Interest Paid</div>
-          <div className="metric-value">
-            {formatCurrency(metrics.totalInterest, primaryCurrency)}
-          </div>
-          <div className="metric-change">
-            {((metrics.totalInterest / metrics.totalPaid) * 100 || 0).toFixed(
-              1
-            )}
-            % of total
-          </div>
-        </div>
-        <div className="metric-card principal">
-          <div className="metric-label">Principal Paid</div>
-          <div className="metric-value">
-            {formatCurrency(metrics.totalPrincipal, primaryCurrency)}
-          </div>
-          <div className="metric-change">
-            {((metrics.totalPrincipal / metrics.totalPaid) * 100 || 0).toFixed(
-              1
-            )}
-            % of total
-          </div>
-        </div>
-        <div className="metric-card accounts">
-          <div className="metric-label">Active Accounts</div>
-          <div className="metric-value">{metrics.activeAccounts}</div>
-          <div className="metric-change">{metrics.totalAccounts} in view</div>
+          {metrics.pendingInterest + metrics.pendingPrincipal > 0 && (
+            <div className="metric-split">
+              <div className="metric-split-bar">
+                <ResponsiveContainer width="100%" height={32}>
+                  <BarChart
+                    data={[
+                      {
+                        name: 'Pending',
+                        interest: metrics.pendingInterest,
+                        principal: metrics.pendingPrincipal,
+                      },
+                    ]}
+                    layout="vertical"
+                    margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+                  >
+                    <XAxis type="number" hide />
+                    <YAxis type="category" dataKey="name" hide />
+                    <Tooltip
+                      cursor={{ fill: 'rgba(255,255,255,0.06)' }}
+                      contentStyle={{
+                        backgroundColor: 'rgba(0,0,0,0.85)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        borderRadius: 8,
+                        fontSize: 12,
+                        zIndex: 9999,
+                      }}
+                      wrapperStyle={{
+                        zIndex: 9999,
+                        pointerEvents: 'none',
+                      }}
+                      position={{ y: -10 }}
+                      formatter={(value: number, name: string) => [
+                        formatCurrency(value, primaryCurrency),
+                        name === 'interest'
+                          ? 'Estimated Interest'
+                          : 'Estimated Principal',
+                      ]}
+                    />
+                    <Bar
+                      dataKey="interest"
+                      stackId="pending"
+                      fill="#f093fb"
+                      radius={[6, 0, 0, 6]}
+                    />
+                    <Bar
+                      dataKey="principal"
+                      stackId="pending"
+                      fill="#4facfe"
+                      radius={[0, 6, 6, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="metric-split-legend">
+                <span className="metric-split-item">
+                  <span className="metric-split-dot interest" />
+                  Est. interest{' '}
+                  <span className="metric-split-amount">
+                    {formatCurrency(metrics.pendingInterest, primaryCurrency)}
+                  </span>
+                </span>
+                <span className="metric-split-item">
+                  <span className="metric-split-dot principal" />
+                  Est. principal{' '}
+                  <span className="metric-split-amount">
+                    {formatCurrency(metrics.pendingPrincipal, primaryCurrency)}
+                  </span>
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
