@@ -167,7 +167,7 @@ export function LogPaymentModal({
         }}
         className="flex flex-col gap-6 py-4"
       >
-        <div className="rounded-xl bg-white/5 p-5 border border-white/10">
+        <div className="rounded-lg bg-white/5 p-5 border border-white/10">
           <div className="flex justify-between items-center py-3 border-b border-white/5 last:border-b-0">
             <span className="text-sm text-white/70 font-medium">
               Account Number:

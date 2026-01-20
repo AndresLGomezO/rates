@@ -453,7 +453,7 @@ export default function AccountDetail() {
             onClick={() => {
               void navigate('/dashboard');
             }}
-            className="flex items-center gap-2 px-5 py-3 bg-white/10 backdrop-blur-[10px] text-white border border-neutral-600/40 rounded-[10px] cursor-pointer text-sm font-semibold transition-all duration-300 ease-in-out mt-4 hover:bg-white/15 hover:-translate-x-1"
+            className="flex items-center gap-2 px-5 py-3 bg-white/10 backdrop-blur-[10px] text-white border border-neutral-600/40 rounded-md cursor-pointer text-sm font-semibold transition-all duration-300 ease-in-out mt-4 hover:bg-white/15 hover:-translate-x-1"
           >
             Go Back
           </button>
@@ -496,7 +496,7 @@ export default function AccountDetail() {
                 void navigate('/dashboard');
               }
             }}
-            className="flex items-center gap-2 px-5 py-3 bg-white/10 backdrop-blur-[10px] text-white border border-neutral-600/40 rounded-[10px] cursor-pointer text-sm font-semibold transition-all duration-300 ease-in-out mb-6 hover:bg-white/15 hover:-translate-x-1"
+            className="flex items-center gap-2 px-5 py-3 bg-white/10 backdrop-blur-[10px] text-white border border-neutral-600/40 rounded-md cursor-pointer text-sm font-semibold transition-all duration-300 ease-in-out mb-6 hover:bg-white/15 hover:-translate-x-1"
           >
             <svg
               width="20"
@@ -529,7 +529,7 @@ export default function AccountDetail() {
         </div>
         <div className="flex flex-col gap-3 items-end md:flex-row md:items-start md:w-full md:mt-4">
           <div
-            className={`px-6 py-3 rounded-xl font-semibold text-xs tracking-wide uppercase whitespace-nowrap ${
+            className={`px-6 py-3 rounded-lg font-semibold text-xs tracking-wide uppercase whitespace-nowrap ${
               account.status === 'active'
                 ? 'bg-success-css/20 text-success-css border border-success-css/30'
                 : account.status === 'paid_off'
@@ -544,7 +544,7 @@ export default function AccountDetail() {
             {formatAccountStatus(account.status)}
           </div>
           <div
-            className="px-6 py-3 rounded-xl font-semibold text-xs tracking-wide uppercase whitespace-nowrap border"
+            className="px-6 py-3 rounded-lg font-semibold text-xs tracking-wide uppercase whitespace-nowrap border"
             style={{
               backgroundColor: `${getAccountPaymentStatusColor(paymentStatus)}20`,
               color: getAccountPaymentStatusColor(paymentStatus),

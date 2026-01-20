@@ -287,7 +287,7 @@ export function BatchPaymentModal({
         }}
         className="flex flex-col gap-6 py-4"
       >
-        <div className="bg-white/5 rounded-xl p-5 border border-neutral-700/30">
+        <div className="bg-white/5 rounded-lg p-5 border border-neutral-700/30">
           <div className="flex justify-between items-center py-3 border-b border-neutral-700/20 last:border-b-0">
             <span className="text-sm text-white/70 font-medium">
               Account Number:

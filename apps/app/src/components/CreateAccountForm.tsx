@@ -228,7 +228,7 @@ export function CreateAccountForm({
             type="text"
             value={formData.accountNumber}
             onChange={(e) => handleChange('accountNumber', e.target.value)}
-            className={`bg-white/10 backdrop-blur-[10px] border rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+            className={`bg-white/10 backdrop-blur-[10px] border rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
               errors.accountNumber
                 ? 'border-danger-500 bg-danger-500/10'
                 : 'border-white/20'
@@ -256,7 +256,7 @@ export function CreateAccountForm({
             onChange={(e) =>
               handleChange('status', e.target.value as AccountStatus)
             }
-            className="bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-xl px-4 py-3.5 pr-10 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg_xmlns=\\'http://www.w3.org/2000/svg\\'_width=\\'12\\'_height=\\'12\\'_viewBox=\\'0_0_12_12\\'%3E%3Cpath_fill=\\'white\\'_d=\\'M6_9L1_4h10z\\'/%3E%3C/svg%3E')] bg-no-repeat bg-[right_1rem_center] focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)]"
+            className="bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-lg px-4 py-3.5 pr-10 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg_xmlns=\\'http://www.w3.org/2000/svg\\'_width=\\'12\\'_height=\\'12\\'_viewBox=\\'0_0_12_12\\'%3E%3Cpath_fill=\\'white\\'_d=\\'M6_9L1_4h10z\\'/%3E%3C/svg%3E')] bg-no-repeat bg-[right_1rem_center] focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)]"
           >
             {ACCOUNT_STATUSES.map((status) => (
               <option
@@ -283,7 +283,7 @@ export function CreateAccountForm({
           type="text"
           value={formData.accountName}
           onChange={(e) => handleChange('accountName', e.target.value)}
-          className={`bg-white/10 backdrop-blur-[10px] border rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+          className={`bg-white/10 backdrop-blur-[10px] border rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
             errors.accountName
               ? 'border-danger-500 bg-danger-500/10'
               : 'border-white/20'
@@ -308,7 +308,7 @@ export function CreateAccountForm({
           id="accountDescription"
           value={formData.accountDescription}
           onChange={(e) => handleChange('accountDescription', e.target.value)}
-          className={`bg-white/10 backdrop-blur-[10px] border rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 resize-y min-h-[80px] focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+          className={`bg-white/10 backdrop-blur-[10px] border rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 resize-y min-h-[80px] focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
             errors.accountDescription
               ? 'border-danger-500 bg-danger-500/10'
               : 'border-white/20'
@@ -334,7 +334,7 @@ export function CreateAccountForm({
           id="currency"
           value={formData.currency}
           onChange={(e) => handleChange('currency', e.target.value)}
-          className="bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-xl px-4 py-3.5 pr-10 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg_xmlns=\\'http://www.w3.org/2000/svg\\'_width=\\'12\\'_height=\\'12\\'_viewBox=\\'0_0_12_12\\'%3E%3Cpath_fill=\\'white\\'_d=\\'M6_9L1_4h10z\\'/%3E%3C/svg%3E')] bg-no-repeat bg-[right_1rem_center] focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)]"
+          className="bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-lg px-4 py-3.5 pr-10 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg_xmlns=\\'http://www.w3.org/2000/svg\\'_width=\\'12\\'_height=\\'12\\'_viewBox=\\'0_0_12_12\\'%3E%3Cpath_fill=\\'white\\'_d=\\'M6_9L1_4h10z\\'/%3E%3C/svg%3E')] bg-no-repeat bg-[right_1rem_center] focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)]"
         >
           <option value="COP" className="bg-neutral-900 text-white">
             COP (Colombian Peso)
@@ -362,7 +362,7 @@ export function CreateAccountForm({
             onChange={(e) =>
               handleChange('totalAmountRemaining', e.target.value)
             }
-            className={`bg-white/10 backdrop-blur-[10px] border rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+            className={`bg-white/10 backdrop-blur-[10px] border rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
               errors.totalAmountRemaining
                 ? 'border-danger-500 bg-danger-500/10'
                 : 'border-white/20'
@@ -390,7 +390,7 @@ export function CreateAccountForm({
             min="0"
             value={formData.monthlyPayment}
             onChange={(e) => handleChange('monthlyPayment', e.target.value)}
-            className={`bg-white/10 backdrop-blur-[10px] border rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+            className={`bg-white/10 backdrop-blur-[10px] border rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
               errors.monthlyPayment
                 ? 'border-danger-500 bg-danger-500/10'
                 : 'border-white/20'
@@ -421,7 +421,7 @@ export function CreateAccountForm({
             max="100"
             value={formData.rate}
             onChange={(e) => handleChange('rate', e.target.value)}
-            className={`bg-white/10 backdrop-blur-[10px] border rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+            className={`bg-white/10 backdrop-blur-[10px] border rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
               errors.rate
                 ? 'border-danger-500 bg-danger-500/10'
                 : 'border-white/20'
@@ -447,7 +447,7 @@ export function CreateAccountForm({
             type="date"
             value={formData.nextDueDate || getDefaultDueDate()}
             onChange={(e) => handleChange('nextDueDate', e.target.value)}
-            className={`bg-white/10 backdrop-blur-[10px] border rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+            className={`bg-white/10 backdrop-blur-[10px] border rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
               errors.nextDueDate
                 ? 'border-danger-500 bg-danger-500/10'
                 : 'border-white/20'
@@ -477,7 +477,7 @@ export function CreateAccountForm({
             min="0"
             value={formData.originalAmount}
             onChange={(e) => handleChange('originalAmount', e.target.value)}
-            className="bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)]"
+            className="bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)]"
             placeholder="0.00"
           />
         </div>
@@ -494,7 +494,7 @@ export function CreateAccountForm({
             type="date"
             value={formData.startDate}
             onChange={(e) => handleChange('startDate', e.target.value)}
-            className="bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)]"
+            className="bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)]"
             max={new Date().toISOString().split('T')[0]}
           />
         </div>
@@ -523,7 +523,7 @@ export function CreateAccountForm({
             min="1"
             value={formData.numberOfPayments}
             onChange={(e) => handleChange('numberOfPayments', e.target.value)}
-            className={`bg-white/10 backdrop-blur-[10px] border rounded-xl px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+            className={`bg-white/10 backdrop-blur-[10px] border rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
               errors.numberOfPayments
                 ? 'border-danger-500 bg-danger-500/10'
                 : 'border-white/20'
@@ -554,7 +554,7 @@ export function CreateAccountForm({
       <div className="flex flex-col-reverse md:flex-row gap-4 justify-end mt-4 pt-6 border-t border-white/10">
         <button
           type="button"
-          className="px-8 py-3.5 rounded-xl text-base font-semibold cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] border-none bg-white/10 backdrop-blur-[10px] text-white border border-white/20 hover:bg-white/15 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 w-full md:w-auto"
+          className="px-8 py-3.5 rounded-lg text-base font-semibold cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] border-none bg-white/10 backdrop-blur-[10px] text-white border border-white/20 hover:bg-white/15 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 w-full md:w-auto"
           onClick={onCancel}
           disabled={isSubmitting}
         >

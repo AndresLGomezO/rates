@@ -496,7 +496,7 @@ export default function Dashboard() {
             Dashboard
           </h2>
         </div>
-        <div className="text-center py-12 px-12 text-white/80 bg-danger-500/20 backdrop-blur-[20px] rounded-[20px] border border-danger-500/30">
+        <div className="text-center py-12 px-12 text-white/80 bg-danger-500/20 backdrop-blur-[20px] rounded-lg border border-danger-500/30">
           <p className="text-xl m-0 text-danger-500">
             Error loading accounts: {error}
           </p>
@@ -506,8 +506,8 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 pb-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-neutral-600/30 after:to-transparent gap-6 md:gap-0 md:mb-8">
+    <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-0 pb-4 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-neutral-600/30 after:to-transparent gap-6 md:gap-0">
         <div>
           <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.05)] md:text-3xl xs:text-[1.75rem]">
             Financial Overview
@@ -519,7 +519,7 @@ export default function Dashboard() {
           </p>
         </div>
         <button
-          className="ds-button-gradient flex items-center gap-2 px-6 py-3.5 text-[0.95rem] whitespace-nowrap"
+          className="hidden md:flex ds-button-gradient items-center gap-2 px-6 py-3.5 text-[0.95rem] whitespace-nowrap"
           onClick={() => setIsNewAccountWizardOpen(true)}
           title="Create a new account"
         >
@@ -541,7 +541,7 @@ export default function Dashboard() {
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 gap-3 mb-8 w-full md:grid-cols-3 md:gap-6">
-        <div className="relative overflow-visible bg-gradient-to-br from-success-css/20 to-success-css/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-neutral-700/30 rounded-2xl p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:via-[#1e3a8a] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:border-neutral-600/40 min-w-0 xs:p-4">
+        <div className="relative overflow-visible bg-gradient-to-br from-success-css/20 to-success-css/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-neutral-700/30 rounded-lg p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:via-[#1e3a8a] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:border-neutral-600/40 min-w-0 xs:p-4">
           <div className="text-sm text-white/70 font-semibold uppercase tracking-wide mb-2">
             Total Paid
           </div>
@@ -621,7 +621,7 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-        <div className="relative overflow-visible bg-gradient-to-br from-danger-500/20 to-danger-500/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-neutral-700/30 rounded-2xl p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:via-[#1e3a8a] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:border-neutral-600/40 min-w-0 xs:p-4">
+        <div className="relative overflow-visible bg-gradient-to-br from-danger-500/20 to-danger-500/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-neutral-700/30 rounded-lg p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:via-[#1e3a8a] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:border-neutral-600/40 min-w-0 xs:p-4">
           <div className="text-sm text-white/70 font-semibold uppercase tracking-wide mb-2">
             Total Due
           </div>
@@ -701,7 +701,7 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-        <div className="relative overflow-visible bg-gradient-to-br from-warning-500/20 to-warning-500/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-neutral-700/30 rounded-2xl p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:via-[#1e3a8a] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:border-neutral-600/40 min-w-0 xs:p-4">
+        <div className="relative overflow-visible bg-gradient-to-br from-warning-500/20 to-warning-500/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-neutral-700/30 rounded-lg p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:via-[#1e3a8a] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:border-neutral-600/40 min-w-0 xs:p-4">
           <div className="text-sm text-white/70 font-semibold uppercase tracking-wide mb-2">
             Pending Amount
           </div>
@@ -1066,7 +1066,7 @@ export default function Dashboard() {
                         </span>
                       </div>
                       <span
-                        className="px-4 py-2 rounded-xl text-white text-xs font-bold uppercase tracking-wide shadow-[0_2px_8px_rgba(0,0,0,0.2)] backdrop-blur-[10px] border border-neutral-600/40 whitespace-nowrap flex-shrink-0 justify-self-start w-fit"
+                        className="px-4 py-2 rounded-lg text-white text-xs font-bold uppercase tracking-wide shadow-[0_2px_8px_rgba(0,0,0,0.2)] backdrop-blur-[10px] border border-neutral-600/40 whitespace-nowrap flex-shrink-0 justify-self-start w-fit"
                         style={{
                           backgroundColor:
                             periodInfo.status === 'pending'
@@ -1154,7 +1154,7 @@ export default function Dashboard() {
                         </p>
                       </div>
                       <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4 w-full box-border xs:grid-cols-1">
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Account:
                           </span>
@@ -1162,7 +1162,7 @@ export default function Dashboard() {
                             {account.accountName} ({account.accountNumber})
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Period Number:
                           </span>
@@ -1170,7 +1170,7 @@ export default function Dashboard() {
                             #{period.periodNumber}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Status:
                           </span>
@@ -1178,7 +1178,7 @@ export default function Dashboard() {
                             {periodInfo.status.toUpperCase()}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Due Date:
                           </span>
@@ -1194,7 +1194,7 @@ export default function Dashboard() {
                             {formatDate(dueDate)}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Days Remaining:
                           </span>
@@ -1212,7 +1212,7 @@ export default function Dashboard() {
                               : `${daysRemaining} days left`}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Amount Due:
                           </span>
@@ -1223,7 +1223,7 @@ export default function Dashboard() {
                             )}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Amount Paid:
                           </span>
@@ -1234,7 +1234,7 @@ export default function Dashboard() {
                             )}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Amount Remaining:
                           </span>
@@ -1245,7 +1245,7 @@ export default function Dashboard() {
                             )}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Capital Portion:
                           </span>
@@ -1253,7 +1253,7 @@ export default function Dashboard() {
                             {formatCurrency(period.capital, period.currency)}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
+                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                           <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                             Interest Portion:
                           </span>
@@ -1262,7 +1262,7 @@ export default function Dashboard() {
                           </span>
                         </div>
                         {period.remainingPrincipal !== undefined && (
-                          <div className="flex flex-col gap-2 p-4 ds-card-light rounded-xl hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
+                          <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
                             <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
                               Remaining Principal:
                             </span>
@@ -1286,7 +1286,7 @@ export default function Dashboard() {
 
       {/* Empty State */}
       {filteredPeriods.length === 0 && !loading && !loadingPeriods && (
-        <div className="text-center py-12 px-12 text-white/80 ds-card-light rounded-[20px]">
+        <div className="text-center py-12 px-12 text-white/80 ds-card-light rounded-lg">
           <p className="text-xl m-0">
             {searchQuery
               ? `No payment periods found matching "${searchQuery}" in the selected date range`
@@ -1315,6 +1315,16 @@ export default function Dashboard() {
         period={selectedPeriodForPayment}
         onPaymentLogged={handlePaymentLogged}
       />
+
+      {/* Floating Action Button - Mobile/Tablet only */}
+      <button
+        className="fixed bottom-6 right-6 z-[90] md:hidden flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-[#1e40af] to-[#334155] text-white text-3xl font-light shadow-[0_8px_24px_rgba(30,64,175,0.4),0_4px_12px_rgba(0,0,0,0.3)] border border-white/20 backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:scale-110 hover:shadow-[0_12px_32px_rgba(30,64,175,0.5),0_6px_16px_rgba(0,0,0,0.4)] active:scale-95"
+        onClick={() => setIsNewAccountWizardOpen(true)}
+        aria-label="Create a new account"
+        title="Create a new account"
+      >
+        <span className="flex items-center justify-center leading-none">+</span>
+      </button>
     </div>
   );
 }

@@ -255,7 +255,7 @@ export function NewAccountWizard({
     >
       <div className="flex flex-col gap-5 text-white">
         <div
-          className="bg-white/8 border border-neutral-700/30 rounded-2xl px-4 pt-4 pb-3.5 backdrop-blur-[14px]"
+          className="bg-white/8 border border-neutral-700/30 rounded-lg px-4 pt-4 pb-3.5 backdrop-blur-[14px]"
           aria-label="Wizard progress"
         >
           <div className="flex items-center justify-between gap-2 sm:gap-3">
@@ -297,7 +297,7 @@ export function NewAccountWizard({
 
         {error && (
           <div
-            className="px-4 py-3.5 bg-danger-500/15 border border-danger-500/35 rounded-[14px] text-[#ffb3b3] text-[0.95rem]"
+            className="px-4 py-3.5 bg-danger-500/15 border border-danger-500/35 rounded-lg text-[#ffb3b3] text-[0.95rem]"
             role="alert"
           >
             {error}
@@ -325,7 +325,7 @@ export function NewAccountWizard({
                     key={type}
                     type="button"
                     role="listitem"
-                    className={`text-left p-4 rounded-2xl border cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] text-white ${
+                    className={`text-left p-4 rounded-lg border cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] text-white ${
                       selectedType === type
                         ? 'border-primary-500/75 bg-primary-500/18 shadow-[0_10px_26px_rgba(30,64,175,0.2)]'
                         : 'border-neutral-700/30 bg-white/8 backdrop-blur-[14px] hover:-translate-y-0.5 hover:border-neutral-600/40 hover:bg-white/10 hover:shadow-[0_10px_24px_rgba(0,0,0,0.18)]'
@@ -381,7 +381,7 @@ export function NewAccountWizard({
                       }))
                     }
                     placeholder="e.g., ACC-0001"
-                    className={`w-full box-border px-3.5 py-3.5 rounded-xl border outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] text-white ${
+                    className={`w-full box-border px-3.5 py-3.5 rounded-lg border outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] text-white ${
                       detailsErrors.accountNumber
                         ? 'border-danger-500/75 shadow-[0_0_0_6px_rgba(255,107,107,0.16)] bg-black/25'
                         : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)] focus:bg-black/25'
@@ -411,7 +411,7 @@ export function NewAccountWizard({
                         status: e.target.value as AccountStatus,
                       }))
                     }
-                    className="w-full box-border px-3.5 py-3.5 rounded-xl border border-neutral-600/40 bg-black/20 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)] focus:bg-black/25"
+                    className="w-full box-border px-3.5 py-3.5 rounded-lg border border-neutral-600/40 bg-black/20 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)] focus:bg-black/25"
                   >
                     {ACCOUNT_STATUSES.map((status) => (
                       <option key={status} value={status}>
@@ -437,7 +437,7 @@ export function NewAccountWizard({
                     setFormData((p) => ({ ...p, accountName: e.target.value }))
                   }
                   placeholder="e.g., Personal Loan - Bank ABC"
-                  className={`w-full box-border px-3.5 py-3.5 rounded-xl border outline-none transition-all duration-200 ease-in-out text-white ${
+                  className={`w-full box-border px-3.5 py-3.5 rounded-lg border outline-none transition-all duration-200 ease-in-out text-white ${
                     detailsErrors.accountName
                       ? 'border-danger-500/75 shadow-[0_0_0_6px_rgba(255,107,107,0.16)] bg-black/25'
                       : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)] focus:bg-black/25'
@@ -468,7 +468,7 @@ export function NewAccountWizard({
                   }
                   placeholder="e.g., Personal loan for home improvement"
                   rows={3}
-                  className={`w-full box-border px-3.5 py-3.5 rounded-xl border outline-none transition-all duration-200 ease-in-out text-white resize-y ${
+                  className={`w-full box-border px-3.5 py-3.5 rounded-lg border outline-none transition-all duration-200 ease-in-out text-white resize-y ${
                     detailsErrors.accountDescription
                       ? 'border-danger-500/75 shadow-[0_0_0_6px_rgba(255,107,107,0.16)] bg-black/25'
                       : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)] focus:bg-black/25'
@@ -498,14 +498,14 @@ export function NewAccountWizard({
                         currency: e.target.value as 'COP' | 'USD',
                       }))
                     }
-                    className="w-full box-border px-3.5 py-3.5 rounded-xl border border-neutral-600/40 bg-black/20 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)] focus:bg-black/25"
+                    className="w-full box-border px-3.5 py-3.5 rounded-lg border border-neutral-600/40 bg-black/20 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)] focus:bg-black/25"
                   >
                     <option value="COP">COP (Colombian Peso)</option>
                     <option value="USD">USD (US Dollar)</option>
                   </select>
                 </div>
 
-                <div className="rounded-[14px] border border-neutral-700/30 bg-white/6 px-3.5 py-3.5">
+                <div className="rounded-lg border border-neutral-700/30 bg-white/6 px-3.5 py-3.5">
                   <div className="font-[750] -tracking-[0.3px] mb-1">Tip</div>
                   <div className="opacity-80 text-[0.92rem] leading-[1.35]">
                     Use an easy-to-remember account number. It becomes the
@@ -536,7 +536,7 @@ export function NewAccountWizard({
                       }))
                     }
                     placeholder="0.00"
-                    className={`w-full box-border px-3.5 py-3.5 rounded-xl border outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] text-white ${
+                    className={`w-full box-border px-3.5 py-3.5 rounded-lg border outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] text-white ${
                       detailsErrors.totalAmountRemaining
                         ? 'border-danger-500/75 shadow-[0_0_0_6px_rgba(255,107,107,0.16)] bg-black/25'
                         : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)] focus:bg-black/25'
@@ -569,7 +569,7 @@ export function NewAccountWizard({
                       }))
                     }
                     placeholder="0.00"
-                    className={`w-full box-border px-3.5 py-3.5 rounded-xl border outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] text-white ${
+                    className={`w-full box-border px-3.5 py-3.5 rounded-lg border outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] text-white ${
                       detailsErrors.monthlyPayment
                         ? 'border-danger-500/75 shadow-[0_0_0_6px_rgba(255,107,107,0.16)] bg-black/25'
                         : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)] focus:bg-black/25'
@@ -602,7 +602,7 @@ export function NewAccountWizard({
                       setFormData((p) => ({ ...p, rate: e.target.value }))
                     }
                     placeholder="0.0"
-                    className={`w-full box-border px-3.5 py-3.5 rounded-xl border outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] text-white ${
+                    className={`w-full box-border px-3.5 py-3.5 rounded-lg border outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] text-white ${
                       detailsErrors.rate
                         ? 'border-danger-500/75 shadow-[0_0_0_6px_rgba(255,107,107,0.16)] bg-black/25'
                         : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)] focus:bg-black/25'
@@ -633,7 +633,7 @@ export function NewAccountWizard({
                       }))
                     }
                     min={new Date().toISOString().split('T')[0]}
-                    className={`w-full box-border px-3.5 py-3.5 rounded-xl border outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] text-white ${
+                    className={`w-full box-border px-3.5 py-3.5 rounded-lg border outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] text-white ${
                       detailsErrors.nextDueDate
                         ? 'border-danger-500/75 shadow-[0_0_0_6px_rgba(255,107,107,0.16)] bg-black/25'
                         : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)] focus:bg-black/25'
@@ -668,7 +668,7 @@ export function NewAccountWizard({
                       }))
                     }
                     placeholder="0.00"
-                    className="w-full box-border px-3.5 py-3.5 rounded-xl border border-neutral-600/40 bg-black/20 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)] focus:bg-black/25"
+                    className="w-full box-border px-3.5 py-3.5 rounded-lg border border-neutral-600/40 bg-black/20 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)] focus:bg-black/25"
                   />
                 </div>
 
@@ -687,7 +687,7 @@ export function NewAccountWizard({
                       setFormData((p) => ({ ...p, startDate: e.target.value }))
                     }
                     max={new Date().toISOString().split('T')[0]}
-                    className="w-full box-border px-3.5 py-3.5 rounded-xl border border-neutral-600/40 bg-black/20 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)] focus:bg-black/25"
+                    className="w-full box-border px-3.5 py-3.5 rounded-lg border border-neutral-600/40 bg-black/20 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)] focus:bg-black/25"
                   />
                 </div>
               </div>
@@ -720,7 +720,7 @@ export function NewAccountWizard({
                         numberOfPayments: e.target.value,
                       }))
                     }
-                    className={`w-full box-border px-3.5 py-3.5 rounded-xl border outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] text-white ${
+                    className={`w-full box-border px-3.5 py-3.5 rounded-lg border outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] text-white ${
                       detailsErrors.numberOfPayments
                         ? 'border-danger-500/75 shadow-[0_0_0_6px_rgba(255,107,107,0.16)] bg-black/25'
                         : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)] focus:bg-black/25'
@@ -744,7 +744,7 @@ export function NewAccountWizard({
                   )}
                 </div>
 
-                <div className="rounded-[14px] border border-neutral-700/30 bg-white/6 px-3.5 py-3.5">
+                <div className="rounded-lg border border-neutral-700/30 bg-white/6 px-3.5 py-3.5">
                   <div className="font-[750] -tracking-[0.3px] mb-1">
                     Preview
                   </div>
@@ -772,37 +772,37 @@ export function NewAccountWizard({
             </div>
 
             <div className="grid grid-cols-2 gap-3.5 mt-4 md-sm:grid-cols-1">
-              <div className="rounded-2xl border border-neutral-700/30 bg-white/8 px-4 py-3.75">
+              <div className="rounded-lg border border-neutral-700/30 bg-white/8 px-4 py-3.75">
                 <div className="opacity-70 text-xs mb-1">Type</div>
                 <div className="font-[650] -tracking-[0.2px]">
                   {ACCOUNT_TYPE_LABELS[selectedType]}
                 </div>
               </div>
-              <div className="rounded-2xl border border-neutral-700/30 bg-white/8 px-4 py-3.75">
+              <div className="rounded-lg border border-neutral-700/30 bg-white/8 px-4 py-3.75">
                 <div className="opacity-70 text-xs mb-1">Status</div>
                 <div className="font-[650] -tracking-[0.2px]">
                   {formData.status.replace('_', ' ').toUpperCase()}
                 </div>
               </div>
-              <div className="rounded-2xl border border-neutral-700/30 bg-white/8 px-4 py-3.75">
+              <div className="rounded-lg border border-neutral-700/30 bg-white/8 px-4 py-3.75">
                 <div className="opacity-70 text-xs mb-1">Account Number</div>
                 <div className="font-[650] -tracking-[0.2px] font-mono">
                   {formData.accountNumber || '—'}
                 </div>
               </div>
-              <div className="rounded-2xl border border-neutral-700/30 bg-white/8 px-4 py-3.75">
+              <div className="rounded-lg border border-neutral-700/30 bg-white/8 px-4 py-3.75">
                 <div className="opacity-70 text-xs mb-1">Account Name</div>
                 <div className="font-[650] -tracking-[0.2px]">
                   {formData.accountName || '—'}
                 </div>
               </div>
-              <div className="col-span-2 rounded-2xl border border-neutral-700/30 bg-white/8 px-4 py-3.75 md-sm:col-span-1">
+              <div className="col-span-2 rounded-lg border border-neutral-700/30 bg-white/8 px-4 py-3.75 md-sm:col-span-1">
                 <div className="opacity-70 text-xs mb-1">Description</div>
                 <div className="font-[650] -tracking-[0.2px]">
                   {formData.accountDescription || '—'}
                 </div>
               </div>
-              <div className="rounded-2xl border border-neutral-700/30 bg-white/8 px-4 py-3.75">
+              <div className="rounded-lg border border-neutral-700/30 bg-white/8 px-4 py-3.75">
                 <div className="opacity-70 text-xs mb-1">Total Remaining</div>
                 <div className="font-[650] -tracking-[0.2px]">
                   {formData.totalAmountRemaining
@@ -813,7 +813,7 @@ export function NewAccountWizard({
                     : '—'}
                 </div>
               </div>
-              <div className="rounded-2xl border border-neutral-700/30 bg-white/8 px-4 py-3.75">
+              <div className="rounded-lg border border-neutral-700/30 bg-white/8 px-4 py-3.75">
                 <div className="opacity-70 text-xs mb-1">Monthly Payment</div>
                 <div className="font-[650] -tracking-[0.2px]">
                   {formData.monthlyPayment
@@ -824,19 +824,19 @@ export function NewAccountWizard({
                     : '—'}
                 </div>
               </div>
-              <div className="rounded-2xl border border-neutral-700/30 bg-white/8 px-4 py-3.75">
+              <div className="rounded-lg border border-neutral-700/30 bg-white/8 px-4 py-3.75">
                 <div className="opacity-70 text-xs mb-1">Rate</div>
                 <div className="font-[650] -tracking-[0.2px]">
                   {formData.rate ? `${formData.rate}%` : '—'}
                 </div>
               </div>
-              <div className="rounded-2xl border border-neutral-700/30 bg-white/8 px-4 py-3.75">
+              <div className="rounded-lg border border-neutral-700/30 bg-white/8 px-4 py-3.75">
                 <div className="opacity-70 text-xs mb-1">Next Due Date</div>
                 <div className="font-[650] -tracking-[0.2px]">
                   {formData.nextDueDate || getDefaultDueDate()}
                 </div>
               </div>
-              <div className="rounded-2xl border border-neutral-700/30 bg-white/8 px-4 py-3.75">
+              <div className="rounded-lg border border-neutral-700/30 bg-white/8 px-4 py-3.75">
                 <div className="opacity-70 text-xs mb-1"># Payments</div>
                 <div className="font-[650] -tracking-[0.2px]">
                   {formData.numberOfPayments || '—'}
@@ -876,7 +876,7 @@ export function NewAccountWizard({
             <>
               <button
                 type="button"
-                className="px-5 py-3.5 rounded-xl border border-neutral-600/40 cursor-pointer font-[650] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 text-white hover:bg-white/16 hover:border-neutral-500/50 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                className="px-5 py-3.5 rounded-lg border border-neutral-600/40 cursor-pointer font-[650] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 text-white hover:bg-white/16 hover:border-neutral-500/50 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={handleClose}
                 disabled={saving}
               >
@@ -901,7 +901,7 @@ export function NewAccountWizard({
             <>
               <button
                 type="button"
-                className="px-5 py-3.5 rounded-xl border border-neutral-600/40 cursor-pointer font-[650] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 text-white hover:bg-white/16 hover:border-neutral-500/50 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+                className="px-5 py-3.5 rounded-lg border border-neutral-600/40 cursor-pointer font-[650] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/10 text-white hover:bg-white/16 hover:border-neutral-500/50 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={step === 'type' ? handleClose : handleBack}
                 disabled={saving}
               >

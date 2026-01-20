@@ -472,7 +472,7 @@ export default function AccountsByType() {
             >
               <button
                 type="button"
-                className="px-8 py-3.5 bg-white/10 backdrop-blur-[10px] text-white border border-neutral-600/40 rounded-xl cursor-pointer text-base font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:bg-white/25 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="px-8 py-3.5 bg-white/10 backdrop-blur-[10px] text-white border border-neutral-600/40 rounded-lg cursor-pointer text-base font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:bg-white/25 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={() => {
                   if (!saving) {
                     setDeletingAccount(null);

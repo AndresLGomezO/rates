@@ -56,7 +56,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
               {title}
             </h2>
             <button
-              className="flex items-center justify-center w-10 h-10 p-0 bg-white/10 backdrop-blur-[10px] border border-neutral-600/40 text-white text-[2rem] leading-none rounded-xl cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/20 hover:border-neutral-500/50 hover:scale-110 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:scale-95"
+              className="flex items-center justify-center w-10 h-10 p-0 bg-white/10 backdrop-blur-[10px] border border-neutral-600/40 text-white text-[2rem] leading-none rounded-lg cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white/20 hover:border-neutral-500/50 hover:scale-110 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:scale-95"
               onClick={onClose}
               aria-label="Close"
             >
