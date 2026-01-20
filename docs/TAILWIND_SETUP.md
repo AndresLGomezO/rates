@@ -4,6 +4,12 @@
 
 This document describes the Tailwind CSS setup for the rates monorepo, including the shared design system package and app-level configurations.
 
+> **📚 Related Documentation:**
+>
+> - [`TAILWIND_MAPPING_STRATEGY.md`](./TAILWIND_MAPPING_STRATEGY.md) - How CSS values were mapped to Tailwind tokens
+> - [`TAILWIND_COLOR_MAPPING.md`](./TAILWIND_COLOR_MAPPING.md) - Complete color reference guide
+> - [`CSS_AUDIT.md`](./CSS_AUDIT.md) - Original CSS analysis and migration roadmap
+
 ## Architecture
 
 ### Shared Design System Package

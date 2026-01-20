@@ -1,44 +1,52 @@
 /**
- * Design tokens exported as TypeScript constants.
- * Useful for programmatic access (e.g., charts, inline styles, JS calculations).
+ * Design Tokens - TypeScript Export
+ *
+ * Exported design tokens for programmatic access (e.g., charts, inline styles, calculations).
+ * These values match the Tailwind config in tailwind.config.cjs.
+ *
+ * Usage:
+ *   import { colors, spacing, breakpoints } from '@rates/ui-theme/tokens';
  */
 
 export const colors = {
   primary: {
-    50: '#f5f7ff',
-    100: '#e6ecff',
-    200: '#c4d0ff',
-    300: '#9db1ff',
-    400: '#6a84ff',
     500: '#6366f1',
     600: '#4f46e5',
-    700: '#4338ca',
-    800: '#3730a3',
-    900: '#312e81',
+    gradient: {
+      start: '#667eea',
+      end: '#764ba2',
+      pink: '#f093fb',
+      cyan: '#4facfe',
+      teal: '#00f2fe',
+      purple: '#8b5cf6',
+    },
   },
   accent: {
-    50: '#ecfeff',
-    100: '#cffafe',
-    200: '#a5f3fc',
-    300: '#67e8f9',
-    400: '#22d3ee',
     500: '#06b6d4',
     600: '#0891b2',
-    700: '#0e7490',
-    800: '#155e75',
-    900: '#164e63',
+    'auth-blue': '#0369a1',
+    'auth-cyan': '#38bdf8',
   },
   success: {
     500: '#22c55e',
-    600: '#16a34a',
+    css: '#4caf50',
+    light: '#ecfdf3',
   },
   warning: {
     500: '#f59e0b',
-    600: '#d97706',
+    css: '#ff9800',
+    yellow: '#ffd93d',
   },
   danger: {
     500: '#ef4444',
-    600: '#dc2626',
+    css: '#ff6b6b',
+    f44336: '#f44336',
+    light: '#fef2f2',
+    border: '#fecdd3',
+  },
+  info: {
+    500: '#2196f3',
+    600: '#667eea',
   },
   neutral: {
     50: '#f9fafb',
@@ -51,6 +59,11 @@ export const colors = {
     700: '#374151',
     800: '#1f2937',
     900: '#111827',
+    'auth-text': '#0f172a',
+    'auth-text-muted': '#475569',
+    'auth-border': '#e2e8f0',
+    'auth-bg': '#f8fafc',
+    'auth-surface': '#ffffff',
   },
   background: '#020617',
   surface: 'rgba(15, 23, 42, 0.85)',
@@ -75,6 +88,17 @@ export const spacing = {
   16: '4rem',
   20: '5rem',
   24: '6rem',
+  // Custom fractional values
+  '0.35': '0.35rem',
+  '0.4': '0.4rem',
+  '0.45': '0.45rem',
+  '0.6': '0.6rem',
+  '0.65': '0.65rem',
+  '0.7': '0.7rem',
+  '0.8': '0.8rem',
+  '0.85': '0.85rem',
+  '0.9': '0.9rem',
+  '0.95': '0.95rem',
 } as const;
 
 export const borderRadius = {
@@ -86,21 +110,64 @@ export const borderRadius = {
   xl: '1.5rem',
   '2xl': '2rem',
   full: '9999px',
+  '8': '8px',
+  '10': '10px',
+  '12': '12px',
+  '16': '16px',
 } as const;
 
 export const breakpoints = {
   xs: '480px',
   sm: '640px',
   md: '768px',
+  'md-sm': '720px',
   lg: '1024px',
   xl: '1280px',
   '2xl': '1536px',
+  'dashboard-lg': '1280px',
+  'dashboard-md': '1024px',
 } as const;
 
 export const zIndex = {
-  modal: 9999,
+  overlay: 10,
+  dropdown: 50,
   sidebar: 100,
   searchbar: 100,
-  dropdown: 50,
-  overlay: 10,
+  modal: 9999,
+} as const;
+
+export const fontSize = {
+  xs: '0.65rem',
+  'xs-sm': '0.7rem',
+  'xs-md': '0.75rem',
+  'xs-lg': '0.8rem',
+  'sm-xs': '0.85rem',
+  sm: '0.875rem',
+  'sm-md': '0.88rem',
+  'sm-lg': '0.9rem',
+  'sm-xl': '0.92rem',
+  'sm-2xl': '0.95rem',
+  base: '1rem',
+  'base-sm': '1.05rem',
+  'base-lg': '1.1rem',
+  'base-xl': '1.2rem',
+  lg: '1.125rem',
+  xl: '1.25rem',
+  'xl-sm': '1.3rem',
+  'xl-md': '1.4rem',
+  '2xl': '1.5rem',
+  '2xl-sm': '1.75rem',
+  '3xl': '1.875rem',
+  '3xl-sm': '2rem',
+  '4xl': '2.25rem',
+  '4xl-sm': '2.5rem',
+} as const;
+
+export const letterSpacing = {
+  tightest: '-1px',
+  tighter: '-0.5px',
+  tight: '-0.3px',
+  'tight-sm': '-0.2px',
+  normal: '0',
+  wide: '0.5px',
 } as const;
