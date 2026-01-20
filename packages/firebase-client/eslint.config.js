@@ -1,23 +1,20 @@
 import globals from 'globals';
-import reactHooks from 'eslint-plugin-react-hooks';
-import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 import baseConfig from '../../eslint.config.js';
 
 /**
- * ESLint configuration for the React app
- * Extends the shared base configuration and adds React-specific rules
+ * ESLint configuration for the firebase-client package
+ * Extends the shared base configuration
  */
 export default tseslint.config(
   ...baseConfig,
-  { ignores: ['dist', 'vite.config.ts'] },
+  { ignores: ['dist'] },
   {
     extends: [...tseslint.configs.recommendedTypeChecked],
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: {
-        ...globals.browser,
         ...globals.node,
       },
       parserOptions: {
@@ -25,16 +22,7 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
-    plugins: {
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
-    },
     rules: {
-      ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
       // Type-checked rules
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-misused-promises': 'error',
