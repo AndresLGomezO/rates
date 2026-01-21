@@ -104,9 +104,9 @@ jobs:
             echo "vite_firebase_api_key=AIzaSyBt3UuP69pYFCfdJsmkmJmx4O_bL9jGVBc" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_auth_domain=dev-rates-01-5a9aa.firebaseapp.com" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_project_id=dev-rates-01-5a9aa" >> "$GITHUB_OUTPUT"
-            echo "vite_firebase_storage_bucket=" >> "$GITHUB_OUTPUT"
-            echo "vite_firebase_messaging_sender_id=" >> "$GITHUB_OUTPUT"
-            echo "vite_firebase_app_id=" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_storage_bucket=dev-rates-01-5a9aa.firebasestorage.app" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_messaging_sender_id=368101248577" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_app_id=1:368101248577:web:c487c70ef308546b3d00c0" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_measurement_id=" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.ref_name }}" = "staging" ]; then
             # --- Staging environment (GCP staging project) ---
