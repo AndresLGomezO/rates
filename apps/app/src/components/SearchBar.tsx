@@ -174,12 +174,12 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
           {!isMobileExpanded ? (
             <button
               onClick={handleMobileExpand}
-              className="relative flex items-center justify-center min-w-[44px] h-11 p-2.5 bg-white/10 backdrop-blur-[10px] border border-neutral-600/40 text-white text-xl cursor-pointer rounded-lg transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(10,14,26,0.3)] hover:bg-white/20 hover:border-neutral-500/50 hover:scale-105 hover:shadow-[0_6px_20px_rgba(10,14,26,0.4)] active:scale-95"
+              className="relative flex h-11 min-w-[44px] cursor-pointer items-center justify-center rounded-lg border border-neutral-600/40 bg-white/10 p-2.5 text-xl text-white shadow-[0_4px_12px_rgba(10,14,26,0.3)] backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:scale-105 hover:border-neutral-500/50 hover:bg-white/20 hover:shadow-[0_6px_20px_rgba(10,14,26,0.4)] active:scale-95"
               aria-label="Open search"
             >
               <span className="flex items-center justify-center">🔍</span>
               {searchQuery && (
-                <span className="absolute top-0 right-0 w-2 h-2 bg-primary-500 rounded-full border-2 border-white/20" />
+                <span className="absolute right-0 top-0 h-2 w-2 rounded-full border-2 border-white/20 bg-primary-500" />
               )}
             </button>
           ) : null}
@@ -195,17 +195,17 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
             onClick={handleMobileCollapse}
           >
             <div
-              className="absolute top-0 left-0 right-0 px-4 pt-3 pb-3 bg-[rgba(15,23,42,0.95)] backdrop-blur-xl border-b border-neutral-700/40 shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
+              className="absolute left-0 right-0 top-0 border-b border-neutral-700/40 bg-[rgba(15,23,42,0.95)] px-4 pb-3 pt-3 shadow-[0_4px_20px_rgba(0,0,0,0.5)] backdrop-blur-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="group relative flex items-center w-full mx-auto pointer-events-auto transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] glass-panel border-neutral-600/40 shadow-[0_4px_16px_0_rgba(10,14,26,0.4),inset_0_1px_0_0_rgba(255,255,255,0.15)] focus-within:border-primary-500/60 focus-within:shadow-[0_6px_24px_0_rgba(10,14,26,0.5),inset_0_1px_0_0_rgba(255,255,255,0.2)] gap-3 px-4 py-2.5 rounded-lg">
+              <div className="glass-panel group pointer-events-auto relative mx-auto flex w-full items-center gap-3 rounded-lg border-neutral-600/40 px-4 py-2.5 shadow-[0_4px_16px_0_rgba(10,14,26,0.4),inset_0_1px_0_0_rgba(255,255,255,0.15)] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus-within:border-primary-500/60 focus-within:shadow-[0_6px_24px_0_rgba(10,14,26,0.5),inset_0_1px_0_0_rgba(255,255,255,0.2)]">
                 <span className="flex-shrink-0 text-base opacity-70 group-focus-within:opacity-100">
                   🔍
                 </span>
                 <input
                   ref={inputRef}
                   type="text"
-                  className="relative flex-1 w-full min-w-0 p-0 bg-transparent border-0 outline-none pointer-events-auto z-[2] text-white font-medium text-[0.875rem] placeholder:text-white/50 placeholder:font-normal"
+                  className="pointer-events-auto relative z-[2] w-full min-w-0 flex-1 border-0 bg-transparent p-0 text-[0.875rem] font-medium text-white outline-none placeholder:font-normal placeholder:text-white/50"
                   placeholder="Search accounts..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -213,7 +213,7 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
                 />
                 {searchQuery && (
                   <button
-                    className="flex items-center justify-center flex-shrink-0 w-5 h-5 p-0 leading-none text-white font-semibold cursor-pointer border transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/20 border-neutral-600/50 rounded-full hover:bg-white/30 hover:border-neutral-500/60 hover:scale-110 active:scale-95 text-xs"
+                    className="flex h-5 w-5 flex-shrink-0 cursor-pointer items-center justify-center rounded-full border border-neutral-600/50 bg-white/20 p-0 text-xs font-semibold leading-none text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:scale-110 hover:border-neutral-500/60 hover:bg-white/30 active:scale-95"
                     onClick={handleClear}
                     aria-label="Clear search"
                     title="Clear search"
@@ -222,11 +222,11 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
                   </button>
                 )}
                 <button
-                  className={`relative flex items-center justify-center flex-shrink-0 w-9 h-9 rounded-md p-0 text-white cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                  className={`relative flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-md p-0 text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                     hasActiveFilters
-                      ? 'bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)] border border-[rgba(30,64,175,0.5)] shadow-[0_2px_8px_rgba(30,64,175,0.3)]'
-                      : 'bg-white/15 border border-neutral-600/40'
-                  } hover:bg-white/25 hover:border-neutral-500/50 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:translate-y-0`}
+                      ? 'border border-[rgba(30,64,175,0.5)] bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)] shadow-[0_2px_8px_rgba(30,64,175,0.3)]'
+                      : 'border border-neutral-600/40 bg-white/15'
+                  } hover:-translate-y-0.5 hover:border-neutral-500/50 hover:bg-white/25 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:translate-y-0`}
                   onClick={() => {
                     setIsFiltersModalOpen(true);
                     handleMobileCollapse();
@@ -238,7 +238,7 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
                     ⚙️
                   </span>
                   {hasActiveFilters && (
-                    <span className="absolute top-[-4px] right-[-4px] text-white font-bold text-center min-w-[18px] px-[0.35rem] py-[0.15rem] rounded-md bg-gradient-to-br from-[#1e40af] to-[#334155] shadow-[0_2px_6px_rgba(30,64,175,0.4)] border-2 border-neutral-600/40 text-[0.6rem] min-w-4">
+                    <span className="absolute right-[-4px] top-[-4px] min-w-[18px] rounded-md border-2 border-neutral-600/40 bg-gradient-to-br from-[#1e40af] to-[#334155] px-[0.35rem] py-[0.15rem] text-center text-[0.6rem] font-bold text-white shadow-[0_2px_6px_rgba(30,64,175,0.4)]">
                       {activeFiltersCount}
                     </span>
                   )}
@@ -251,21 +251,21 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
 
       {/* Desktop search bar */}
       <div
-        className={`hidden md:block sticky top-0 z-searchbar pointer-events-auto transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+        className={`pointer-events-auto sticky top-0 z-searchbar hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] md:block ${
           isScrolled
-            ? 'px-10 py-3 bg-white/8 backdrop-blur-[15px] shadow-[0_2px_8px_rgba(0,0,0,0.1)] md:px-6 md:py-2.5'
-            : 'px-10 py-6 bg-white/5 backdrop-blur-[10px] border-b border-neutral-700/30 md:px-6 md:py-4'
-        } relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-neutral-600/30 after:to-transparent after:pointer-events-none`}
+            ? 'bg-white/8 px-10 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.1)] backdrop-blur-[15px] md:px-6 md:py-2.5'
+            : 'border-b border-neutral-700/30 bg-white/5 px-10 py-6 backdrop-blur-[10px] md:px-6 md:py-4'
+        } relative after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-neutral-600/30 after:to-transparent after:content-['']`}
       >
         <div
-          className={`group relative flex items-center w-full mx-auto pointer-events-auto transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] glass-panel border-neutral-600/40 shadow-[0_4px_16px_0_rgba(10,14,26,0.4),inset_0_1px_0_0_rgba(255,255,255,0.15)] focus-within:border-primary-500/60 focus-within:shadow-[0_6px_24px_0_rgba(10,14,26,0.5),inset_0_1px_0_0_rgba(255,255,255,0.2)] focus-within:-translate-y-0.5 ${
+          className={`glass-panel group pointer-events-auto relative mx-auto flex w-full items-center border-neutral-600/40 shadow-[0_4px_16px_0_rgba(10,14,26,0.4),inset_0_1px_0_0_rgba(255,255,255,0.15)] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus-within:-translate-y-0.5 focus-within:border-primary-500/60 focus-within:shadow-[0_6px_24px_0_rgba(10,14,26,0.5),inset_0_1px_0_0_rgba(255,255,255,0.2)] ${
             isScrolled
-              ? 'gap-3 max-w-[600px] px-4 py-2.5 rounded-lg shadow-[0_2px_8px_0_rgba(10,14,26,0.3),inset_0_1px_0_0_rgba(255,255,255,0.12)] focus-within:shadow-[0_4px_12px_0_rgba(10,14,26,0.4),inset_0_1px_0_0_rgba(255,255,255,0.18)] focus-within:-translate-y-[1px] md:max-w-full md:px-3.5 md:py-2'
-              : 'gap-3 max-w-[800px] px-5 py-3.5 rounded-xl md:px-4 md:py-3'
+              ? 'max-w-[600px] gap-3 rounded-lg px-4 py-2.5 shadow-[0_2px_8px_0_rgba(10,14,26,0.3),inset_0_1px_0_0_rgba(255,255,255,0.12)] focus-within:-translate-y-[1px] focus-within:shadow-[0_4px_12px_0_rgba(10,14,26,0.4),inset_0_1px_0_0_rgba(255,255,255,0.18)] md:max-w-full md:px-3.5 md:py-2'
+              : 'max-w-[800px] gap-3 rounded-xl px-5 py-3.5 md:px-4 md:py-3'
           }`}
         >
           <span
-            className={`flex-shrink-0 transition-all duration-300 ease-out opacity-70 ${
+            className={`flex-shrink-0 opacity-70 transition-all duration-300 ease-out ${
               isScrolled ? 'text-base md:text-base' : 'text-xl md:text-base'
             } group-focus-within:opacity-100`}
           >
@@ -273,7 +273,7 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
           </span>
           <input
             type="text"
-            className={`relative flex-1 w-full min-w-0 p-0 bg-transparent border-0 outline-none pointer-events-auto z-[2] text-white font-medium transition-[font-size] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] placeholder:text-white/50 placeholder:font-normal ${
+            className={`pointer-events-auto relative z-[2] w-full min-w-0 flex-1 border-0 bg-transparent p-0 font-medium text-white outline-none transition-[font-size] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] placeholder:font-normal placeholder:text-white/50 ${
               isScrolled
                 ? 'text-[0.9rem] md:text-[0.85rem]'
                 : 'text-base md:text-[0.9rem]'
@@ -289,8 +289,8 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
           />
           {searchQuery && (
             <button
-              className={`flex items-center justify-center flex-shrink-0 p-0 leading-none text-white font-semibold cursor-pointer border transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] bg-white/20 border-neutral-600/50 rounded-full hover:bg-white/30 hover:border-neutral-500/60 hover:scale-110 active:scale-95 ${
-                isScrolled ? 'w-5 h-5 text-xs' : 'w-6 h-6 text-sm'
+              className={`flex flex-shrink-0 cursor-pointer items-center justify-center rounded-full border border-neutral-600/50 bg-white/20 p-0 font-semibold leading-none text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:scale-110 hover:border-neutral-500/60 hover:bg-white/30 active:scale-95 ${
+                isScrolled ? 'h-5 w-5 text-xs' : 'h-6 w-6 text-sm'
               }`}
               onClick={handleClear}
               aria-label="Clear search"
@@ -300,13 +300,13 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
             </button>
           )}
           <button
-            className={`relative flex items-center justify-center flex-shrink-0 p-0 text-white cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-              isScrolled ? 'w-9 h-9 rounded-md' : 'w-10 h-10 rounded-lg'
+            className={`relative flex flex-shrink-0 cursor-pointer items-center justify-center p-0 text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+              isScrolled ? 'h-9 w-9 rounded-md' : 'h-10 w-10 rounded-lg'
             } ${
               hasActiveFilters
-                ? 'bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)] border border-[rgba(30,64,175,0.5)] shadow-[0_2px_8px_rgba(30,64,175,0.3)]'
-                : 'bg-white/15 border border-neutral-600/40'
-            } hover:bg-white/25 hover:border-neutral-500/50 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:translate-y-0`}
+                ? 'border border-[rgba(30,64,175,0.5)] bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)] shadow-[0_2px_8px_rgba(30,64,175,0.3)]'
+                : 'border border-neutral-600/40 bg-white/15'
+            } hover:-translate-y-0.5 hover:border-neutral-500/50 hover:bg-white/25 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:translate-y-0`}
             onClick={() => setIsFiltersModalOpen(true)}
             aria-label="Open filters"
             title="Filters"
@@ -320,10 +320,10 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
             </span>
             {hasActiveFilters && (
               <span
-                className={`absolute text-white font-bold text-center min-w-[18px] px-[0.4rem] py-[0.2rem] rounded-md bg-gradient-to-br from-[#1e40af] to-[#334155] shadow-[0_2px_6px_rgba(30,64,175,0.4)] border-2 border-neutral-600/40 ${
+                className={`absolute min-w-[18px] rounded-md border-2 border-neutral-600/40 bg-gradient-to-br from-[#1e40af] to-[#334155] px-[0.4rem] py-[0.2rem] text-center font-bold text-white shadow-[0_2px_6px_rgba(30,64,175,0.4)] ${
                   isScrolled
-                    ? 'top-[-4px] right-[-4px] text-[0.6rem] px-[0.35rem] py-[0.15rem] min-w-4'
-                    : 'top-[-4px] right-[-4px] text-[0.65rem]'
+                    ? 'right-[-4px] top-[-4px] min-w-4 px-[0.35rem] py-[0.15rem] text-[0.6rem]'
+                    : 'right-[-4px] top-[-4px] text-[0.65rem]'
                 }`}
               >
                 {activeFiltersCount}

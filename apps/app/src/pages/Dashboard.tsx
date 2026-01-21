@@ -472,15 +472,15 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-8">
-        <div className="flex justify-between items-center mb-10 pb-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent">
-          <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.05)]">
+      <div className="m-0 box-border flex w-full max-w-full animate-fadeIn-slow flex-col gap-8 overflow-x-hidden p-0">
+        <div className="relative mb-10 flex items-center justify-between pb-6 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:content-['']">
+          <h2 className="m-0 bg-gradient-to-br from-white to-white/80 bg-clip-text text-4xl font-bold -tracking-[0.5px] text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.05)]">
             Dashboard
           </h2>
         </div>
-        <div className="flex flex-col items-center justify-center py-16 px-8 text-white gap-6">
-          <div className="w-[50px] h-[50px] border-4 border-neutral-600/40 border-t-neutral-500/60 rounded-full animate-spin"></div>
-          <p className="text-lg text-white/90 font-medium">
+        <div className="flex flex-col items-center justify-center gap-6 px-8 py-16 text-white">
+          <div className="h-[50px] w-[50px] animate-spin rounded-full border-4 border-neutral-600/40 border-t-neutral-500/60"></div>
+          <p className="text-lg font-medium text-white/90">
             Loading accounts...
           </p>
         </div>
@@ -490,14 +490,14 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-8">
-        <div className="flex justify-between items-center mb-10 pb-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent">
-          <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.05)]">
+      <div className="m-0 box-border flex w-full max-w-full animate-fadeIn-slow flex-col gap-8 overflow-x-hidden p-0">
+        <div className="relative mb-10 flex items-center justify-between pb-6 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:content-['']">
+          <h2 className="m-0 bg-gradient-to-br from-white to-white/80 bg-clip-text text-4xl font-bold -tracking-[0.5px] text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.05)]">
             Dashboard
           </h2>
         </div>
-        <div className="text-center py-12 px-12 text-white/80 bg-danger-500/20 backdrop-blur-[20px] rounded-lg border border-danger-500/30">
-          <p className="text-xl m-0 text-danger-500">
+        <div className="rounded-lg border border-danger-500/30 bg-danger-500/20 px-12 py-12 text-center text-white/80 backdrop-blur-[20px]">
+          <p className="m-0 text-xl text-danger-500">
             Error loading accounts: {error}
           </p>
         </div>
@@ -506,24 +506,24 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-0 pb-4 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-neutral-600/30 after:to-transparent gap-6 md:gap-0">
+    <div className="m-0 box-border flex w-full max-w-full animate-fadeIn-slow flex-col gap-6 overflow-x-hidden p-0">
+      <div className="relative mb-0 flex flex-col items-start justify-between gap-6 pb-4 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-neutral-600/30 after:to-transparent after:content-[''] md:flex-row md:items-center md:gap-0">
         <div>
-          <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.05)] md:text-3xl xs:text-[1.75rem]">
+          <h2 className="m-0 bg-gradient-to-br from-white to-white/80 bg-clip-text text-4xl font-bold -tracking-[0.5px] text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.05)] xs:text-[1.75rem] md:text-3xl">
             Financial Overview
           </h2>
-          <p className="mt-2 mb-0 text-white/70 text-base font-normal">
+          <p className="mb-0 mt-2 text-base font-normal text-white/70">
             {daysAhead > 0
               ? `Viewing ${daysAhead} days before and after today`
               : 'Viewing all periods'}
           </p>
         </div>
         <button
-          className="hidden md:flex ds-button-gradient items-center gap-2 px-6 py-3.5 text-[0.95rem] whitespace-nowrap"
+          className="ds-button-gradient hidden items-center gap-2 whitespace-nowrap px-6 py-3.5 text-[0.95rem] md:flex"
           onClick={() => setIsNewAccountWizardOpen(true)}
           title="Create a new account"
         >
-          <span className="text-2xl leading-none font-light flex items-center justify-center">
+          <span className="flex items-center justify-center text-2xl font-light leading-none">
             +
           </span>
           <span>New account</span>
@@ -540,20 +540,20 @@ export default function Dashboard() {
       />
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 gap-3 mb-8 w-full md:grid-cols-3 md:gap-6">
-        <div className="relative overflow-visible bg-gradient-to-br from-success-css/20 to-success-css/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-neutral-700/30 rounded-lg p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:via-[#1e3a8a] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:border-neutral-600/40 min-w-0 xs:p-4">
-          <div className="text-sm text-white/70 font-semibold uppercase tracking-wide mb-2">
+      <div className="mb-8 grid w-full grid-cols-1 gap-3 md:grid-cols-3 md:gap-6">
+        <div className="relative min-w-0 overflow-visible rounded-lg border border-neutral-700/30 bg-gradient-to-br from-success-css/20 to-success-css/10 p-6 backdrop-blur-[20px] backdrop-saturate-[180%] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:left-0 before:right-0 before:top-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:-translate-y-1 hover:border-neutral-600/40 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:before:opacity-100 xs:p-4">
+          <div className="mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
             Total Paid
           </div>
-          <div className="text-3xl font-bold text-white -tracking-[0.5px] mb-2 leading-tight xs:text-2xl">
+          <div className="mb-2 text-3xl font-bold leading-tight -tracking-[0.5px] text-white xs:text-2xl">
             {formatCurrency(metrics.totalPaid, primaryCurrency)}
           </div>
-          <div className="text-xs text-success-css font-medium">
+          <div className="text-xs font-medium text-success-css">
             {metrics.paidPeriodsCount} paid periods
           </div>
           {metrics.totalPaid > 0 && (
-            <div className="flex items-center gap-3 mt-3 overflow-visible relative z-10">
-              <div className="flex-1 min-w-0 overflow-visible relative z-[1]">
+            <div className="relative z-10 mt-3 flex items-center gap-3 overflow-visible">
+              <div className="relative z-[1] min-w-0 flex-1 overflow-visible">
                 <ResponsiveContainer width="100%" height={32}>
                   <BarChart
                     data={[
@@ -604,14 +604,14 @@ export default function Dashboard() {
               </div>
               <div className="flex flex-col gap-1 text-xs text-white/70">
                 <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-2 h-2 rounded-full bg-[#2563eb] inline-block"></span>
+                  <span className="inline-block h-2 w-2 rounded-full bg-[#2563eb]"></span>
                   Interest{' '}
                   <span className="font-semibold text-white">
                     {formatCurrency(metrics.totalInterest, primaryCurrency)}
                   </span>
                 </span>
                 <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-2 h-2 rounded-full bg-[#1e40af] inline-block"></span>
+                  <span className="inline-block h-2 w-2 rounded-full bg-[#1e40af]"></span>
                   Principal{' '}
                   <span className="font-semibold text-white">
                     {formatCurrency(metrics.totalPrincipal, primaryCurrency)}
@@ -621,19 +621,19 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-        <div className="relative overflow-visible bg-gradient-to-br from-danger-500/20 to-danger-500/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-neutral-700/30 rounded-lg p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:via-[#1e3a8a] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:border-neutral-600/40 min-w-0 xs:p-4">
-          <div className="text-sm text-white/70 font-semibold uppercase tracking-wide mb-2">
+        <div className="relative min-w-0 overflow-visible rounded-lg border border-neutral-700/30 bg-gradient-to-br from-danger-500/20 to-danger-500/10 p-6 backdrop-blur-[20px] backdrop-saturate-[180%] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:left-0 before:right-0 before:top-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:-translate-y-1 hover:border-neutral-600/40 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:before:opacity-100 xs:p-4">
+          <div className="mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
             Total Due
           </div>
-          <div className="text-3xl font-bold text-white -tracking-[0.5px] mb-2 leading-tight xs:text-2xl">
+          <div className="mb-2 text-3xl font-bold leading-tight -tracking-[0.5px] text-white xs:text-2xl">
             {formatCurrency(metrics.totalOutcomes, primaryCurrency)}
           </div>
-          <div className="text-xs text-white/60 font-medium">
+          <div className="text-xs font-medium text-white/60">
             {filteredPeriods.length} periods
           </div>
           {metrics.dueInterest + metrics.duePrincipal > 0 && (
-            <div className="flex items-center gap-3 mt-3 overflow-visible relative z-10">
-              <div className="flex-1 min-w-0 overflow-visible relative z-[1]">
+            <div className="relative z-10 mt-3 flex items-center gap-3 overflow-visible">
+              <div className="relative z-[1] min-w-0 flex-1 overflow-visible">
                 <ResponsiveContainer width="100%" height={32}>
                   <BarChart
                     data={[
@@ -684,14 +684,14 @@ export default function Dashboard() {
               </div>
               <div className="flex flex-col gap-1 text-xs text-white/70">
                 <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-2 h-2 rounded-full bg-[#2563eb] inline-block"></span>
+                  <span className="inline-block h-2 w-2 rounded-full bg-[#2563eb]"></span>
                   Interest due{' '}
                   <span className="font-semibold text-white">
                     {formatCurrency(metrics.dueInterest, primaryCurrency)}
                   </span>
                 </span>
                 <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-2 h-2 rounded-full bg-[#1e40af] inline-block"></span>
+                  <span className="inline-block h-2 w-2 rounded-full bg-[#1e40af]"></span>
                   Principal due{' '}
                   <span className="font-semibold text-white">
                     {formatCurrency(metrics.duePrincipal, primaryCurrency)}
@@ -701,21 +701,21 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-        <div className="relative overflow-visible bg-gradient-to-br from-warning-500/20 to-warning-500/10 backdrop-blur-[20px] backdrop-saturate-[180%] border border-neutral-700/30 rounded-lg p-6 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:via-[#1e3a8a] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:-translate-y-1 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:border-neutral-600/40 min-w-0 xs:p-4">
-          <div className="text-sm text-white/70 font-semibold uppercase tracking-wide mb-2">
+        <div className="relative min-w-0 overflow-visible rounded-lg border border-neutral-700/30 bg-gradient-to-br from-warning-500/20 to-warning-500/10 p-6 backdrop-blur-[20px] backdrop-saturate-[180%] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:left-0 before:right-0 before:top-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:-translate-y-1 hover:border-neutral-600/40 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:before:opacity-100 xs:p-4">
+          <div className="mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
             Pending Amount
           </div>
-          <div className="text-3xl font-bold text-white -tracking-[0.5px] mb-2 leading-tight xs:text-2xl">
+          <div className="mb-2 text-3xl font-bold leading-tight -tracking-[0.5px] text-white xs:text-2xl">
             {formatCurrency(metrics.totalPending, primaryCurrency)}
           </div>
-          <div className="text-xs text-warning-500 font-medium">
+          <div className="text-xs font-medium text-warning-500">
             {metrics.pendingPeriodsCount + metrics.partialPeriodsCount} pending
             {metrics.overduePeriodsCount > 0 &&
               ` • ${metrics.overduePeriodsCount} overdue`}
           </div>
           {metrics.pendingInterest + metrics.pendingPrincipal > 0 && (
-            <div className="flex items-center gap-3 mt-3 overflow-visible relative z-10">
-              <div className="flex-1 min-w-0 overflow-visible relative z-[1]">
+            <div className="relative z-10 mt-3 flex items-center gap-3 overflow-visible">
+              <div className="relative z-[1] min-w-0 flex-1 overflow-visible">
                 <ResponsiveContainer width="100%" height={32}>
                   <BarChart
                     data={[
@@ -768,14 +768,14 @@ export default function Dashboard() {
               </div>
               <div className="flex flex-col gap-1 text-xs text-white/70">
                 <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-2 h-2 rounded-full bg-[#2563eb] inline-block"></span>
+                  <span className="inline-block h-2 w-2 rounded-full bg-[#2563eb]"></span>
                   Est. interest{' '}
                   <span className="font-semibold text-white">
                     {formatCurrency(metrics.pendingInterest, primaryCurrency)}
                   </span>
                 </span>
                 <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span className="w-2 h-2 rounded-full bg-[#1e40af] inline-block"></span>
+                  <span className="inline-block h-2 w-2 rounded-full bg-[#1e40af]"></span>
                   Est. principal{' '}
                   <span className="font-semibold text-white">
                     {formatCurrency(metrics.pendingPrincipal, primaryCurrency)}
@@ -789,10 +789,10 @@ export default function Dashboard() {
 
       {/* Charts Section */}
       {chartData.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 w-full box-border xs:grid-cols-1 xs:gap-4">
+        <div className="mb-8 box-border grid w-full grid-cols-1 gap-8 xs:grid-cols-1 xs:gap-4 md:grid-cols-2">
           {/* Payment Timeline */}
           <div className="ds-card-medium p-8 xs:p-4">
-            <h3 className="m-0 mb-6 text-white text-xl font-bold -tracking-[0.3px] xs:text-lg">
+            <h3 className="m-0 mb-6 text-xl font-bold -tracking-[0.3px] text-white xs:text-lg">
               Payment Timeline
             </h3>
             <ResponsiveContainer width="100%" height={300}>
@@ -850,7 +850,7 @@ export default function Dashboard() {
           {/* Interest vs Principal */}
           {interestPrincipalData.some((d) => d.value > 0) && (
             <div className="ds-card-medium p-8 xs:p-4">
-              <h3 className="m-0 mb-6 text-white text-xl font-bold -tracking-[0.3px] xs:text-lg">
+              <h3 className="m-0 mb-6 text-xl font-bold -tracking-[0.3px] text-white xs:text-lg">
                 Interest vs Principal
               </h3>
               <ResponsiveContainer width="100%" height={300}>
@@ -892,7 +892,7 @@ export default function Dashboard() {
           {/* Account Type Distribution */}
           {accountTypeData.length > 0 && (
             <div className="ds-card-medium p-8 xs:p-4">
-              <h3 className="m-0 mb-6 text-white text-xl font-bold -tracking-[0.3px] xs:text-lg">
+              <h3 className="m-0 mb-6 text-xl font-bold -tracking-[0.3px] text-white xs:text-lg">
                 By Account Type
               </h3>
               <ResponsiveContainer width="100%" height={300}>
@@ -937,28 +937,28 @@ export default function Dashboard() {
 
           {/* Top Accounts by Interest - Compact */}
           {topAccountsByInterest.length > 0 && (
-            <div className="flex flex-col min-h-[300px] ds-card-medium p-8 xs:p-4">
-              <h3 className="m-0 mb-6 text-white text-xl font-bold -tracking-[0.3px] xs:text-lg">
+            <div className="ds-card-medium flex min-h-[300px] flex-col p-8 xs:p-4">
+              <h3 className="m-0 mb-6 text-xl font-bold -tracking-[0.3px] text-white xs:text-lg">
                 Top Accounts by Interest
               </h3>
-              <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-track]:rounded [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb:hover]:bg-white/30">
+              <div className="flex flex-1 flex-col gap-3 overflow-y-auto pr-2 [&::-webkit-scrollbar-thumb:hover]:bg-white/30 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-track]:rounded [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar]:w-1.5">
                 {topAccountsByInterest.map((account, index) => (
                   <div
                     key={account.accountNumber}
-                    className="flex items-center gap-3 px-3 py-3 bg-white/8 border border-neutral-700/30 rounded-lg cursor-pointer transition-all duration-200 ease-in-out flex-shrink-0 hover:bg-white/12 hover:border-neutral-600/40 hover:translate-x-0.5"
+                    className="bg-white/8 hover:bg-white/12 flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-lg border border-neutral-700/30 px-3 py-3 transition-all duration-200 ease-in-out hover:translate-x-0.5 hover:border-neutral-600/40"
                     onClick={() => {
                       void navigate(`/account/${account.accountNumber}`);
                     }}
                   >
-                    <span className="text-sm font-bold text-primary-500 min-w-[1.75rem] text-center flex-shrink-0">
+                    <span className="min-w-[1.75rem] flex-shrink-0 text-center text-sm font-bold text-primary-500">
                       #{index + 1}
                     </span>
-                    <div className="flex-1 min-w-0 overflow-hidden">
-                      <span className="text-sm font-semibold text-white -tracking-[0.2px] whitespace-nowrap overflow-hidden text-ellipsis block">
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <span className="block overflow-hidden text-ellipsis whitespace-nowrap text-sm font-semibold -tracking-[0.2px] text-white">
                         {account.accountName}
                       </span>
                     </div>
-                    <span className="text-[0.95rem] font-bold text-[#2563eb] -tracking-[0.3px] whitespace-nowrap flex-shrink-0">
+                    <span className="flex-shrink-0 whitespace-nowrap text-[0.95rem] font-bold -tracking-[0.3px] text-[#2563eb]">
                       {formatCurrency(account.totalInterest, account.currency)}
                     </span>
                   </div>
@@ -972,7 +972,7 @@ export default function Dashboard() {
       {/* Pending Payments List */}
       {pendingPeriods.length > 0 && (
         <div className="mt-8">
-          <h3 className="m-0 mb-6 text-white text-2xl font-bold -tracking-[0.5px] xs:text-xl">
+          <h3 className="m-0 mb-6 text-2xl font-bold -tracking-[0.5px] text-white xs:text-xl">
             Pending Payments
           </h3>
           <div className="flex flex-col gap-4">
@@ -988,20 +988,20 @@ export default function Dashboard() {
               return (
                 <div
                   key={periodKey}
-                  className={`relative ds-card-medium overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-0.5 before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:via-[#1e3a8a] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 hover:border-neutral-600/50 hover:shadow-[0_8px_24px_0_rgba(10,14,26,0.5)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] ${
+                  className={`ds-card-medium relative overflow-hidden before:absolute before:left-0 before:right-0 before:top-0 before:h-0.5 before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:border-neutral-600/50 hover:shadow-[0_8px_24px_0_rgba(10,14,26,0.5)] hover:before:opacity-100 ${
                     isExpanded
-                      ? 'border-neutral-600/50 shadow-[0_12px_32px_0_rgba(10,14,26,0.6)] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] before:opacity-100'
+                      ? 'border-neutral-600/50 shadow-[0_12px_32px_0_rgba(10,14,26,0.6)] before:opacity-100'
                       : 'border-white/15'
                   }`}
                 >
                   <div
-                    className="flex items-center px-6 py-5 cursor-pointer gap-6 transition-colors duration-200 ease-in-out relative hover:bg-white/5 md:px-4 md:gap-4 xs:px-3.5 xs:gap-3"
+                    className="relative flex cursor-pointer items-center gap-6 px-6 py-5 transition-colors duration-200 ease-in-out hover:bg-white/5 xs:gap-3 xs:px-3.5 md:gap-4 md:px-4"
                     onClick={() => toggleExpand(periodKey)}
                   >
-                    <div className="grid grid-cols-[220px_140px_140px_180px_auto] items-center flex-1 gap-8 min-w-0 md:grid-cols-[200px_130px_130px_160px_auto] md:gap-6 xs:grid-cols-1 xs:gap-4 xs:w-full">
-                      <div className="flex flex-col gap-1 w-[220px] flex-shrink-0 md:w-[200px] xs:w-full">
+                    <div className="grid min-w-0 flex-1 grid-cols-[220px_140px_140px_180px_auto] items-center gap-8 xs:w-full xs:grid-cols-1 xs:gap-4 md:grid-cols-[200px_130px_130px_160px_auto] md:gap-6">
+                      <div className="flex w-[220px] flex-shrink-0 flex-col gap-1 xs:w-full md:w-[200px]">
                         <h3
-                          className="m-0 text-white text-lg font-bold -tracking-[0.3px] whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer transition-colors duration-200 hover:text-primary-500"
+                          className="m-0 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap text-lg font-bold -tracking-[0.3px] text-white transition-colors duration-200 hover:text-primary-500"
                           onClick={(e) => {
                             e.stopPropagation();
                             void navigate(`/account/${account.accountNumber}`);
@@ -1009,43 +1009,43 @@ export default function Dashboard() {
                         >
                           {account.accountName}
                         </h3>
-                        <p className="m-0 text-white/60 text-sm font-mono tracking-wide">
+                        <p className="m-0 font-mono text-sm tracking-wide text-white/60">
                           Period #{period.periodNumber} •{' '}
                           {account.accountNumber}
                         </p>
                       </div>
-                      <div className="flex flex-col gap-1 w-[140px] md:w-[130px] xs:w-full">
-                        <span className="text-xs text-white/60 font-semibold uppercase tracking-wide">
+                      <div className="flex w-[140px] flex-col gap-1 xs:w-full md:w-[130px]">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-white/60">
                           Amount Due
                         </span>
-                        <span className="text-xl font-bold text-[#2563eb] shadow-[0_2px_10px_rgba(37,99,235,0.3)] -tracking-[0.5px] xs:text-base">
+                        <span className="text-xl font-bold -tracking-[0.5px] text-[#2563eb] shadow-[0_2px_10px_rgba(37,99,235,0.3)] xs:text-base">
                           {formatCurrency(
                             periodInfo.amountDue,
                             period.currency
                           )}
                         </span>
                       </div>
-                      <div className="flex flex-col gap-1 w-[140px] md:w-[130px] xs:w-full">
-                        <span className="text-xs text-white/60 font-semibold uppercase tracking-wide">
+                      <div className="flex w-[140px] flex-col gap-1 xs:w-full md:w-[130px]">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-white/60">
                           Amount Paid
                         </span>
-                        <span className="text-lg font-semibold text-white -tracking-[0.3px] xs:text-base">
+                        <span className="text-lg font-semibold -tracking-[0.3px] text-white xs:text-base">
                           {formatCurrency(
                             periodInfo.amountPaid,
                             period.currency
                           )}
                         </span>
                       </div>
-                      <div className="flex flex-col gap-1 w-[180px] md:w-[160px] xs:w-full">
-                        <span className="text-xs text-white/60 font-semibold uppercase tracking-wide">
+                      <div className="flex w-[180px] flex-col gap-1 xs:w-full md:w-[160px]">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-white/60">
                           Due Date
                         </span>
                         <span
                           className={`text-[0.95rem] font-semibold ${
                             isOverdue
-                              ? 'text-danger-500 font-bold'
+                              ? 'font-bold text-danger-500'
                               : daysRemaining <= 7
-                                ? 'text-warning-400 font-bold'
+                                ? 'font-bold text-warning-400'
                                 : 'text-white'
                           }`}
                         >
@@ -1054,9 +1054,9 @@ export default function Dashboard() {
                         <span
                           className={`text-xs font-medium ${
                             isOverdue
-                              ? 'text-danger-500 font-semibold'
+                              ? 'font-semibold text-danger-500'
                               : daysRemaining <= 7
-                                ? 'text-warning-400 font-semibold'
+                                ? 'font-semibold text-warning-400'
                                 : 'text-white/70'
                           }`}
                         >
@@ -1066,7 +1066,7 @@ export default function Dashboard() {
                         </span>
                       </div>
                       <span
-                        className="px-4 py-2 rounded-lg text-white text-xs font-bold uppercase tracking-wide shadow-[0_2px_8px_rgba(0,0,0,0.2)] backdrop-blur-[10px] border border-neutral-600/40 whitespace-nowrap flex-shrink-0 justify-self-start w-fit"
+                        className="w-fit flex-shrink-0 justify-self-start whitespace-nowrap rounded-lg border border-neutral-600/40 px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-[0_2px_8px_rgba(0,0,0,0.2)] backdrop-blur-[10px]"
                         style={{
                           backgroundColor:
                             periodInfo.status === 'pending'
@@ -1079,9 +1079,9 @@ export default function Dashboard() {
                         {periodInfo.status.toUpperCase()}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="flex flex-shrink-0 items-center gap-3">
                       <button
-                        className="ds-button-gradient flex items-center gap-2 px-5 py-2.5 text-sm whitespace-nowrap border-none rounded-lg"
+                        className="ds-button-gradient flex items-center gap-2 whitespace-nowrap rounded-lg border-none px-5 py-2.5 text-sm"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleLogPayment(account, period);
@@ -1107,7 +1107,7 @@ export default function Dashboard() {
                         Log Payment
                       </button>
                       <button
-                        className={`bg-white/10 border border-neutral-600/40 rounded-lg w-9 h-9 flex items-center justify-center cursor-pointer text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex-shrink-0 p-0 hover:bg-white/20 hover:border-neutral-600/40 hover:scale-110 xs:w-8 xs:h-8 ${
+                        className={`flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-lg border border-neutral-600/40 bg-white/10 p-0 text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:scale-110 hover:border-neutral-600/40 hover:bg-white/20 xs:h-8 xs:w-8 ${
                           isExpanded ? 'rotate-180' : ''
                         } ${isExpanded ? 'hover:rotate-180 hover:scale-110' : ''}`}
                         onClick={(e) => {
@@ -1138,54 +1138,54 @@ export default function Dashboard() {
 
                   {/* Expanded Details View */}
                   <div
-                    className={`overflow-hidden transition-[max-height,opacity] duration-[400ms,300ms] ease-[cubic-bezier(0.4,0,0.2,1),ease-in-out] border-t border-neutral-700/30 ${
+                    className={`overflow-hidden border-t border-neutral-700/30 transition-[max-height,opacity] duration-[400ms,300ms] ease-[cubic-bezier(0.4,0,0.2,1),ease-in-out] ${
                       isExpanded
                         ? 'max-h-[2000px] opacity-100'
                         : 'max-h-0 opacity-0'
                     }`}
                   >
-                    <div className="p-6 bg-black/20">
-                      <div className="mb-6 pb-4 border-b border-neutral-700/30">
-                        <h4 className="m-0 mb-2 text-white text-lg font-bold -tracking-[0.3px]">
+                    <div className="bg-black/20 p-6">
+                      <div className="mb-6 border-b border-neutral-700/30 pb-4">
+                        <h4 className="m-0 mb-2 text-lg font-bold -tracking-[0.3px] text-white">
                           Payment Period Details
                         </h4>
-                        <p className="m-0 text-white/80 text-[0.95rem] leading-relaxed">
+                        <p className="m-0 text-[0.95rem] leading-relaxed text-white/80">
                           {account.accountDescription}
                         </p>
                       </div>
-                      <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4 w-full box-border xs:grid-cols-1">
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
-                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                      <div className="box-border grid w-full grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4 xs:grid-cols-1">
+                        <div className="ds-card-light flex flex-col gap-2 rounded-lg p-4 hover:translate-x-1 hover:border-neutral-600/40 hover:bg-white/10">
+                          <span className="text-sm font-semibold uppercase tracking-wide text-white/70">
                             Account:
                           </span>
-                          <span className="text-lg text-white font-bold -tracking-[0.3px]">
+                          <span className="text-lg font-bold -tracking-[0.3px] text-white">
                             {account.accountName} ({account.accountNumber})
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
-                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                        <div className="ds-card-light flex flex-col gap-2 rounded-lg p-4 hover:translate-x-1 hover:border-neutral-600/40 hover:bg-white/10">
+                          <span className="text-sm font-semibold uppercase tracking-wide text-white/70">
                             Period Number:
                           </span>
-                          <span className="text-lg text-white font-bold -tracking-[0.3px]">
+                          <span className="text-lg font-bold -tracking-[0.3px] text-white">
                             #{period.periodNumber}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
-                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                        <div className="ds-card-light flex flex-col gap-2 rounded-lg p-4 hover:translate-x-1 hover:border-neutral-600/40 hover:bg-white/10">
+                          <span className="text-sm font-semibold uppercase tracking-wide text-white/70">
                             Status:
                           </span>
-                          <span className="text-lg text-white font-bold -tracking-[0.3px]">
+                          <span className="text-lg font-bold -tracking-[0.3px] text-white">
                             {periodInfo.status.toUpperCase()}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
-                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                        <div className="ds-card-light flex flex-col gap-2 rounded-lg p-4 hover:translate-x-1 hover:border-neutral-600/40 hover:bg-white/10">
+                          <span className="text-sm font-semibold uppercase tracking-wide text-white/70">
                             Due Date:
                           </span>
                           <span
                             className={`text-lg font-bold -tracking-[0.3px] ${
                               isOverdue
-                                ? 'text-danger-500 shadow-[0_2px_10px_rgba(255,107,107,0.3)] animate-pulse'
+                                ? 'animate-pulse text-danger-500 shadow-[0_2px_10px_rgba(255,107,107,0.3)]'
                                 : daysRemaining <= 7
                                   ? 'text-warning-400 shadow-[0_2px_10px_rgba(255,217,61,0.3)]'
                                   : 'text-white'
@@ -1194,14 +1194,14 @@ export default function Dashboard() {
                             {formatDate(dueDate)}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
-                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                        <div className="ds-card-light flex flex-col gap-2 rounded-lg p-4 hover:translate-x-1 hover:border-neutral-600/40 hover:bg-white/10">
+                          <span className="text-sm font-semibold uppercase tracking-wide text-white/70">
                             Days Remaining:
                           </span>
                           <span
                             className={`text-lg font-bold -tracking-[0.3px] ${
                               isOverdue
-                                ? 'text-danger-500 shadow-[0_2px_10px_rgba(255,107,107,0.3)] animate-pulse'
+                                ? 'animate-pulse text-danger-500 shadow-[0_2px_10px_rgba(255,107,107,0.3)]'
                                 : daysRemaining <= 7
                                   ? 'text-warning-400 shadow-[0_2px_10px_rgba(255,217,61,0.3)]'
                                   : 'text-white'
@@ -1212,61 +1212,61 @@ export default function Dashboard() {
                               : `${daysRemaining} days left`}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
-                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                        <div className="ds-card-light flex flex-col gap-2 rounded-lg p-4 hover:translate-x-1 hover:border-neutral-600/40 hover:bg-white/10">
+                          <span className="text-sm font-semibold uppercase tracking-wide text-white/70">
                             Amount Due:
                           </span>
-                          <span className="text-xl text-[#2563eb] font-bold -tracking-[0.3px] shadow-[0_2px_10px_rgba(37,99,235,0.3)]">
+                          <span className="text-xl font-bold -tracking-[0.3px] text-[#2563eb] shadow-[0_2px_10px_rgba(37,99,235,0.3)]">
                             {formatCurrency(
                               periodInfo.amountDue,
                               period.currency
                             )}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
-                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                        <div className="ds-card-light flex flex-col gap-2 rounded-lg p-4 hover:translate-x-1 hover:border-neutral-600/40 hover:bg-white/10">
+                          <span className="text-sm font-semibold uppercase tracking-wide text-white/70">
                             Amount Paid:
                           </span>
-                          <span className="text-lg text-white font-bold -tracking-[0.3px]">
+                          <span className="text-lg font-bold -tracking-[0.3px] text-white">
                             {formatCurrency(
                               periodInfo.amountPaid,
                               period.currency
                             )}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
-                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                        <div className="ds-card-light flex flex-col gap-2 rounded-lg p-4 hover:translate-x-1 hover:border-neutral-600/40 hover:bg-white/10">
+                          <span className="text-sm font-semibold uppercase tracking-wide text-white/70">
                             Amount Remaining:
                           </span>
-                          <span className="text-xl text-[#2563eb] font-bold -tracking-[0.3px] shadow-[0_2px_10px_rgba(37,99,235,0.3)]">
+                          <span className="text-xl font-bold -tracking-[0.3px] text-[#2563eb] shadow-[0_2px_10px_rgba(37,99,235,0.3)]">
                             {formatCurrency(
                               periodInfo.amountRemaining,
                               period.currency
                             )}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
-                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                        <div className="ds-card-light flex flex-col gap-2 rounded-lg p-4 hover:translate-x-1 hover:border-neutral-600/40 hover:bg-white/10">
+                          <span className="text-sm font-semibold uppercase tracking-wide text-white/70">
                             Capital Portion:
                           </span>
-                          <span className="text-lg text-white font-bold -tracking-[0.3px]">
+                          <span className="text-lg font-bold -tracking-[0.3px] text-white">
                             {formatCurrency(period.capital, period.currency)}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
-                          <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                        <div className="ds-card-light flex flex-col gap-2 rounded-lg p-4 hover:translate-x-1 hover:border-neutral-600/40 hover:bg-white/10">
+                          <span className="text-sm font-semibold uppercase tracking-wide text-white/70">
                             Interest Portion:
                           </span>
-                          <span className="text-lg text-white font-bold -tracking-[0.3px]">
+                          <span className="text-lg font-bold -tracking-[0.3px] text-white">
                             {formatCurrency(period.interest, period.currency)}
                           </span>
                         </div>
                         {period.remainingPrincipal !== undefined && (
-                          <div className="flex flex-col gap-2 p-4 ds-card-light rounded-lg hover:bg-white/10 hover:border-neutral-600/40 hover:translate-x-1">
-                            <span className="text-sm text-white/70 font-semibold uppercase tracking-wide">
+                          <div className="ds-card-light flex flex-col gap-2 rounded-lg p-4 hover:translate-x-1 hover:border-neutral-600/40 hover:bg-white/10">
+                            <span className="text-sm font-semibold uppercase tracking-wide text-white/70">
                               Remaining Principal:
                             </span>
-                            <span className="text-lg text-white font-bold -tracking-[0.3px]">
+                            <span className="text-lg font-bold -tracking-[0.3px] text-white">
                               {formatCurrency(
                                 period.remainingPrincipal,
                                 period.currency
@@ -1286,8 +1286,8 @@ export default function Dashboard() {
 
       {/* Empty State */}
       {filteredPeriods.length === 0 && !loading && !loadingPeriods && (
-        <div className="text-center py-12 px-12 text-white/80 ds-card-light rounded-lg">
-          <p className="text-xl m-0">
+        <div className="ds-card-light rounded-lg px-12 py-12 text-center text-white/80">
+          <p className="m-0 text-xl">
             {searchQuery
               ? `No payment periods found matching "${searchQuery}" in the selected date range`
               : 'No payment periods found in the selected date range'}
@@ -1296,9 +1296,9 @@ export default function Dashboard() {
       )}
 
       {loadingPeriods && (
-        <div className="flex flex-col items-center justify-center py-16 px-8 text-white gap-6">
-          <div className="w-[50px] h-[50px] border-4 border-neutral-600/40 border-t-neutral-500/60 rounded-full animate-spin"></div>
-          <p className="text-lg text-white/90 font-medium">
+        <div className="flex flex-col items-center justify-center gap-6 px-8 py-16 text-white">
+          <div className="h-[50px] w-[50px] animate-spin rounded-full border-4 border-neutral-600/40 border-t-neutral-500/60"></div>
+          <p className="text-lg font-medium text-white/90">
             Loading payment periods...
           </p>
         </div>
@@ -1318,7 +1318,7 @@ export default function Dashboard() {
 
       {/* Floating Action Button - Mobile/Tablet only */}
       <button
-        className="fixed bottom-6 right-6 z-[90] md:hidden flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-[#1e40af] to-[#334155] text-white text-3xl font-light shadow-[0_8px_24px_rgba(30,64,175,0.4),0_4px_12px_rgba(0,0,0,0.3)] border border-white/20 backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:scale-110 hover:shadow-[0_12px_32px_rgba(30,64,175,0.5),0_6px_16px_rgba(0,0,0,0.4)] active:scale-95"
+        className="fixed bottom-6 right-6 z-[90] flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-gradient-to-br from-[#1e40af] to-[#334155] text-3xl font-light text-white shadow-[0_8px_24px_rgba(30,64,175,0.4),0_4px_12px_rgba(0,0,0,0.3)] backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:scale-110 hover:shadow-[0_12px_32px_rgba(30,64,175,0.5),0_6px_16px_rgba(0,0,0,0.4)] active:scale-95 md:hidden"
         onClick={() => setIsNewAccountWizardOpen(true)}
         aria-label="Create a new account"
         title="Create a new account"
