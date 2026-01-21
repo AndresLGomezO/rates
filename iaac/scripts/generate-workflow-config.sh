@@ -66,6 +66,14 @@ cat > "$REPLACEMENT_FILE" <<EOF
             echo "wif_provider=${DEV_WIF_PROVIDER}" >> "\$GITHUB_OUTPUT"
             echo "wif_service_account=${DEV_SA_EMAIL}" >> "\$GITHUB_OUTPUT"
             echo "github_environment=development" >> "\$GITHUB_OUTPUT"
+            # Firebase Web SDK config (from .iaac.env)
+            echo "vite_firebase_api_key=${FIREBASE_API_KEY_DEV:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_auth_domain=${FIREBASE_AUTH_DOMAIN_DEV:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_project_id=${FIREBASE_PROJECT_ID_DEV:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_storage_bucket=${FIREBASE_STORAGE_BUCKET_DEV:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_messaging_sender_id=${FIREBASE_MESSAGING_SENDER_ID_DEV:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_app_id=${FIREBASE_APP_ID_DEV:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_measurement_id=${FIREBASE_MEASUREMENT_ID_DEV:-}" >> "\$GITHUB_OUTPUT"
           elif [ "\${{ github.ref_name }}" = "${GITHUB_BRANCH_STAGING:-staging}" ]; then
             # --- Staging environment (GCP staging project) ---
             echo "gcp_project_id=${GCP_PROJECT_ID_STAGING}" >> "\$GITHUB_OUTPUT"
@@ -75,6 +83,14 @@ cat > "$REPLACEMENT_FILE" <<EOF
             echo "wif_provider=${STAGING_WIF_PROVIDER}" >> "\$GITHUB_OUTPUT"
             echo "wif_service_account=${STAGING_SA_EMAIL}" >> "\$GITHUB_OUTPUT"
             echo "github_environment=staging" >> "\$GITHUB_OUTPUT"
+            # Firebase Web SDK config (from .iaac.env)
+            echo "vite_firebase_api_key=${FIREBASE_API_KEY_STAGING:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_auth_domain=${FIREBASE_AUTH_DOMAIN_STAGING:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_project_id=${FIREBASE_PROJECT_ID_STAGING:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_storage_bucket=${FIREBASE_STORAGE_BUCKET_STAGING:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_messaging_sender_id=${FIREBASE_MESSAGING_SENDER_ID_STAGING:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_app_id=${FIREBASE_APP_ID_STAGING:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_measurement_id=${FIREBASE_MEASUREMENT_ID_STAGING:-}" >> "\$GITHUB_OUTPUT"
           else
             # --- Production (main) ---
             echo "gcp_project_id=${GCP_PROJECT_ID_PROD}" >> "\$GITHUB_OUTPUT"
@@ -84,6 +100,14 @@ cat > "$REPLACEMENT_FILE" <<EOF
             echo "wif_provider=${PROD_WIF_PROVIDER}" >> "\$GITHUB_OUTPUT"
             echo "wif_service_account=${PROD_SA_EMAIL}" >> "\$GITHUB_OUTPUT"
             echo "github_environment=production" >> "\$GITHUB_OUTPUT"
+            # Firebase Web SDK config (from .iaac.env)
+            echo "vite_firebase_api_key=${FIREBASE_API_KEY_PROD:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_auth_domain=${FIREBASE_AUTH_DOMAIN_PROD:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_project_id=${FIREBASE_PROJECT_ID_PROD:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_storage_bucket=${FIREBASE_STORAGE_BUCKET_PROD:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_messaging_sender_id=${FIREBASE_MESSAGING_SENDER_ID_PROD:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_app_id=${FIREBASE_APP_ID_PROD:-}" >> "\$GITHUB_OUTPUT"
+            echo "vite_firebase_measurement_id=${FIREBASE_MEASUREMENT_ID_PROD:-}" >> "\$GITHUB_OUTPUT"
           fi
 EOF
 
@@ -161,4 +185,19 @@ echo "  WIF Provider: ${PROD_WIF_PROVIDER}"
 echo "  Service Account: ${PROD_SA_EMAIL}"
 echo ""
 echo "✅ Workflow file has been updated automatically!"
+echo ""
+echo "📝 Next steps:"
+echo "  1. Set NONCE_SECRET in GitHub Environment secrets:"
+echo "     - Go to: Settings > Environments > [environment] > Secrets"
+echo "     - Add secret: NONCE_SECRET (value from your .iaac.env)"
+echo "     - Repeat for: development, staging, production"
+echo ""
+echo "  2. Fill in Firebase config in .iaac.env:"
+echo "     - FIREBASE_API_KEY_[DEV|STAGING|PROD]"
+echo "     - FIREBASE_AUTH_DOMAIN_[DEV|STAGING|PROD]"
+echo "     - FIREBASE_PROJECT_ID_[DEV|STAGING|PROD]"
+echo "     - ... (see .iaac.env.example for full list)"
+echo ""
+echo "  3. Run this script again after updating .iaac.env to inject Firebase config"
+echo ""
 echo "💡 Review the changes with: git diff $WORKFLOW_FILE"
