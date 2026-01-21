@@ -88,6 +88,15 @@ resource "google_service_account" "deployer" {
   depends_on = [time_sleep.after_api_enable]
 }
 
+# Allow the deployer identity to "actAs" the runtime service account configured on Cloud Run.
+# We intentionally set Cloud Run's runtime service account to this same deployer SA, so it must
+# have roles/iam.serviceAccountUser on itself for `gcloud run deploy` to succeed (iam.serviceaccounts.actAs).
+resource "google_service_account_iam_member" "deployer_act_as_self" {
+  service_account_id = google_service_account.deployer.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.deployer.email}"
+}
+
 resource "google_service_account_iam_member" "wif_binding" {
   service_account_id = google_service_account.deployer.name
   role               = "roles/iam.workloadIdentityUser"
