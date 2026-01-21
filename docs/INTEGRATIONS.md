@@ -1,3 +1,12 @@
+## 0. Integrations Index
+
+- **Firebase**: see `docs/integrations/Firebase.md` for the complete Firebase + emulator configuration guide.
+- **Token validation**: see app-level docs:
+  - `apps/app/README.md` – how the main app calls `/api/validate` and handles tokens.
+  - `apps/auth-app/README.md` – how the auth app exposes `/api/validate` using Firebase Admin SDK.
+
+---
+
 ## 1. API Architecture
 
 The project is a **Firebase-backed SPA architecture** composed of:

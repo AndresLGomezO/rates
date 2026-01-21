@@ -332,14 +332,14 @@ export default function AccountsByType() {
 
   if (loading) {
     return (
-      <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-8">
-        <div className="flex justify-between items-center mb-10 pb-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent">
-          <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent drop-shadow-[0_2px_20px_rgba(255,255,255,0.1)]">
+      <div className="m-0 box-border flex w-full max-w-full animate-fadeIn-slow flex-col gap-8 overflow-x-hidden p-0">
+        <div className="relative mb-10 flex items-center justify-between pb-6 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:content-['']">
+          <h2 className="m-0 bg-gradient-to-br from-white to-white/80 bg-clip-text text-4xl font-bold -tracking-[0.5px] text-transparent drop-shadow-[0_2px_20px_rgba(255,255,255,0.1)]">
             {type ? ACCOUNT_TYPE_LABELS[type] : 'Accounts'}
           </h2>
         </div>
-        <div className="flex flex-col items-center justify-center min-h-[400px] text-center text-white/80">
-          <div className="w-[50px] h-[50px] border-4 border-neutral-600/30 border-t-primary-500 rounded-full animate-spin mb-4"></div>
+        <div className="flex min-h-[400px] flex-col items-center justify-center text-center text-white/80">
+          <div className="mb-4 h-[50px] w-[50px] animate-spin rounded-full border-4 border-neutral-600/30 border-t-primary-500"></div>
           <p>Loading accounts...</p>
         </div>
       </div>
@@ -348,9 +348,9 @@ export default function AccountsByType() {
 
   if (!type || !ACCOUNT_TYPE_LABELS[type]) {
     return (
-      <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-8">
-        <div className="flex justify-between items-center mb-10 pb-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent">
-          <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent drop-shadow-[0_2px_20px_rgba(255,255,255,0.1)]">
+      <div className="m-0 box-border flex w-full max-w-full animate-fadeIn-slow flex-col gap-8 overflow-x-hidden p-0">
+        <div className="relative mb-10 flex items-center justify-between pb-6 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:content-['']">
+          <h2 className="m-0 bg-gradient-to-br from-white to-white/80 bg-clip-text text-4xl font-bold -tracking-[0.5px] text-transparent drop-shadow-[0_2px_20px_rgba(255,255,255,0.1)]">
             Invalid Account Type
           </h2>
         </div>
@@ -360,9 +360,9 @@ export default function AccountsByType() {
   }
 
   return (
-    <div className="p-0 max-w-full w-full m-0 animate-fadeIn-slow box-border overflow-x-hidden flex flex-col gap-8">
-      <div className="flex justify-between items-center mb-10 pb-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent">
-        <h2 className="m-0 text-white text-4xl font-bold -tracking-[0.5px] bg-gradient-to-br from-white to-white/80 bg-clip-text text-transparent drop-shadow-[0_2px_20px_rgba(255,255,255,0.1)]">
+    <div className="m-0 box-border flex w-full max-w-full animate-fadeIn-slow flex-col gap-8 overflow-x-hidden p-0">
+      <div className="relative mb-10 flex items-center justify-between pb-6 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:content-['']">
+        <h2 className="m-0 bg-gradient-to-br from-white to-white/80 bg-clip-text text-4xl font-bold -tracking-[0.5px] text-transparent drop-shadow-[0_2px_20px_rgba(255,255,255,0.1)]">
           {ACCOUNT_TYPE_LABELS[type]}
         </h2>
         <button
@@ -472,7 +472,7 @@ export default function AccountsByType() {
             >
               <button
                 type="button"
-                className="px-8 py-3.5 bg-white/10 backdrop-blur-[10px] text-white border border-neutral-600/40 rounded-lg cursor-pointer text-base font-semibold transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:bg-white/25 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="cursor-pointer rounded-lg border border-neutral-600/40 bg-white/10 px-8 py-3.5 text-base font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:bg-white/25 hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={() => {
                   if (!saving) {
                     setDeletingAccount(null);
@@ -534,7 +534,7 @@ export default function AccountsByType() {
             No {ACCOUNT_TYPE_LABELS[type].toLowerCase()} found.
           </p>
           <button
-            className="ds-button-gradient flex items-center gap-2 px-6 py-3.5 text-[0.95rem] mx-auto"
+            className="ds-button-gradient mx-auto flex items-center gap-2 px-6 py-3.5 text-[0.95rem]"
             onClick={handleOpenCreateModal}
           >
             <span className="text-xl font-bold leading-none">+</span>
@@ -560,28 +560,28 @@ export default function AccountsByType() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-3">
+          <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
             <div className="ds-card-light p-6">
-              <h3 className="text-white/70 text-sm font-semibold uppercase tracking-wide mb-2 m-0">
+              <h3 className="m-0 mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
                 Total Accounts
               </h3>
-              <p className="text-white text-2xl font-bold m-0">
+              <p className="m-0 text-2xl font-bold text-white">
                 {filteredAccounts.length}
               </p>
             </div>
             <div className="ds-card-light p-6">
-              <h3 className="text-white/70 text-sm font-semibold uppercase tracking-wide mb-2 m-0">
+              <h3 className="m-0 mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
                 Active Accounts
               </h3>
-              <p className="text-white text-2xl font-bold m-0">
+              <p className="m-0 text-2xl font-bold text-white">
                 {filteredAccounts.filter((a) => a.status === 'active').length}
               </p>
             </div>
             <div className="ds-card-light p-6">
-              <h3 className="text-white/70 text-sm font-semibold uppercase tracking-wide mb-2 m-0">
+              <h3 className="m-0 mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
                 Total Remaining
               </h3>
-              <p className="text-white text-2xl font-bold m-0">
+              <p className="m-0 text-2xl font-bold text-white">
                 {formatCurrency(
                   filteredAccounts.reduce(
                     (sum, a) => sum + a.totalAmountRemaining.amount,
@@ -602,15 +602,15 @@ export default function AccountsByType() {
 
               return (
                 <div key={account.accountNumber} className="ds-card-light p-6">
-                  <div className="flex justify-between items-start mb-6 pb-4 border-b border-neutral-700/30">
+                  <div className="mb-6 flex items-start justify-between border-b border-neutral-700/30 pb-4">
                     <div>
-                      <h3 className="text-white text-xl font-bold mb-2 m-0">
+                      <h3 className="m-0 mb-2 text-xl font-bold text-white">
                         {account.accountName}
                       </h3>
-                      <p className="text-white/60 text-sm font-mono mb-1 m-0">
+                      <p className="m-0 mb-1 font-mono text-sm text-white/60">
                         {account.accountNumber}
                       </p>
-                      <p className="text-white/80 text-sm m-0">
+                      <p className="m-0 text-sm text-white/80">
                         {account.accountDescription}
                       </p>
                     </div>
@@ -622,7 +622,7 @@ export default function AccountsByType() {
                       }}
                     >
                       <span
-                        className="px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide uppercase text-white"
+                        className="rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-white"
                         style={{
                           backgroundColor: getStatusColor(account.status),
                         }}
@@ -740,25 +740,25 @@ export default function AccountsByType() {
                   </div>
 
                   <div className="flex flex-col gap-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-white/70 text-sm">Type:</span>
-                      <span className="text-white font-semibold text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-white/70">Type:</span>
+                      <span className="text-sm font-semibold text-white">
                         {account.accountType.replace('_', ' ')}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-white/70 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-white/70">
                         Remaining Balance:
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-white font-semibold text-sm">
+                        <span className="text-sm font-semibold text-white">
                           {formatCurrency(
                             account.totalAmountRemaining.amount,
                             account.totalAmountRemaining.currency
                           )}
                         </span>
                         {account.additionalAmounts?.[0] && (
-                          <span className="text-white/50 text-xs">
+                          <span className="text-xs text-white/50">
                             (
                             {formatCurrency(
                               account.additionalAmounts[0].amount,
@@ -769,30 +769,30 @@ export default function AccountsByType() {
                         )}
                       </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-white/70 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-white/70">
                         Monthly Payment:
                       </span>
-                      <span className="text-white font-semibold text-sm">
+                      <span className="text-sm font-semibold text-white">
                         {formatCurrency(
                           account.monthlyPayment.amount,
                           account.monthlyPayment.currency
                         )}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-white/70 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-white/70">
                         Interest Rate:
                       </span>
-                      <span className="text-white font-semibold text-sm">
+                      <span className="text-sm font-semibold text-white">
                         {account.rate}%
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-white/70 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-white/70">
                         Capital/Interest Split:
                       </span>
-                      <span className="text-white font-semibold text-sm">
+                      <span className="text-sm font-semibold text-white">
                         {formatCurrency(
                           accountWithCalculated.monthlyCapital.amount,
                           accountWithCalculated.monthlyCapital.currency
@@ -804,12 +804,12 @@ export default function AccountsByType() {
                         )}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-white/70 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-white/70">
                         Next Due Date:
                       </span>
                       <span
-                        className={`font-semibold text-sm ${
+                        className={`text-sm font-semibold ${
                           isOverdue
                             ? 'text-danger-500'
                             : daysRemaining <= 7
@@ -821,12 +821,12 @@ export default function AccountsByType() {
                         {accountWithCalculated.nextDueDateMonth})
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-white/70 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-white/70">
                         Days Remaining:
                       </span>
                       <span
-                        className={`font-semibold text-sm ${
+                        className={`text-sm font-semibold ${
                           isOverdue
                             ? 'text-danger-500'
                             : daysRemaining <= 7
@@ -837,17 +837,17 @@ export default function AccountsByType() {
                         {daysRemaining} days
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-white/70 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-white/70">
                         Payments Made:
                       </span>
-                      <span className="text-white font-semibold text-sm">
+                      <span className="text-sm font-semibold text-white">
                         {account.paymentLog.length} payments
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-white/70 text-sm">Total Paid:</span>
-                      <span className="text-white font-semibold text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-white/70">Total Paid:</span>
+                      <span className="text-sm font-semibold text-white">
                         {formatCurrency(
                           accountWithCalculated.totalPaid.amount,
                           accountWithCalculated.totalPaid.currency
@@ -855,11 +855,11 @@ export default function AccountsByType() {
                       </span>
                     </div>
                     {accountWithCalculated.estimatedPayoffDate && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-white/70 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-white/70">
                           Estimated Payoff:
                         </span>
-                        <span className="text-white font-semibold text-sm">
+                        <span className="text-sm font-semibold text-white">
                           {formatDate(
                             accountWithCalculated.estimatedPayoffDate
                           )}
