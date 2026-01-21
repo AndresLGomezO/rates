@@ -12,6 +12,7 @@ RUN corepack enable
 
 # Copy only files needed for dependency resolution first (better layer caching).
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY tsconfig.base.json tsconfig.base.json
 COPY apps/app/package.json apps/app/package.json
 COPY packages/firebase-client/package.json packages/firebase-client/package.json
 COPY packages/ui-theme/package.json packages/ui-theme/package.json
