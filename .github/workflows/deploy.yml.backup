@@ -85,30 +85,33 @@ jobs:
           # Do not edit manually - run the script to update these values from Terraform outputs
           if [ "${{ github.ref_name }}" = "develop" ]; then
             # --- Development environment (GCP dev project) ---
-            echo "gcp_project_id=dev-rates-01" >> "$GITHUB_OUTPUT"
+            echo "gcp_project_id=your-dev-project-id" >> "$GITHUB_OUTPUT"
             echo "ar_repository=dev-rates" >> "$GITHUB_OUTPUT"
             echo "cloud_run_service_app=rates-app-dev" >> "$GITHUB_OUTPUT"
             echo "cloud_run_service_auth_app=rates-auth-app-dev" >> "$GITHUB_OUTPUT"
-            echo "wif_provider=projects/116876566424/locations/global/workloadIdentityPools/github-pool/providers/github-provider" >> "$GITHUB_OUTPUT"
-            echo "wif_service_account=github-ci-dev@dev-rates-01.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
+            # WIF provider for DEV project (update PROJECT_NUMBER/POOL/PROVIDER as needed)
+            echo "wif_provider=projects/DEV_PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/providers/github-provider" >> "$GITHUB_OUTPUT"
+            echo "wif_service_account=github-ci-dev@your-dev-project-id.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
             echo "github_environment=development" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.ref_name }}" = "staging" ]; then
             # --- Staging environment (GCP staging project) ---
-            echo "gcp_project_id=staging-rates-01" >> "$GITHUB_OUTPUT"
+            echo "gcp_project_id=your-staging-project-id" >> "$GITHUB_OUTPUT"
             echo "ar_repository=staging-rates" >> "$GITHUB_OUTPUT"
             echo "cloud_run_service_app=rates-app-staging" >> "$GITHUB_OUTPUT"
             echo "cloud_run_service_auth_app=rates-auth-app-staging" >> "$GITHUB_OUTPUT"
-            echo "wif_provider=projects/121459611937/locations/global/workloadIdentityPools/github-pool/providers/github-provider" >> "$GITHUB_OUTPUT"
-            echo "wif_service_account=github-ci-staging@staging-rates-01.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
+            # WIF provider for STAGING project
+            echo "wif_provider=projects/STAGING_PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/providers/github-provider" >> "$GITHUB_OUTPUT"
+            echo "wif_service_account=github-ci-staging@your-staging-project-id.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
             echo "github_environment=staging" >> "$GITHUB_OUTPUT"
           else
             # --- Production (main) ---
-            echo "gcp_project_id=prod-rates-01" >> "$GITHUB_OUTPUT"
+            echo "gcp_project_id=your-prod-project-id" >> "$GITHUB_OUTPUT"
             echo "ar_repository=rates" >> "$GITHUB_OUTPUT"
             echo "cloud_run_service_app=rates-app" >> "$GITHUB_OUTPUT"
             echo "cloud_run_service_auth_app=rates-auth-app" >> "$GITHUB_OUTPUT"
-            echo "wif_provider=projects/568545658944/locations/global/workloadIdentityPools/github-pool/providers/github-provider" >> "$GITHUB_OUTPUT"
-            echo "wif_service_account=github-ci-prod@prod-rates-01.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
+            # WIF provider for PROD project
+            echo "wif_provider=projects/PROD_PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/providers/github-provider" >> "$GITHUB_OUTPUT"
+            echo "wif_service_account=github-ci-prod@your-prod-project-id.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
             echo "github_environment=production" >> "$GITHUB_OUTPUT"
           fi
           # <<TERRAFORM_VALUES_END>>

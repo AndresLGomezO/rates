@@ -1,0 +1,18 @@
+# Ignore auto-generated files
+terraform.tfvars
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+tfplan
+tfplan.*
+
+# Ignore environment files
+.iaac.env
+
+# Ignore IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
