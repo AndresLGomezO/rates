@@ -13,7 +13,7 @@ function parseList(value?: string): string[] {
 }
 
 function getAllowedOrigins(env: Env): string[] {
-  // Comma-separated list of origins (e.g. https://rates-app-dev-....a.run.app)
+  // Comma-separated list of origins (e.g. https://rates-app-dev-....a.run.app).
   return parseList(env.ALLOWED_ORIGINS);
 }
 
