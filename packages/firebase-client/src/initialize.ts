@@ -26,12 +26,33 @@ let initialized = false;
  * @param isEmulatorMode - If true, uses default values for missing config when in emulator mode
  */
 function getFirebaseConfig(isEmulatorMode = false): FirebaseConfig {
-  // Use GCP project ID if specified, otherwise fall back to Firebase project ID
+  // Use GCP project ID if specified and non-empty, otherwise fall back to Firebase project ID
   // With Identity Platform, both should be the same (GCP project ID)
-  const projectId =
-    import.meta.env.VITE_GCP_PROJECT_ID ??
-    import.meta.env.VITE_FIREBASE_PROJECT_ID ??
-    '';
+  // Also check for GCP_PROJECT_ID as a fallback (set in Dockerfile)
+  const gcpProjectId = import.meta.env.VITE_GCP_PROJECT_ID;
+  const firebaseProjectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+  const gcpProjectIdEnv = (
+    import.meta.env as Record<string, string | undefined>
+  ).GCP_PROJECT_ID;
+
+  // Get trimmed project IDs, handling null/undefined with ??
+  // Empty strings will fall through to the next option in the projectId assignment
+  const trimmedGcpId = gcpProjectId?.trim() ?? '';
+  const trimmedFirebaseId = firebaseProjectId?.trim() ?? '';
+  const trimmedGcpEnvId = gcpProjectIdEnv?.trim() ?? '';
+
+  // Use || here to handle empty strings (we need the first non-empty value)
+  const projectId = trimmedGcpId || trimmedFirebaseId || trimmedGcpEnvId;
+
+  // Log for debugging
+  if (!projectId && !isEmulatorMode) {
+    console.error(
+      '[getFirebaseConfig] ERROR: No project ID found. ' +
+        `VITE_GCP_PROJECT_ID: "${gcpProjectId ?? 'not set'}", ` +
+        `VITE_FIREBASE_PROJECT_ID: "${firebaseProjectId ?? 'not set'}", ` +
+        `GCP_PROJECT_ID: "${gcpProjectIdEnv ?? 'not set'}"`
+    );
+  }
 
   const config: FirebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? '',
@@ -74,8 +95,19 @@ function getFirebaseConfig(isEmulatorMode = false): FirebaseConfig {
   );
 
   if (missingFields.length > 0) {
+    // Provide helpful error message with environment variable names
+    const envVarMap: Record<string, string> = {
+      apiKey: 'VITE_FIREBASE_API_KEY',
+      authDomain: 'VITE_FIREBASE_AUTH_DOMAIN',
+      projectId: 'VITE_GCP_PROJECT_ID or VITE_FIREBASE_PROJECT_ID',
+      storageBucket: 'VITE_FIREBASE_STORAGE_BUCKET',
+      messagingSenderId: 'VITE_FIREBASE_MESSAGING_SENDER_ID',
+      appId: 'VITE_FIREBASE_APP_ID',
+    };
+    const missingEnvVars = missingFields.map((f) => envVarMap[f] || f);
     throw new Error(
-      `Missing required Firebase configuration: ${missingFields.join(', ')}`
+      `Missing required Firebase configuration: ${missingFields.join(', ')}. ` +
+        `Please set the following environment variables: ${missingEnvVars.join(', ')}`
     );
   }
 
