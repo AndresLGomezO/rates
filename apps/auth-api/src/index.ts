@@ -2,7 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import { initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
-// CI/CD trigger.
+// CI/CD trigger
 
 type Env = Record<string, string | undefined>;
 
