@@ -7,6 +7,14 @@ FROM node:20-alpine AS build
 
 WORKDIR /repo
 
+# Build-time config for Vite (VITE_* are embedded at build time)
+ARG VITE_ALLOWED_REDIRECTS
+ARG VITE_DEFAULT_RETURN_URL
+ARG VITE_NONCE_SECRET
+ENV VITE_ALLOWED_REDIRECTS=${VITE_ALLOWED_REDIRECTS}
+ENV VITE_DEFAULT_RETURN_URL=${VITE_DEFAULT_RETURN_URL}
+ENV VITE_NONCE_SECRET=${VITE_NONCE_SECRET}
+
 RUN corepack enable
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
