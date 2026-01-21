@@ -10,7 +10,7 @@ import { initializeFirebase } from '@rates/firebase-client';
 
 // Initialize Firebase on app startup
 // This will automatically use emulators in development mode
-// and live Firebase in production mode
+// and live Firebase in production mode.
 console.log('🔥 [firebase.ts] Initializing Firebase...');
 console.log('🔥 [firebase.ts] Environment variables:');
 console.log(
