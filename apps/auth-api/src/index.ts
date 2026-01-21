@@ -2,7 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import { initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
-// CI/CD trigger
+// CI/CD trigger.
 
 type Env = Record<string, string | undefined>;
 
@@ -19,11 +19,28 @@ function getAllowedOrigins(env: Env): string[] {
 }
 
 function getProjectId(env: Env): string | undefined {
-  return (
+  // Priority: FIREBASE_PROJECT_ID > VITE_FIREBASE_PROJECT_ID > GOOGLE_CLOUD_PROJECT
+  // Note: GOOGLE_CLOUD_PROJECT is the GCP project, not necessarily the Firebase project
+  const projectId =
     env.FIREBASE_PROJECT_ID ||
     env.VITE_FIREBASE_PROJECT_ID ||
-    env.GOOGLE_CLOUD_PROJECT
-  );
+    env.GOOGLE_CLOUD_PROJECT;
+
+  // Log which source was used for debugging
+  if (env.FIREBASE_PROJECT_ID) {
+    // eslint-disable-next-line no-console
+    console.log('[auth-api] Using FIREBASE_PROJECT_ID from environment');
+  } else if (env.VITE_FIREBASE_PROJECT_ID) {
+    // eslint-disable-next-line no-console
+    console.log('[auth-api] Using VITE_FIREBASE_PROJECT_ID from environment');
+  } else if (env.GOOGLE_CLOUD_PROJECT) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[auth-api] WARNING: Using GOOGLE_CLOUD_PROJECT as fallback. This may not match the Firebase project ID used by client apps.'
+    );
+  }
+
+  return projectId;
 }
 
 const env = process.env as Env;
@@ -31,7 +48,17 @@ const port = Number(env.PORT ?? 8080);
 const allowedOrigins = getAllowedOrigins(env);
 const projectId = getProjectId(env);
 
+// Log environment variables for debugging (without exposing sensitive values)
+// eslint-disable-next-line no-console
+console.log('[auth-api] Environment check:', {
+  hasFIREBASE_PROJECT_ID: !!env.FIREBASE_PROJECT_ID,
+  hasVITE_FIREBASE_PROJECT_ID: !!env.VITE_FIREBASE_PROJECT_ID,
+  hasGOOGLE_CLOUD_PROJECT: !!env.GOOGLE_CLOUD_PROJECT,
+  selectedProjectId: projectId ?? 'none',
+});
+
 // Firebase Admin SDK (ADC in Cloud Run). Project ID helps Admin choose correct issuer/project.
+// CRITICAL: This must match the Firebase project ID used by client apps, not the GCP project ID.
 initializeApp(projectId ? { projectId } : undefined);
 const adminAuth = getAuth();
 
@@ -69,6 +96,23 @@ app.get('/api/validate', async (req, res) => {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Token validation failed';
+
+    // Enhanced error logging for project ID mismatches
+    if (
+      error instanceof Error &&
+      message.includes('aud') &&
+      message.includes('claim')
+    ) {
+      // eslint-disable-next-line no-console
+      console.error(
+        `[auth-api] Project ID mismatch detected. Configured project: ${projectId ?? 'none'}. Error: ${message}`
+      );
+      // eslint-disable-next-line no-console
+      console.error(
+        '[auth-api] Ensure FIREBASE_PROJECT_ID environment variable matches the Firebase project ID used by client apps.'
+      );
+    }
+
     res.status(401).json({ valid: false, error: message });
   }
 });
