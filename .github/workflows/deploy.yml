@@ -1,8 +1,12 @@
-name: Deploy (main → production)
+name: Deploy (develop/staging/main → GCP)
 
 on:
   push:
-    branches: ["main"]
+    # Branch → environment mapping:
+    # - develop → dev
+    # - staging → staging
+    # - main → production
+    branches: ["main", "develop", "staging"]
     paths:
       - "apps/**"
       - "packages/**"
@@ -23,24 +27,8 @@ permissions:
   id-token: write
 
 env:
-  # --- Change these per environment / repo ---
-  GCP_PROJECT_ID: your-prod-project-id
+  # Shared region across environments (override here if needed).
   GCP_REGION: us-central1
-
-  # Artifact Registry repository (regional). Create once per env.
-  AR_REPOSITORY: rates
-
-  # Cloud Run services (one per deployable workspace).
-  CLOUD_RUN_SERVICE_APP: rates-app
-  CLOUD_RUN_SERVICE_AUTH_APP: rates-auth-app
-
-  # Workload Identity Federation provider resource:
-  # projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_ID}/providers/${PROVIDER_ID}
-  WIF_PROVIDER: projects/123456789012/locations/global/workloadIdentityPools/github-pool/providers/github-provider
-
-  # Service account used by GitHub Actions *in prod* (least privilege).
-  # This is NOT the runtime service account for Cloud Run; it’s the deployer identity.
-  WIF_SERVICE_ACCOUNT: github-ci-prod@your-prod-project-id.iam.gserviceaccount.com
 
 jobs:
   changes:
@@ -75,12 +63,68 @@ jobs:
               - "pnpm-workspace.yaml"
               - "apps/auth-app/Dockerfile"
 
+  env-select:
+    name: Select environment config (dev / staging / prod)
+    runs-on: ubuntu-latest
+    outputs:
+      gcp_project_id: ${{ steps.set-env.outputs.gcp_project_id }}
+      ar_repository: ${{ steps.set-env.outputs.ar_repository }}
+      cloud_run_service_app: ${{ steps.set-env.outputs.cloud_run_service_app }}
+      cloud_run_service_auth_app: ${{ steps.set-env.outputs.cloud_run_service_auth_app }}
+      wif_provider: ${{ steps.set-env.outputs.wif_provider }}
+      wif_service_account: ${{ steps.set-env.outputs.wif_service_account }}
+      github_environment: ${{ steps.set-env.outputs.github_environment }}
+    steps:
+      - name: Determine branch environment
+        id: set-env
+        run: |
+          echo "Detected ref: ${{ github.ref }} (name: ${{ github.ref_name }})"
+
+          if [ "${{ github.ref_name }}" = "develop" ]; then
+            # --- Development environment (GCP dev project) ---
+            echo "gcp_project_id=your-dev-project-id" >> "$GITHUB_OUTPUT"
+            echo "ar_repository=dev-rates" >> "$GITHUB_OUTPUT"
+            echo "cloud_run_service_app=rates-app-dev" >> "$GITHUB_OUTPUT"
+            echo "cloud_run_service_auth_app=rates-auth-app-dev" >> "$GITHUB_OUTPUT"
+            # WIF provider for DEV project (update PROJECT_NUMBER/POOL/PROVIDER as needed)
+            echo "wif_provider=projects/DEV_PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/providers/github-provider" >> "$GITHUB_OUTPUT"
+            echo "wif_service_account=github-ci-dev@your-dev-project-id.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
+            echo "github_environment=development" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.ref_name }}" = "staging" ]; then
+            # --- Staging environment (GCP staging project) ---
+            echo "gcp_project_id=your-staging-project-id" >> "$GITHUB_OUTPUT"
+            echo "ar_repository=staging-rates" >> "$GITHUB_OUTPUT"
+            echo "cloud_run_service_app=rates-app-staging" >> "$GITHUB_OUTPUT"
+            echo "cloud_run_service_auth_app=rates-auth-app-staging" >> "$GITHUB_OUTPUT"
+            # WIF provider for STAGING project
+            echo "wif_provider=projects/STAGING_PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/providers/github-provider" >> "$GITHUB_OUTPUT"
+            echo "wif_service_account=github-ci-staging@your-staging-project-id.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
+            echo "github_environment=staging" >> "$GITHUB_OUTPUT"
+          else
+            # --- Production (main) ---
+            echo "gcp_project_id=your-prod-project-id" >> "$GITHUB_OUTPUT"
+            echo "ar_repository=rates" >> "$GITHUB_OUTPUT"
+            echo "cloud_run_service_app=rates-app" >> "$GITHUB_OUTPUT"
+            echo "cloud_run_service_auth_app=rates-auth-app" >> "$GITHUB_OUTPUT"
+            # WIF provider for PROD project
+            echo "wif_provider=projects/PROD_PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/providers/github-provider" >> "$GITHUB_OUTPUT"
+            echo "wif_service_account=github-ci-prod@your-prod-project-id.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
+            echo "github_environment=production" >> "$GITHUB_OUTPUT"
+          fi
+
   deploy:
     name: Build → push → deploy (Cloud Run)
     runs-on: ubuntu-latest
-    needs: [changes]
-    # GitHub Environment gives you: required reviewers, audit trail, protected secrets (if ever needed).
-    environment: production
+    needs: [changes, env-select]
+    # GitHub Environment gives you: required reviewers, audit trail, protected secrets.
+    environment: ${{ needs.env-select.outputs.github_environment }}
+    env:
+      GCP_PROJECT_ID: ${{ needs.env-select.outputs.gcp_project_id }}
+      AR_REPOSITORY: ${{ needs.env-select.outputs.ar_repository }}
+      CLOUD_RUN_SERVICE_APP: ${{ needs.env-select.outputs.cloud_run_service_app }}
+      CLOUD_RUN_SERVICE_AUTH_APP: ${{ needs.env-select.outputs.cloud_run_service_auth_app }}
+      WIF_PROVIDER: ${{ needs.env-select.outputs.wif_provider }}
+      WIF_SERVICE_ACCOUNT: ${{ needs.env-select.outputs.wif_service_account }}
     strategy:
       fail-fast: false
       matrix:
