@@ -7,6 +7,12 @@ FROM node:20-alpine AS build
 
 WORKDIR /repo
 
+# Build-time config for Vite (VITE_* are embedded at build time)
+ARG VITE_AUTH_APP_URL
+ARG VITE_NONCE_SECRET
+ENV VITE_AUTH_APP_URL=${VITE_AUTH_APP_URL}
+ENV VITE_NONCE_SECRET=${VITE_NONCE_SECRET}
+
 # Enable pnpm via corepack (recommended vs npm i -g pnpm).
 RUN corepack enable
 
