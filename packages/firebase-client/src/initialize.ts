@@ -41,7 +41,6 @@ function getFirebaseConfig(isEmulatorMode = false): FirebaseConfig {
   const trimmedFirebaseId = firebaseProjectId?.trim() ?? '';
   const trimmedGcpEnvId = gcpProjectIdEnv?.trim() ?? '';
 
-   
   // Use || here to handle empty strings (we need the first non-empty value)
   const projectId = trimmedGcpId || trimmedFirebaseId || trimmedGcpEnvId;
 
