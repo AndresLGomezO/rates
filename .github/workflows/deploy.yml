@@ -113,6 +113,7 @@ jobs:
             echo "vite_firebase_api_key=AIzaSyBt3UuP69pYFCfdJsmkmJmx4O_bL9jGVBc" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_auth_domain=dev-rates-01-5a9aa.firebaseapp.com" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_project_id=dev-rates-01-5a9aa" >> "$GITHUB_OUTPUT"
+            echo "vite_gcp_project_id=dev-rates-01" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_storage_bucket=dev-rates-01-5a9aa.appspot.com" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_messaging_sender_id=368101248577" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_app_id=1:368101248577:web:c487c70ef308546b3d00c0" >> "$GITHUB_OUTPUT"
@@ -131,6 +132,7 @@ jobs:
             echo "vite_firebase_api_key=" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_auth_domain=" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_project_id=" >> "$GITHUB_OUTPUT"
+            echo "vite_gcp_project_id=staging-rates-01" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_storage_bucket=" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_messaging_sender_id=" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_app_id=" >> "$GITHUB_OUTPUT"
@@ -149,6 +151,7 @@ jobs:
             echo "vite_firebase_api_key=" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_auth_domain=" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_project_id=" >> "$GITHUB_OUTPUT"
+            echo "vite_gcp_project_id=prod-rates-01" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_storage_bucket=" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_messaging_sender_id=" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_app_id=" >> "$GITHUB_OUTPUT"
@@ -174,6 +177,7 @@ jobs:
       VITE_FIREBASE_API_KEY: ${{ needs.env-select.outputs.vite_firebase_api_key }}
       VITE_FIREBASE_AUTH_DOMAIN: ${{ needs.env-select.outputs.vite_firebase_auth_domain }}
       VITE_FIREBASE_PROJECT_ID: ${{ needs.env-select.outputs.vite_firebase_project_id }}
+      VITE_GCP_PROJECT_ID: ${{ needs.env-select.outputs.vite_gcp_project_id }}
       VITE_FIREBASE_STORAGE_BUCKET: ${{ needs.env-select.outputs.vite_firebase_storage_bucket }}
       VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ needs.env-select.outputs.vite_firebase_messaging_sender_id }}
       VITE_FIREBASE_APP_ID: ${{ needs.env-select.outputs.vite_firebase_app_id }}
@@ -260,6 +264,7 @@ jobs:
             VITE_FIREBASE_API_KEY=${{ env.VITE_FIREBASE_API_KEY }}
             VITE_FIREBASE_AUTH_DOMAIN=${{ env.VITE_FIREBASE_AUTH_DOMAIN }}
             VITE_FIREBASE_PROJECT_ID=${{ env.VITE_FIREBASE_PROJECT_ID }}
+            VITE_GCP_PROJECT_ID=${{ env.VITE_GCP_PROJECT_ID }}
             VITE_FIREBASE_STORAGE_BUCKET=${{ env.VITE_FIREBASE_STORAGE_BUCKET }}
             VITE_FIREBASE_MESSAGING_SENDER_ID=${{ env.VITE_FIREBASE_MESSAGING_SENDER_ID }}
             VITE_FIREBASE_APP_ID=${{ env.VITE_FIREBASE_APP_ID }}
