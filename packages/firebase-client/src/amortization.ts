@@ -15,7 +15,7 @@ import { Timestamp } from 'firebase/firestore';
  * @param startDate - Start date of the account
  * @param paymentIntervalMonths - Payment interval in months
  * @param endDate - Optional end date (defaults to current date)
- * @returns Number of periods
+ * @returns Number of periods.
  */
 function calculatePeriodicPeriods(
   startDate: Date,
