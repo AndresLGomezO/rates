@@ -1,0 +1,18 @@
+# Terraform state and variables
+terraform.tfvars
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+tfplan
+tfplan.*
+
+# Environment configuration (sensitive)
+.iaac.env
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~

@@ -46,6 +46,20 @@ lerna-debug.log*
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
-*.cache# Docker
+*.cache
+
+# Docker
 docker-compose.override.yml
 .env.docker
+# Infrastructure as Code (Terraform)
+.iaac.env
+terraform.tfvars
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+tfplan
+tfplan.*
+.terraformrc
+terraform.rc
+iaac/workflow-config.txt
