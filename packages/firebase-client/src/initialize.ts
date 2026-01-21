@@ -19,17 +19,29 @@ import type {
 } from './types';
 
 let firebaseApp: FirebaseApp | null = null;
+let firestoreApp: FirebaseApp | null = null;
 let initialized = false;
 
 /**
  * Get Firebase configuration from environment variables
  * @param isEmulatorMode - If true, uses default values for missing config when in emulator mode
+ * @param useGcpProjectId - If true, uses GCP project ID instead of Firebase project ID (for Firestore)
  */
-function getFirebaseConfig(isEmulatorMode = false): FirebaseConfig {
+function getFirebaseConfig(
+  isEmulatorMode = false,
+  useGcpProjectId = false
+): FirebaseConfig {
+  // Use GCP project ID for Firestore if specified, otherwise use Firebase project ID
+  const projectId = useGcpProjectId
+    ? (import.meta.env.VITE_GCP_PROJECT_ID ??
+      import.meta.env.VITE_FIREBASE_PROJECT_ID ??
+      '')
+    : (import.meta.env.VITE_FIREBASE_PROJECT_ID ?? '');
+
   const config: FirebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? '',
     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ?? '',
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ?? '',
+    projectId,
     storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ?? '',
     messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? '',
     appId: import.meta.env.VITE_FIREBASE_APP_ID ?? '',
@@ -204,16 +216,29 @@ export function initializeFirebase(
   const isEmulatorMode = mode === 'emulator';
 
   // Get configuration (skip validation if using emulator)
-  const firebaseConfig = config ?? getFirebaseConfig(isEmulatorMode);
+  const firebaseConfig = config ?? getFirebaseConfig(isEmulatorMode, false);
   const emulatorConfig = getEmulatorConfig();
 
-  // Initialize Firebase app
+  // Initialize Firebase app (for Auth, Storage, Functions - uses Firebase project ID)
   if (forceReinit && firebaseApp) {
     // In a real scenario, you might want to handle cleanup
     // For now, we'll just reinitialize
     firebaseApp = initializeApp(firebaseConfig);
   } else {
     firebaseApp = initializeApp(firebaseConfig);
+  }
+
+  // Initialize separate Firebase app for Firestore (uses GCP project ID if different)
+  // Only create if GCP project ID is different from Firebase project ID
+  const gcpProjectId = import.meta.env.VITE_GCP_PROJECT_ID;
+  const firebaseProjectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+  if (gcpProjectId && gcpProjectId !== firebaseProjectId && !firestoreApp) {
+    const firestoreConfig = getFirebaseConfig(isEmulatorMode, true);
+    // Use a unique name for the Firestore app to avoid conflicts
+    firestoreApp = initializeApp(firestoreConfig, 'firestore');
+    console.log(
+      `🔥 [initializeFirebase] Initialized separate Firestore app with GCP project ID: ${gcpProjectId}`
+    );
   }
 
   // Connect to emulators if in emulator mode
@@ -247,7 +272,7 @@ export function initializeFirebase(
 }
 
 /**
- * Get the initialized Firebase app instance
+ * Get the initialized Firebase app instance (for Auth, Storage, Functions)
  */
 export function getFirebaseApp(): FirebaseApp {
   if (!firebaseApp) {
@@ -256,6 +281,18 @@ export function getFirebaseApp(): FirebaseApp {
     );
   }
   return firebaseApp;
+}
+
+/**
+ * Get the Firestore-specific Firebase app instance (uses GCP project ID if different)
+ */
+export function getFirestoreApp(): FirebaseApp {
+  // If Firestore app exists (different project ID), use it; otherwise use main app
+  if (firestoreApp) {
+    return firestoreApp;
+  }
+  // Fallback to main app if GCP project ID is same as Firebase project ID
+  return getFirebaseApp();
 }
 
 /**

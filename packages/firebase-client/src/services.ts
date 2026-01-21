@@ -9,7 +9,7 @@ import { getAuth as getFirebaseAuth } from 'firebase/auth';
 import { getFirestore as getFirebaseFirestore } from 'firebase/firestore';
 import { getStorage as getFirebaseStorage } from 'firebase/storage';
 import { getFunctions as getFirebaseFunctions } from 'firebase/functions';
-import { getFirebaseApp } from './initialize';
+import { getFirebaseApp, getFirestoreApp } from './initialize';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
 import type { FirebaseStorage } from 'firebase/storage';
@@ -41,7 +41,8 @@ export function getAuth(): Auth {
  */
 export function getFirestore(databaseId?: string): Firestore {
   if (!firestoreInstance) {
-    const app = getFirebaseApp();
+    // Use Firestore app (GCP project ID) instead of main app (Firebase project ID)
+    const app = getFirestoreApp();
     firestoreInstance = databaseId
       ? getFirebaseFirestore(app, databaseId)
       : getFirebaseFirestore(app);
