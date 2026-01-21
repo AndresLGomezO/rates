@@ -27,6 +27,7 @@ import type {
   LogPaymentToPeriodInput,
   PaymentPeriodStatus,
 } from '@rates/firebase-client';
+import { getFinancialAccount } from './financialAccounts';
 
 // Collection name constant
 export const FINANCIAL_ACCOUNTS_COLLECTION = 'financialAccounts';
@@ -316,7 +317,6 @@ export async function logPaymentToPeriod(
   const period = periodSnap.data() as unknown as PaymentPeriod;
 
   // Get account to check if it's a bill
-  const { getFinancialAccount } = await import('./financialAccounts');
   const account = await getFinancialAccount(accountNumber);
   const isBill = account?.accountType === 'bill';
 
@@ -392,7 +392,6 @@ export async function generateAmortizationPlanForAccount(
   regenerate: boolean = false,
   endDate?: Date
 ): Promise<void> {
-  const { getFinancialAccount } = await import('./financialAccounts');
   const { generateAmortizationPlan } = await import('@rates/firebase-client');
 
   // Get account
@@ -511,8 +510,6 @@ export async function generateAmortizationPlanForAccount(
 export async function extendPeriodicBillPeriods(
   accountNumber: string
 ): Promise<number> {
-  const { getFinancialAccount } = await import('./financialAccounts');
-
   // Get account
   const account = await getFinancialAccount(accountNumber);
   if (!account) {
@@ -638,7 +635,6 @@ export async function batchLogPaymentsToPeriods(
   }
 
   // Get account for currency
-  const { getFinancialAccount } = await import('./financialAccounts');
   const account = await getFinancialAccount(accountNumber);
   if (!account) {
     throw new Error(`Account ${accountNumber} not found`);
