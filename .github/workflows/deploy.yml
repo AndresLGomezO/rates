@@ -261,10 +261,12 @@ jobs:
             VITE_ALLOWED_REDIRECTS=${{ steps.service-urls.outputs.app_url }}
             VITE_DEFAULT_RETURN_URL=${{ steps.service-urls.outputs.app_url }}
             # Firebase Web SDK config (from GitHub Environment secrets/variables)
+            # With Identity Platform, use GCP project ID for all services
             VITE_FIREBASE_API_KEY=${{ env.VITE_FIREBASE_API_KEY }}
             VITE_FIREBASE_AUTH_DOMAIN=${{ env.VITE_FIREBASE_AUTH_DOMAIN }}
             VITE_FIREBASE_PROJECT_ID=${{ env.VITE_FIREBASE_PROJECT_ID }}
             VITE_GCP_PROJECT_ID=${{ env.VITE_GCP_PROJECT_ID }}
+            GCP_PROJECT_ID=${{ env.GCP_PROJECT_ID }}
             VITE_FIREBASE_STORAGE_BUCKET=${{ env.VITE_FIREBASE_STORAGE_BUCKET }}
             VITE_FIREBASE_MESSAGING_SENDER_ID=${{ env.VITE_FIREBASE_MESSAGING_SENDER_ID }}
             VITE_FIREBASE_APP_ID=${{ env.VITE_FIREBASE_APP_ID }}
