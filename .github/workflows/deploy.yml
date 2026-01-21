@@ -74,6 +74,14 @@ jobs:
       wif_provider: ${{ steps.set-env.outputs.wif_provider }}
       wif_service_account: ${{ steps.set-env.outputs.wif_service_account }}
       github_environment: ${{ steps.set-env.outputs.github_environment }}
+      # Firebase Web SDK config (per environment)
+      vite_firebase_api_key: ${{ steps.set-env.outputs.vite_firebase_api_key }}
+      vite_firebase_auth_domain: ${{ steps.set-env.outputs.vite_firebase_auth_domain }}
+      vite_firebase_project_id: ${{ steps.set-env.outputs.vite_firebase_project_id }}
+      vite_firebase_storage_bucket: ${{ steps.set-env.outputs.vite_firebase_storage_bucket }}
+      vite_firebase_messaging_sender_id: ${{ steps.set-env.outputs.vite_firebase_messaging_sender_id }}
+      vite_firebase_app_id: ${{ steps.set-env.outputs.vite_firebase_app_id }}
+      vite_firebase_measurement_id: ${{ steps.set-env.outputs.vite_firebase_measurement_id }}
     steps:
       - name: Determine branch environment
         id: set-env
@@ -92,6 +100,14 @@ jobs:
             echo "wif_provider=projects/116876566424/locations/global/workloadIdentityPools/github-pool/providers/github-provider" >> "$GITHUB_OUTPUT"
             echo "wif_service_account=github-ci-dev@dev-rates-01.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
             echo "github_environment=development" >> "$GITHUB_OUTPUT"
+            # Firebase Web SDK config (from .iaac.env)
+            echo "vite_firebase_api_key=AIzaSyBt3UuP69pYFCfdJsmkmJmx4O_bL9jGVBc" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_auth_domain=dev-rates-01-5a9aa.firebaseapp.com" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_project_id=dev-rates-01-5a9aa" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_storage_bucket=" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_messaging_sender_id=" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_app_id=" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_measurement_id=" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.ref_name }}" = "staging" ]; then
             # --- Staging environment (GCP staging project) ---
             echo "gcp_project_id=staging-rates-01" >> "$GITHUB_OUTPUT"
@@ -101,6 +117,14 @@ jobs:
             echo "wif_provider=projects/121459611937/locations/global/workloadIdentityPools/github-pool/providers/github-provider" >> "$GITHUB_OUTPUT"
             echo "wif_service_account=github-ci-staging@staging-rates-01.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
             echo "github_environment=staging" >> "$GITHUB_OUTPUT"
+            # Firebase Web SDK config (from .iaac.env)
+            echo "vite_firebase_api_key=" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_auth_domain=" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_project_id=" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_storage_bucket=" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_messaging_sender_id=" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_app_id=" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_measurement_id=" >> "$GITHUB_OUTPUT"
           else
             # --- Production (main) ---
             echo "gcp_project_id=prod-rates-01" >> "$GITHUB_OUTPUT"
@@ -110,6 +134,14 @@ jobs:
             echo "wif_provider=projects/568545658944/locations/global/workloadIdentityPools/github-pool/providers/github-provider" >> "$GITHUB_OUTPUT"
             echo "wif_service_account=github-ci-prod@prod-rates-01.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
             echo "github_environment=production" >> "$GITHUB_OUTPUT"
+            # Firebase Web SDK config (from .iaac.env)
+            echo "vite_firebase_api_key=" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_auth_domain=" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_project_id=" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_storage_bucket=" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_messaging_sender_id=" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_app_id=" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_measurement_id=" >> "$GITHUB_OUTPUT"
           fi
           # <<TERRAFORM_VALUES_END>>
 
@@ -126,6 +158,23 @@ jobs:
       CLOUD_RUN_SERVICE_AUTH_APP: ${{ needs.env-select.outputs.cloud_run_service_auth_app }}
       WIF_PROVIDER: ${{ needs.env-select.outputs.wif_provider }}
       WIF_SERVICE_ACCOUNT: ${{ needs.env-select.outputs.wif_service_account }}
+      # Firebase Web SDK config (from env-select step)
+      VITE_FIREBASE_API_KEY: ${{ needs.env-select.outputs.vite_firebase_api_key }}
+      VITE_FIREBASE_AUTH_DOMAIN: ${{ needs.env-select.outputs.vite_firebase_auth_domain }}
+      VITE_FIREBASE_PROJECT_ID: ${{ needs.env-select.outputs.vite_firebase_project_id }}
+      VITE_FIREBASE_STORAGE_BUCKET: ${{ needs.env-select.outputs.vite_firebase_storage_bucket }}
+      VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ needs.env-select.outputs.vite_firebase_messaging_sender_id }}
+      VITE_FIREBASE_APP_ID: ${{ needs.env-select.outputs.vite_firebase_app_id }}
+      VITE_FIREBASE_MEASUREMENT_ID: ${{ needs.env-select.outputs.vite_firebase_measurement_id }}
+      # Nonce secret (from GitHub Environment secrets - set manually once)
+      # Note: This should match the value in your .iaac.env file
+      VITE_NONCE_SECRET: ${{ secrets.NONCE_SECRET }}
+      # Cookie config (optional, defaults shown)
+      VITE_ENABLE_AUTH_COOKIE: ${{ vars.VITE_ENABLE_AUTH_COOKIE || 'true' }}
+      VITE_AUTH_COOKIE_NAME: ${{ vars.VITE_AUTH_COOKIE_NAME || 'auth_app_token' }}
+      VITE_AUTH_COOKIE_MAX_AGE: ${{ vars.VITE_AUTH_COOKIE_MAX_AGE || '3600' }}
+      VITE_AUTH_COOKIE_DOMAIN: ${{ vars.VITE_AUTH_COOKIE_DOMAIN || '' }}
+      VITE_AUTH_COOKIE_SAMESITE: ${{ vars.VITE_AUTH_COOKIE_SAMESITE || 'Lax' }}
     strategy:
       fail-fast: false
       matrix:
@@ -183,9 +232,29 @@ jobs:
           file: ${{ matrix.dockerfile }}
           push: true
           build-args: |
+            # Service URLs (resolved from Cloud Run)
             VITE_AUTH_APP_URL=${{ steps.service-urls.outputs.auth_url }}
             VITE_ALLOWED_REDIRECTS=${{ steps.service-urls.outputs.app_url }}
             VITE_DEFAULT_RETURN_URL=${{ steps.service-urls.outputs.app_url }}
+            # Firebase Web SDK config (from GitHub Environment secrets/variables)
+            VITE_FIREBASE_API_KEY=${{ env.VITE_FIREBASE_API_KEY }}
+            VITE_FIREBASE_AUTH_DOMAIN=${{ env.VITE_FIREBASE_AUTH_DOMAIN }}
+            VITE_FIREBASE_PROJECT_ID=${{ env.VITE_FIREBASE_PROJECT_ID }}
+            VITE_FIREBASE_STORAGE_BUCKET=${{ env.VITE_FIREBASE_STORAGE_BUCKET }}
+            VITE_FIREBASE_MESSAGING_SENDER_ID=${{ env.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+            VITE_FIREBASE_APP_ID=${{ env.VITE_FIREBASE_APP_ID }}
+            VITE_FIREBASE_MEASUREMENT_ID=${{ env.VITE_FIREBASE_MEASUREMENT_ID }}
+            # Production mode flags
+            VITE_USE_FIREBASE_EMULATOR=false
+            VITE_FIREBASE_MODE=live
+            # Nonce secret (shared between apps)
+            VITE_NONCE_SECRET=${{ env.VITE_NONCE_SECRET }}
+            # Auth-app cookie config (only for auth-app builds)
+            VITE_ENABLE_AUTH_COOKIE=${{ env.VITE_ENABLE_AUTH_COOKIE || 'true' }}
+            VITE_AUTH_COOKIE_NAME=${{ env.VITE_AUTH_COOKIE_NAME || 'auth_app_token' }}
+            VITE_AUTH_COOKIE_MAX_AGE=${{ env.VITE_AUTH_COOKIE_MAX_AGE || '3600' }}
+            VITE_AUTH_COOKIE_DOMAIN=${{ env.VITE_AUTH_COOKIE_DOMAIN || '' }}
+            VITE_AUTH_COOKIE_SAMESITE=${{ env.VITE_AUTH_COOKIE_SAMESITE || 'Lax' }}
           tags: |
             ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ matrix.image_name }}:${{ github.sha }}
 
