@@ -133,12 +133,12 @@ jobs:
             enabled: ${{ needs.changes.outputs.app == 'true' }}
             dockerfile: apps/app/Dockerfile
             image_name: rates-app
-            cloud_run_service: ${{ env.CLOUD_RUN_SERVICE_APP }}
+            cloud_run_service: ${{ needs.env-select.outputs.cloud_run_service_app }}
           - id: auth-app
             enabled: ${{ needs.changes.outputs.auth_app == 'true' }}
             dockerfile: apps/auth-app/Dockerfile
             image_name: rates-auth-app
-            cloud_run_service: ${{ env.CLOUD_RUN_SERVICE_AUTH_APP }}
+            cloud_run_service: ${{ needs.env-select.outputs.cloud_run_service_auth_app }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
