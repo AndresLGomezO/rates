@@ -3,7 +3,7 @@
  *
  * This file initializes Firebase when the app starts.
  * Import this file in your main entry point (main.tsx) to ensure
- * Firebase is initialized before any components use it.
+ * Firebase is initialized before any components use it
  */
 
 import { initializeFirebase } from '@rates/firebase-client';

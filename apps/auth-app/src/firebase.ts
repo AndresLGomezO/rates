@@ -6,7 +6,7 @@ const isEmulator =
   env.VITE_FIREBASE_MODE === 'emulator' ||
   (env.VITE_USE_FIREBASE_EMULATOR !== 'false' && import.meta.env.PROD !== true);
 
-// Provide safe defaults so the emulator can run without real keys..
+// Provide safe defaults so the emulator can run without real keys.
 const projectId = env.VITE_FIREBASE_PROJECT_ID ?? 'demo-project';
 const firebaseConfig: FirebaseOptions = {
   apiKey: env.VITE_FIREBASE_API_KEY ?? 'demo-api-key',
