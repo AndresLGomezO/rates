@@ -183,6 +183,24 @@ variable "cloud_run_service_auth_app_prod" {
   default     = "rates-auth-app"
 }
 
+variable "cloud_run_service_auth_api_dev" {
+  description = "Cloud Run service name for auth API (development)"
+  type        = string
+  default     = "rates-auth-api-dev"
+}
+
+variable "cloud_run_service_auth_api_staging" {
+  description = "Cloud Run service name for auth API (staging)"
+  type        = string
+  default     = "rates-auth-api-staging"
+}
+
+variable "cloud_run_service_auth_api_prod" {
+  description = "Cloud Run service name for auth API (production)"
+  type        = string
+  default     = "rates-auth-api"
+}
+
 variable "cloud_run_cpu" {
   description = "CPU allocation for Cloud Run services"
   type        = string

@@ -47,8 +47,9 @@ module "environment_dev" {
 
   ar_repository = var.ar_repository_dev
 
-  cloud_run_service_app  = var.cloud_run_service_app_dev
-  cloud_run_service_auth = var.cloud_run_service_auth_app_dev
+  cloud_run_service_app      = var.cloud_run_service_app_dev
+  cloud_run_service_auth     = var.cloud_run_service_auth_app_dev
+  cloud_run_service_auth_api = var.cloud_run_service_auth_api_dev
 
   cloud_run_cpu           = var.cloud_run_cpu
   cloud_run_memory        = var.cloud_run_memory
@@ -83,8 +84,9 @@ module "environment_staging" {
 
   ar_repository = var.ar_repository_staging
 
-  cloud_run_service_app  = var.cloud_run_service_app_staging
-  cloud_run_service_auth = var.cloud_run_service_auth_app_staging
+  cloud_run_service_app      = var.cloud_run_service_app_staging
+  cloud_run_service_auth     = var.cloud_run_service_auth_app_staging
+  cloud_run_service_auth_api = var.cloud_run_service_auth_api_staging
 
   cloud_run_cpu           = var.cloud_run_cpu
   cloud_run_memory        = var.cloud_run_memory
@@ -119,8 +121,9 @@ module "environment_prod" {
 
   ar_repository = var.ar_repository_prod
 
-  cloud_run_service_app  = var.cloud_run_service_app_prod
-  cloud_run_service_auth = var.cloud_run_service_auth_app_prod
+  cloud_run_service_app      = var.cloud_run_service_app_prod
+  cloud_run_service_auth     = var.cloud_run_service_auth_app_prod
+  cloud_run_service_auth_api = var.cloud_run_service_auth_api_prod
 
   cloud_run_cpu           = var.cloud_run_cpu
   cloud_run_memory        = var.cloud_run_memory

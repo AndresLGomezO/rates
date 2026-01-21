@@ -37,6 +37,7 @@ jobs:
     outputs:
       app: ${{ steps.filter.outputs.app }}
       auth_app: ${{ steps.filter.outputs.auth_app }}
+      auth_api: ${{ steps.filter.outputs.auth_api }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -62,6 +63,12 @@ jobs:
               - "pnpm-lock.yaml"
               - "pnpm-workspace.yaml"
               - "apps/auth-app/Dockerfile"
+            auth_api:
+              - "apps/auth-api/**"
+              - "package.json"
+              - "pnpm-lock.yaml"
+              - "pnpm-workspace.yaml"
+              - "apps/auth-api/Dockerfile"
 
   env-select:
     name: Select environment config (dev / staging / prod)
@@ -71,6 +78,7 @@ jobs:
       ar_repository: ${{ steps.set-env.outputs.ar_repository }}
       cloud_run_service_app: ${{ steps.set-env.outputs.cloud_run_service_app }}
       cloud_run_service_auth_app: ${{ steps.set-env.outputs.cloud_run_service_auth_app }}
+      cloud_run_service_auth_api: ${{ steps.set-env.outputs.cloud_run_service_auth_api }}
       wif_provider: ${{ steps.set-env.outputs.wif_provider }}
       wif_service_account: ${{ steps.set-env.outputs.wif_service_account }}
       github_environment: ${{ steps.set-env.outputs.github_environment }}
@@ -97,6 +105,7 @@ jobs:
             echo "ar_repository=dev-rates" >> "$GITHUB_OUTPUT"
             echo "cloud_run_service_app=rates-app-dev" >> "$GITHUB_OUTPUT"
             echo "cloud_run_service_auth_app=rates-auth-app-dev" >> "$GITHUB_OUTPUT"
+            echo "cloud_run_service_auth_api=rates-auth-api-dev" >> "$GITHUB_OUTPUT"
             echo "wif_provider=projects/116876566424/locations/global/workloadIdentityPools/github-pool/providers/github-provider" >> "$GITHUB_OUTPUT"
             echo "wif_service_account=github-ci-dev@dev-rates-01.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
             echo "github_environment=development" >> "$GITHUB_OUTPUT"
@@ -104,9 +113,9 @@ jobs:
             echo "vite_firebase_api_key=AIzaSyBt3UuP69pYFCfdJsmkmJmx4O_bL9jGVBc" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_auth_domain=dev-rates-01-5a9aa.firebaseapp.com" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_project_id=dev-rates-01-5a9aa" >> "$GITHUB_OUTPUT"
-            echo "vite_firebase_storage_bucket=" >> "$GITHUB_OUTPUT"
-            echo "vite_firebase_messaging_sender_id=" >> "$GITHUB_OUTPUT"
-            echo "vite_firebase_app_id=" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_storage_bucket=dev-rates-01-5a9aa.firebasestorage.app" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_messaging_sender_id=368101248577" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_app_id=1:368101248577:web:c487c70ef308546b3d00c0" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_measurement_id=" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.ref_name }}" = "staging" ]; then
             # --- Staging environment (GCP staging project) ---
@@ -114,6 +123,7 @@ jobs:
             echo "ar_repository=staging-rates" >> "$GITHUB_OUTPUT"
             echo "cloud_run_service_app=rates-app-staging" >> "$GITHUB_OUTPUT"
             echo "cloud_run_service_auth_app=rates-auth-app-staging" >> "$GITHUB_OUTPUT"
+            echo "cloud_run_service_auth_api=rates-auth-api-staging" >> "$GITHUB_OUTPUT"
             echo "wif_provider=projects/121459611937/locations/global/workloadIdentityPools/github-pool/providers/github-provider" >> "$GITHUB_OUTPUT"
             echo "wif_service_account=github-ci-staging@staging-rates-01.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
             echo "github_environment=staging" >> "$GITHUB_OUTPUT"
@@ -131,6 +141,7 @@ jobs:
             echo "ar_repository=rates" >> "$GITHUB_OUTPUT"
             echo "cloud_run_service_app=rates-app" >> "$GITHUB_OUTPUT"
             echo "cloud_run_service_auth_app=rates-auth-app" >> "$GITHUB_OUTPUT"
+            echo "cloud_run_service_auth_api=rates-auth-api" >> "$GITHUB_OUTPUT"
             echo "wif_provider=projects/568545658944/locations/global/workloadIdentityPools/github-pool/providers/github-provider" >> "$GITHUB_OUTPUT"
             echo "wif_service_account=github-ci-prod@prod-rates-01.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
             echo "github_environment=production" >> "$GITHUB_OUTPUT"
@@ -156,6 +167,7 @@ jobs:
       AR_REPOSITORY: ${{ needs.env-select.outputs.ar_repository }}
       CLOUD_RUN_SERVICE_APP: ${{ needs.env-select.outputs.cloud_run_service_app }}
       CLOUD_RUN_SERVICE_AUTH_APP: ${{ needs.env-select.outputs.cloud_run_service_auth_app }}
+      CLOUD_RUN_SERVICE_AUTH_API: ${{ needs.env-select.outputs.cloud_run_service_auth_api }}
       WIF_PROVIDER: ${{ needs.env-select.outputs.wif_provider }}
       WIF_SERVICE_ACCOUNT: ${{ needs.env-select.outputs.wif_service_account }}
       # Firebase Web SDK config (from env-select step)
@@ -189,6 +201,11 @@ jobs:
             dockerfile: apps/auth-app/Dockerfile
             image_name: rates-auth-app
             cloud_run_service: ${{ needs.env-select.outputs.cloud_run_service_auth_app }}
+          - id: auth-api
+            enabled: ${{ needs.changes.outputs.auth_api == 'true' }}
+            dockerfile: apps/auth-api/Dockerfile
+            image_name: rates-auth-api
+            cloud_run_service: ${{ needs.env-select.outputs.cloud_run_service_auth_api }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -213,8 +230,10 @@ jobs:
         run: |
           APP_URL="$(gcloud run services describe "${CLOUD_RUN_SERVICE_APP}" --region "${GCP_REGION}" --format='value(status.url)')"
           AUTH_URL="$(gcloud run services describe "${CLOUD_RUN_SERVICE_AUTH_APP}" --region "${GCP_REGION}" --format='value(status.url)')"
+          AUTH_API_URL="$(gcloud run services describe "${CLOUD_RUN_SERVICE_AUTH_API}" --region "${GCP_REGION}" --format='value(status.url)')"
           echo "app_url=${APP_URL}" >> "$GITHUB_OUTPUT"
           echo "auth_url=${AUTH_URL}" >> "$GITHUB_OUTPUT"
+          echo "auth_api_url=${AUTH_API_URL}" >> "$GITHUB_OUTPUT"
 
       - name: Configure Docker auth for Artifact Registry
         if: matrix.enabled
@@ -234,6 +253,7 @@ jobs:
           build-args: |
             # Service URLs (resolved from Cloud Run)
             VITE_AUTH_APP_URL=${{ steps.service-urls.outputs.auth_url }}
+            VITE_AUTH_API_URL=${{ steps.service-urls.outputs.auth_api_url }}
             VITE_ALLOWED_REDIRECTS=${{ steps.service-urls.outputs.app_url }}
             VITE_DEFAULT_RETURN_URL=${{ steps.service-urls.outputs.app_url }}
             # Firebase Web SDK config (from GitHub Environment secrets/variables)
@@ -261,10 +281,17 @@ jobs:
       - name: Deploy to Cloud Run
         if: matrix.enabled
         run: |
+          # Auth API needs runtime env vars for CORS + project id (it is a real backend).
+          EXTRA_FLAGS=""
+          if [ "${{ matrix.id }}" = "auth-api" ]; then
+            EXTRA_FLAGS="--set-env-vars=ALLOWED_ORIGINS=${{ steps.service-urls.outputs.app_url }},FIREBASE_PROJECT_ID=${{ env.VITE_FIREBASE_PROJECT_ID }}"
+          fi
+
           gcloud run deploy "${{ matrix.cloud_run_service }}" \
             --region "${{ env.GCP_REGION }}" \
             --image "${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ matrix.image_name }}:${{ github.sha }}" \
             --platform managed \
+            ${EXTRA_FLAGS} \
             --quiet
 
       # Optional extension point:
