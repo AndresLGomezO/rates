@@ -229,14 +229,49 @@ Each environment (dev/staging/prod) gets:
 - State is stored locally by default (`.terraform/` directory)
 - For team collaboration, configure remote state (see `versions.tf` comments)
 
+## Service-to-Service Integration
+
+The Terraform configuration automatically sets up environment variables to link your app and auth-app services:
+
+### App Service (`rates-app-*`)
+
+- **`VITE_AUTH_APP_URL`**: Automatically set to the auth-app Cloud Run service URL
+- Used by your app to redirect users to the auth-app for authentication
+
+### Auth-App Service (`rates-auth-app-*`)
+
+- **`VITE_ALLOWED_REDIRECTS`**: Automatically set to the app Cloud Run service URL
+- Security whitelist that allows redirects back to your app after authentication
+
+### Two-Pass Deployment
+
+Due to circular dependencies, environment variables are set in two passes:
+
+1. **First `terraform apply`**: Creates both services with empty environment variables
+2. **Second `terraform apply`**: Updates both services with the correct URLs
+
+**Note**: After the first apply, run `terraform apply` again to populate the service URLs. Terraform will detect the changes and update the environment variables automatically.
+
+### Verifying Environment Variables
+
+After deployment, verify the environment variables are set correctly:
+
+```bash
+# Check app service
+gcloud run services describe rates-app-dev --region us-central1 --format="value(spec.template.spec.containers[0].env)"
+
+# Check auth-app service
+gcloud run services describe rates-auth-app-dev --region us-central1 --format="value(spec.template.spec.containers[0].env)"
+```
+
 ## CI/CD Integration
 
 The infrastructure created by this Terraform code integrates seamlessly with the GitHub Actions workflow in `.github/workflows/deploy.yml`.
 
 **After applying Terraform:**
 
-1. Copy the WIF provider names from `terraform output`
-2. Update `.github/workflows/deploy.yml` with these values
+1. Run `terraform apply` **twice** (first creates services, second sets environment variables)
+2. Run `./scripts/generate-workflow-config.sh` to update the workflow file automatically
 3. Create GitHub environments: `development`, `staging`, `production`
 4. Push to `develop`/`staging`/`main` branches to trigger deployments
 

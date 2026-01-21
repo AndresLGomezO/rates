@@ -147,6 +147,14 @@ resource "google_cloud_run_service" "app" {
             memory = var.cloud_run_memory
           }
         }
+        # Environment variables for app service
+        # VITE_AUTH_APP_URL: Points to the auth-app service URL
+        # Note: On first apply, this will be empty. Run 'terraform apply' again after auth-app exists.
+        env {
+          name  = "VITE_AUTH_APP_URL"
+          # Reference auth-app URL (empty string if auth-app doesn't exist yet)
+          value = var.create_cloud_run_services && length(google_cloud_run_service.auth_app) > 0 ? google_cloud_run_service.auth_app[0].status[0].url : ""
+        }
       }
       service_account_name = google_service_account.deployer.email
     }
@@ -199,6 +207,15 @@ resource "google_cloud_run_service" "auth_app" {
             cpu    = var.cloud_run_cpu
             memory = var.cloud_run_memory
           }
+        }
+        # Environment variables for auth-app service
+        # VITE_ALLOWED_REDIRECTS: Security whitelist of allowed redirect URLs
+        # Note: On first apply, this will be empty. Run 'terraform apply' again after app exists.
+        env {
+          name  = "VITE_ALLOWED_REDIRECTS"
+          # Reference app URL for allowed redirects (security whitelist)
+          # Empty string if app doesn't exist yet
+          value = var.create_cloud_run_services && length(google_cloud_run_service.app) > 0 ? google_cloud_run_service.app[0].status[0].url : ""
         }
       }
       service_account_name = google_service_account.deployer.email
