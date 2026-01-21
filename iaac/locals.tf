@@ -37,6 +37,12 @@ locals {
     "iam.googleapis.com",
     "run.googleapis.com",
     "artifactregistry.googleapis.com",
-    "cloudresourcemanager.googleapis.com"
+    "cloudresourcemanager.googleapis.com",
+    # Firebase/Identity Platform APIs
+    "identitytoolkit.googleapis.com",    # Identity Platform (GCP-native Firebase Auth)
+    "firebase.googleapis.com",           # Firebase API (enables Firebase services)
+    "firestore.googleapis.com",          # Firestore API
+    "firebasestorage.googleapis.com",    # Firebase Storage API
+    "cloudfunctions.googleapis.com"      # Cloud Functions API
   ]
 }
