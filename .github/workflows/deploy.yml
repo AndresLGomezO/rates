@@ -110,11 +110,12 @@ jobs:
             echo "wif_service_account=github-ci-dev@dev-rates-01.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
             echo "github_environment=development" >> "$GITHUB_OUTPUT"
             # Firebase Web SDK config (from .iaac.env)
+            # Using Identity Platform - all services use GCP project ID (dev-rates-01)
             echo "vite_firebase_api_key=AIzaSyBt3UuP69pYFCfdJsmkmJmx4O_bL9jGVBc" >> "$GITHUB_OUTPUT"
-            echo "vite_firebase_auth_domain=dev-rates-01-5a9aa.firebaseapp.com" >> "$GITHUB_OUTPUT"
-            echo "vite_firebase_project_id=dev-rates-01-5a9aa" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_auth_domain=dev-rates-01.firebaseapp.com" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_project_id=dev-rates-01" >> "$GITHUB_OUTPUT"
             echo "vite_gcp_project_id=dev-rates-01" >> "$GITHUB_OUTPUT"
-            echo "vite_firebase_storage_bucket=dev-rates-01-5a9aa.appspot.com" >> "$GITHUB_OUTPUT"
+            echo "vite_firebase_storage_bucket=dev-rates-01.appspot.com" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_messaging_sender_id=368101248577" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_app_id=1:368101248577:web:c487c70ef308546b3d00c0" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_measurement_id=" >> "$GITHUB_OUTPUT"
@@ -287,6 +288,7 @@ jobs:
         if: matrix.enabled
         run: |
           # Auth API needs runtime env vars for CORS + project id (it is a real backend).
+          # With Identity Platform, FIREBASE_PROJECT_ID should be the GCP project ID
           EXTRA_FLAGS=""
           if [ "${{ matrix.id }}" = "auth-api" ]; then
             EXTRA_FLAGS="--set-env-vars=ALLOWED_ORIGINS=${{ steps.service-urls.outputs.app_url }},FIREBASE_PROJECT_ID=${{ env.VITE_FIREBASE_PROJECT_ID }}"

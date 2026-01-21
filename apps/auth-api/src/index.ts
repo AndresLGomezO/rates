@@ -20,7 +20,8 @@ function getAllowedOrigins(env: Env): string[] {
 
 function getProjectId(env: Env): string | undefined {
   // Priority: FIREBASE_PROJECT_ID > VITE_FIREBASE_PROJECT_ID > GOOGLE_CLOUD_PROJECT
-  // Note: GOOGLE_CLOUD_PROJECT is the GCP project, not necessarily the Firebase project
+  // With Identity Platform, all should use GCP project ID
+  // GOOGLE_CLOUD_PROJECT is automatically set by Cloud Run to the GCP project ID
   const projectId =
     env.FIREBASE_PROJECT_ID ||
     env.VITE_FIREBASE_PROJECT_ID ||
@@ -35,8 +36,8 @@ function getProjectId(env: Env): string | undefined {
     console.log('[auth-api] Using VITE_FIREBASE_PROJECT_ID from environment');
   } else if (env.GOOGLE_CLOUD_PROJECT) {
     // eslint-disable-next-line no-console
-    console.warn(
-      '[auth-api] WARNING: Using GOOGLE_CLOUD_PROJECT as fallback. This may not match the Firebase project ID used by client apps.'
+    console.log(
+      '[auth-api] Using GOOGLE_CLOUD_PROJECT (GCP project ID) - Identity Platform enabled'
     );
   }
 
@@ -58,7 +59,7 @@ console.log('[auth-api] Environment check:', {
 });
 
 // Firebase Admin SDK (ADC in Cloud Run). Project ID helps Admin choose correct issuer/project.
-// CRITICAL: This must match the Firebase project ID used by client apps, not the GCP project ID.
+// With Identity Platform, this should be the GCP project ID (same as client apps).
 initializeApp(projectId ? { projectId } : undefined);
 const adminAuth = getAuth();
 
