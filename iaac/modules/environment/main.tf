@@ -247,3 +247,55 @@ resource "google_cloud_run_service_iam_member" "auth_app_public_access" {
   role     = "roles/run.invoker"
   member   = "allUsers"
 }
+
+# Auth API (real backend for /api/validate in production)
+resource "google_cloud_run_service" "auth_api" {
+  count    = var.create_cloud_run_services ? 1 : 0
+  project  = var.project_id
+  name     = var.cloud_run_service_auth_api
+  location = var.region
+
+  template {
+    spec {
+      containers {
+        image = "gcr.io/cloudrun/hello"
+        resources {
+          limits = {
+            cpu    = var.cloud_run_cpu
+            memory = var.cloud_run_memory
+          }
+        }
+      }
+      service_account_name = google_service_account.deployer.email
+    }
+
+    metadata {
+      annotations = {
+        "autoscaling.knative.dev/minScale" = tostring(var.cloud_run_min_instances)
+        "autoscaling.knative.dev/maxScale" = tostring(var.cloud_run_max_instances)
+        "run.googleapis.com/execution-environment" = "gen2"
+        "run.googleapis.com/cpu-throttling" = "true"
+        "run.googleapis.com/startup-cpu-boost" = "false"
+      }
+    }
+  }
+
+  traffic {
+    percent         = 100
+    latest_revision = true
+  }
+
+  depends_on = [
+    time_sleep.after_api_enable,
+    google_service_account.deployer
+  ]
+}
+
+resource "google_cloud_run_service_iam_member" "auth_api_public_access" {
+  count    = var.create_cloud_run_services ? 1 : 0
+  project  = var.project_id
+  service  = google_cloud_run_service.auth_api[0].name
+  location = var.region
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}

@@ -58,6 +58,11 @@ variable "cloud_run_service_auth" {
   type        = string
 }
 
+variable "cloud_run_service_auth_api" {
+  description = "Cloud Run service name for auth API"
+  type        = string
+}
+
 variable "cloud_run_cpu" {
   description = "CPU allocation for Cloud Run"
   type        = string

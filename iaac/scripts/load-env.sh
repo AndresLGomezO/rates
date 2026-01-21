@@ -98,6 +98,10 @@ cloud_run_service_auth_app_dev = "${CLOUD_RUN_SERVICE_AUTH_APP_DEV:-rates-auth-a
 cloud_run_service_auth_app_staging = "${CLOUD_RUN_SERVICE_AUTH_APP_STAGING:-rates-auth-app-staging}"
 cloud_run_service_auth_app_prod = "${CLOUD_RUN_SERVICE_AUTH_APP_PROD:-rates-auth-app}"
 
+cloud_run_service_auth_api_dev = "${CLOUD_RUN_SERVICE_AUTH_API_DEV:-rates-auth-api-dev}"
+cloud_run_service_auth_api_staging = "${CLOUD_RUN_SERVICE_AUTH_API_STAGING:-rates-auth-api-staging}"
+cloud_run_service_auth_api_prod = "${CLOUD_RUN_SERVICE_AUTH_API_PROD:-rates-auth-api}"
+
 cloud_run_cpu = "${CLOUD_RUN_CPU:-1}"
 cloud_run_memory = "${CLOUD_RUN_MEMORY:-512Mi}"
 cloud_run_min_instances = ${CLOUD_RUN_MIN_INSTANCES:-0}

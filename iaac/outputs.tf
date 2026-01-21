@@ -27,6 +27,7 @@ output "dev_cloud_run_services" {
   value = {
     app  = var.cloud_run_service_app_dev
     auth = var.cloud_run_service_auth_app_dev
+    auth_api = var.cloud_run_service_auth_api_dev
   }
 }
 
@@ -59,6 +60,7 @@ output "staging_cloud_run_services" {
   value = {
     app  = var.cloud_run_service_app_staging
     auth = var.cloud_run_service_auth_app_staging
+    auth_api = var.cloud_run_service_auth_api_staging
   }
 }
 
@@ -91,6 +93,7 @@ output "prod_cloud_run_services" {
   value = {
     app  = var.cloud_run_service_app_prod
     auth = var.cloud_run_service_auth_app_prod
+    auth_api = var.cloud_run_service_auth_api_prod
   }
 }
 
