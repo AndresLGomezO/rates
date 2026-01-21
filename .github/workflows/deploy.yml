@@ -110,7 +110,6 @@ jobs:
             echo "wif_service_account=github-ci-dev@dev-rates-01.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
             echo "github_environment=development" >> "$GITHUB_OUTPUT"
             # Firebase Web SDK config (from .iaac.env)
-            # Using Identity Platform - all services use GCP project ID (dev-rates-01)
             echo "vite_firebase_api_key=AIzaSyBt3UuP69pYFCfdJsmkmJmx4O_bL9jGVBc" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_auth_domain=dev-rates-01.firebaseapp.com" >> "$GITHUB_OUTPUT"
             echo "vite_firebase_project_id=dev-rates-01" >> "$GITHUB_OUTPUT"
