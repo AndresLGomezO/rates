@@ -786,7 +786,7 @@ export function NewAccountWizard({
               </div>
               <div className="bg-white/8 py-3.75 rounded-lg border border-neutral-700/30 px-4">
                 <div className="mb-1 text-xs opacity-70">Account Number</div>
-                <div className="font-mono font-semibold -tracking-[0.2px]">
+                <div className="font-mono font-[650] -tracking-[0.2px]">
                   {formData.accountNumber || '—'}
                 </div>
               </div>
