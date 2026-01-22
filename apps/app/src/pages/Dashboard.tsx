@@ -474,7 +474,7 @@ export default function Dashboard() {
     return (
       <div className="m-0 box-border flex w-full max-w-full animate-fadeIn-slow flex-col gap-8 overflow-x-hidden p-0">
         <div className="relative mb-10 flex items-center justify-between pb-6 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:content-['']">
-          <h2 className="m-0 bg-gradient-to-br from-white to-white/80 bg-clip-text text-4xl font-bold -tracking-[0.5px] text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.05)]">
+          <h2 className="m-0 bg-gradient-to-br from-white to-white/80 bg-clip-text text-4xl font-bold -tracking-[0.5px] text-transparent text-white shadow-[0_2px_20px_rgba(255,255,255,0.05)]">
             Dashboard
           </h2>
         </div>
@@ -492,7 +492,7 @@ export default function Dashboard() {
     return (
       <div className="m-0 box-border flex w-full max-w-full animate-fadeIn-slow flex-col gap-8 overflow-x-hidden p-0">
         <div className="relative mb-10 flex items-center justify-between pb-6 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:content-['']">
-          <h2 className="m-0 bg-gradient-to-br from-white to-white/80 bg-clip-text text-4xl font-bold -tracking-[0.5px] text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.05)]">
+          <h2 className="m-0 bg-gradient-to-br from-white to-white/80 bg-clip-text text-4xl font-bold -tracking-[0.5px] text-transparent text-white shadow-[0_2px_20px_rgba(255,255,255,0.05)]">
             Dashboard
           </h2>
         </div>
@@ -509,7 +509,7 @@ export default function Dashboard() {
     <div className="m-0 box-border flex w-full max-w-full animate-fadeIn-slow flex-col gap-6 overflow-x-hidden p-0">
       <div className="relative mb-0 flex flex-col items-start justify-between gap-6 pb-4 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-neutral-600/30 after:to-transparent after:content-[''] md:flex-row md:items-center md:gap-0">
         <div>
-          <h2 className="m-0 bg-gradient-to-br from-white to-white/80 bg-clip-text text-4xl font-bold -tracking-[0.5px] text-transparent shadow-[0_2px_20px_rgba(255,255,255,0.05)] xs:text-[1.75rem] md:text-3xl">
+          <h2 className="m-0 bg-gradient-to-br from-white to-white/80 bg-clip-text text-4xl font-bold -tracking-[0.5px] text-transparent text-white shadow-[0_2px_20px_rgba(255,255,255,0.05)] xs:text-[1.75rem] md:text-3xl">
             Financial Overview
           </h2>
           <p className="mb-0 mt-2 text-base font-normal text-white/70">
@@ -541,7 +541,7 @@ export default function Dashboard() {
 
       {/* Key Metrics */}
       <div className="mb-8 grid w-full grid-cols-1 gap-3 md:grid-cols-3 md:gap-6">
-        <div className="relative min-w-0 overflow-visible rounded-lg border border-neutral-700/30 bg-gradient-to-br from-success-css/20 to-success-css/10 p-6 backdrop-blur-[20px] backdrop-saturate-[180%] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:left-0 before:right-0 before:top-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:-translate-y-1 hover:border-neutral-600/40 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:before:opacity-100 xs:p-4">
+        <div className="relative min-w-0 overflow-visible rounded-lg border border-neutral-700/30 bg-gradient-to-br from-success-css/20 to-success-css/10 p-6 backdrop-blur-[20px] backdrop-saturate-[180%] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:left-0 before:right-0 before:top-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#1e3a8a] before:via-[#334155] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:-translate-y-1 hover:border-neutral-600/40 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:before:opacity-100 xs:p-4">
           <div className="mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
             Total Paid
           </div>
@@ -621,7 +621,7 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-        <div className="relative min-w-0 overflow-visible rounded-lg border border-neutral-700/30 bg-gradient-to-br from-danger-500/20 to-danger-500/10 p-6 backdrop-blur-[20px] backdrop-saturate-[180%] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:left-0 before:right-0 before:top-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:-translate-y-1 hover:border-neutral-600/40 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:before:opacity-100 xs:p-4">
+        <div className="relative min-w-0 overflow-visible rounded-lg border border-neutral-700/30 bg-gradient-to-br from-danger-500/20 to-danger-500/10 p-6 backdrop-blur-[20px] backdrop-saturate-[180%] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:left-0 before:right-0 before:top-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#1e3a8a] before:via-[#334155] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:-translate-y-1 hover:border-neutral-600/40 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:before:opacity-100 xs:p-4">
           <div className="mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
             Total Due
           </div>
@@ -701,7 +701,7 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-        <div className="relative min-w-0 overflow-visible rounded-lg border border-neutral-700/30 bg-gradient-to-br from-warning-500/20 to-warning-500/10 p-6 backdrop-blur-[20px] backdrop-saturate-[180%] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:left-0 before:right-0 before:top-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:-translate-y-1 hover:border-neutral-600/40 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:before:opacity-100 xs:p-4">
+        <div className="relative min-w-0 overflow-visible rounded-lg border border-neutral-700/30 bg-gradient-to-br from-warning-500/20 to-warning-500/10 p-6 backdrop-blur-[20px] backdrop-saturate-[180%] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:left-0 before:right-0 before:top-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#1e3a8a] before:via-[#334155] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:-translate-y-1 hover:border-neutral-600/40 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:before:opacity-100 xs:p-4">
           <div className="mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
             Pending Amount
           </div>
@@ -988,7 +988,7 @@ export default function Dashboard() {
               return (
                 <div
                   key={periodKey}
-                  className={`ds-card-medium relative overflow-hidden before:absolute before:left-0 before:right-0 before:top-0 before:h-0.5 before:bg-gradient-to-r before:from-[#1e40af] before:via-[#334155] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:border-neutral-600/50 hover:shadow-[0_8px_24px_0_rgba(10,14,26,0.5)] hover:before:opacity-100 ${
+                  className={`ds-card-medium relative overflow-hidden before:absolute before:left-0 before:right-0 before:top-0 before:h-0.5 before:bg-gradient-to-r before:from-[#1e40af] before:via-[#1e3a8a] before:via-[#334155] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:border-neutral-600/50 hover:shadow-[0_8px_24px_0_rgba(10,14,26,0.5)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] hover:before:opacity-100 ${
                     isExpanded
                       ? 'border-neutral-600/50 shadow-[0_12px_32px_0_rgba(10,14,26,0.6)] before:opacity-100'
                       : 'border-white/15'

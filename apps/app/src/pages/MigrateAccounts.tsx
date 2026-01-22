@@ -489,7 +489,7 @@ export default function MigrateAccounts() {
     <div className="m-0 box-border flex w-full max-w-full animate-fadeIn-slow flex-col gap-8 overflow-x-hidden p-0">
       <div className="relative mb-10 flex items-center justify-between pb-6 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:content-['']">
         <div>
-          <h1 className="m-0 mb-2 bg-gradient-to-br from-white to-white/80 bg-clip-text text-4xl font-bold -tracking-[0.5px] text-transparent drop-shadow-[0_2px_20px_rgba(255,255,255,0.1)]">
+          <h1 className="m-0 mb-2 bg-gradient-to-br from-white to-white/80 bg-clip-text text-4xl font-bold -tracking-[0.5px] text-transparent text-white drop-shadow-[0_2px_20px_rgba(255,255,255,0.1)]">
             Account Migration
           </h1>
           <p className="m-0 text-base text-white/70">

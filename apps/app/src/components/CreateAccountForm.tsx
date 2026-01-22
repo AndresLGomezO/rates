@@ -256,7 +256,7 @@ export function CreateAccountForm({
             onChange={(e) =>
               handleChange('status', e.target.value as AccountStatus)
             }
-            className="font-inherit cursor-pointer appearance-none rounded-lg border border-white/20 bg-white/10 bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22white%22%20d%3D%22M6%209L1%204h10z%22%2F%3E%3C%2Fsvg%3E')] bg-[right_1rem_center] bg-no-repeat px-4 py-3.5 pr-10 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none"
+            className="font-inherit cursor-pointer appearance-none rounded-lg border border-white/20 bg-white/10 bg-[url('data:image/svg+xml,%3Csvg_xmlns=\\'http://www.w3.org/2000/svg\\'_width=\\'12\\'_height=\\'12\\'_viewBox=\\'0_0_12_12\\'%3E%3Cpath_fill=\\'white\\'_d=\\'M6_9L1_4h10z\\'/%3E%3C/svg%3E')] bg-[right_1rem_center] bg-no-repeat px-4 py-3.5 pr-10 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none"
           >
             {ACCOUNT_STATUSES.map((status) => (
               <option
@@ -334,7 +334,7 @@ export function CreateAccountForm({
           id="currency"
           value={formData.currency}
           onChange={(e) => handleChange('currency', e.target.value)}
-          className="font-inherit cursor-pointer appearance-none rounded-lg border border-white/20 bg-white/10 bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22white%22%20d%3D%22M6%209L1%204h10z%22%2F%3E%3C%2Fsvg%3E')] bg-[right_1rem_center] bg-no-repeat px-4 py-3.5 pr-10 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none"
+          className="font-inherit cursor-pointer appearance-none rounded-lg border border-white/20 bg-white/10 bg-[url('data:image/svg+xml,%3Csvg_xmlns=\\'http://www.w3.org/2000/svg\\'_width=\\'12\\'_height=\\'12\\'_viewBox=\\'0_0_12_12\\'%3E%3Cpath_fill=\\'white\\'_d=\\'M6_9L1_4h10z\\'/%3E%3C/svg%3E')] bg-[right_1rem_center] bg-no-repeat px-4 py-3.5 pr-10 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none"
         >
           <option value="COP" className="bg-neutral-900 text-white">
             COP (Colombian Peso)

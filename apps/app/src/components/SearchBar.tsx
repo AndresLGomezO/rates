@@ -238,7 +238,7 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
                     ⚙️
                   </span>
                   {hasActiveFilters && (
-                    <span className="absolute right-[-4px] top-[-4px] min-w-[18px] rounded-md border-2 border-neutral-600/40 bg-gradient-to-br from-[#1e40af] to-[#334155] px-[0.35rem] py-[0.15rem] text-center text-[0.6rem] font-bold text-white shadow-[0_2px_6px_rgba(30,64,175,0.4)]">
+                    <span className="absolute right-[-4px] top-[-4px] min-w-4 min-w-[18px] rounded-md border-2 border-neutral-600/40 bg-gradient-to-br from-[#1e40af] to-[#334155] px-[0.35rem] py-[0.15rem] text-center text-[0.6rem] font-bold text-white shadow-[0_2px_6px_rgba(30,64,175,0.4)]">
                       {activeFiltersCount}
                     </span>
                   )}
