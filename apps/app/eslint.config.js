@@ -58,7 +58,10 @@ export default tseslint.config(
             // Tailwind CSS class ordering
             'tailwindcss/classnames-order': 'warn',
             'tailwindcss/no-custom-classname': 'off', // Allow custom classes like ds-card-light
-            'tailwindcss/no-contradicting-classname': 'error',
+            // Temporarily disabled due to ESLint 9 compatibility issue
+            // Error: "Node must be provided when reporting error if location is not provided"
+            // TODO: Re-enable when eslint-plugin-tailwindcss fixes ESLint 9 compatibility
+            'tailwindcss/no-contradicting-classname': 'off',
           }
         : {}),
     },
