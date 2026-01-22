@@ -201,6 +201,30 @@ check_gcp_auth() {
 }
 
 # ============================================================================
+# Set Quota Project for ADC
+# ============================================================================
+
+set_quota_project() {
+  local project_id=$1
+  
+  if [ -z "${project_id}" ]; then
+    return 0  # Skip if project ID not yet determined
+  fi
+  
+  print_info "Setting quota project for Application Default Credentials..."
+  
+  # Set quota project for ADC (required for Identity Platform API and others)
+  if gcloud auth application-default set-quota-project "${project_id}" &> /dev/null; then
+    print_success "Quota project set to: ${project_id}"
+  else
+    print_warning "Could not set quota project automatically"
+    print_info "Run manually: gcloud auth application-default set-quota-project ${project_id}"
+  fi
+  
+  echo ""
+}
+
+# ============================================================================
 # User Input Collection
 # ============================================================================
 
@@ -490,8 +514,20 @@ main() {
   check_tool_versions
   check_gcp_auth
   collect_user_input
+  
+  # Set quota project if project ID is known (for existing projects)
+  if [ -n "${PROJECT_ID:-}" ]; then
+    set_quota_project "${PROJECT_ID}"
+  fi
+  
   configure_free_tier
   generate_tfvars
+  
+  # Set quota project after generating tfvars (for new projects, will be set after terraform apply)
+  if [ -n "${PROJECT_ID:-}" ]; then
+    set_quota_project "${PROJECT_ID}"
+  fi
+  
   validate_config
   show_cost_estimate
   show_next_steps

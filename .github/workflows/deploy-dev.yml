@@ -9,10 +9,11 @@ on:
   push:
     branches:
       - develop
+      - empty-change # This is the current branch. This is temporary.
     paths:
       - "apps/**"
       - "packages/**"
-      - "Dockerfile"
+      - "apps/app/Dockerfile"
       - ".dockerignore"
   workflow_dispatch:
     inputs:
@@ -154,6 +155,7 @@ jobs:
         uses: docker/build-push-action@v6.10.0
         with:
           context: .
+          file: ./apps/app/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
