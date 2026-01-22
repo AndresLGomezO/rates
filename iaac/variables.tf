@@ -243,6 +243,28 @@ variable "github_environments" {
   }
 }
 
+variable "configure_github_actions" {
+  type        = bool
+  description = <<-EOT
+    Enable automated GitHub Actions configuration.
+    
+    When true:
+    - Creates Secret Manager secret with deployment configuration
+    - Configures GitHub repository secrets/variables (minimal - only WIF auth)
+    - Creates GitHub environments with protection rules
+    - Generates deployment workflow file
+    
+    When false:
+    - Skips all GitHub Actions automation
+    - WIF is still configured (can be used manually)
+    
+    Default: true (enabled by default for convenience)
+    
+    Ref: https://docs.github.com/en/actions
+  EOT
+  default     = true
+}
+
 # ============================================================================
 # FREE TIER Configuration (DEFAULT: ENABLED)
 # ============================================================================

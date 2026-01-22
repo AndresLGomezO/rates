@@ -48,6 +48,14 @@ terraform {
       source  = "hashicorp/null"
       version = "~> 3.2.0"
     }
+
+    # GitHub Provider (for GitHub Actions automation)
+    # Changelog: https://github.com/integrations/terraform-provider-github/blob/main/CHANGELOG.md
+    # Registry: https://registry.terraform.io/providers/integrations/github/latest/docs
+    github = {
+      source  = "integrations/github"
+      version = "~> 6.4.0"
+    }
   }
 }
 
@@ -82,4 +90,24 @@ provider "google-beta" {
   billing_project       = var.project_id
 
   # Required for Firebase resources (google_firebase_project, etc.)
+}
+
+# GitHub Provider Configuration
+# Authentication via GITHUB_TOKEN environment variable or GitHub App
+# For local development: export GITHUB_TOKEN=$(gh auth token)
+# For CI/CD: Use GitHub App or Personal Access Token
+# Ref: https://registry.terraform.io/providers/integrations/github/latest/docs#authentication
+provider "github" {
+  # Token can be provided via:
+  # 1. GITHUB_TOKEN environment variable (recommended)
+  # 2. token argument (not recommended - use env var instead)
+  # 3. GitHub App authentication (advanced)
+  #
+  # To get a token:
+  # - Personal Access Token: https://github.com/settings/tokens
+  # - GitHub CLI: gh auth token
+  # - Required scopes: repo, admin:repo_hook, admin:org (if org repo)
+  #
+  # Note: Token is only needed for Terraform apply (to configure GitHub)
+  # GitHub Actions workflows use WIF (keyless) for GCP authentication
 }

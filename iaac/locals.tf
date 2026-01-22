@@ -175,4 +175,14 @@ locals {
 
   # Secret Manager secret names
   firebase_config_secret = "firebase-client-config-${var.environment}"
+
+  # ============================================================================
+  # GitHub Repository Parsing
+  # ============================================================================
+  # Parse github_repo string (format: "owner/repo-name") into components
+  # Used by GitHub Actions module for repository configuration
+
+  github_repo_parts = split("/", var.github_repo)
+  github_owner_auto = length(local.github_repo_parts) > 1 ? local.github_repo_parts[0] : ""
+  github_repo_name_auto = length(local.github_repo_parts) > 1 ? local.github_repo_parts[1] : var.github_repo
 }
