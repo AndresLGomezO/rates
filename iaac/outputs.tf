@@ -250,28 +250,19 @@ output "backend_config" {
 
 output "github_integration" {
   description = "GitHub Actions integration status and configuration"
-  value = var.configure_github_actions ? {
-    enabled                 = true
-    repository              = module.github_actions[0].github_repository
-    environment             = module.github_actions[0].github_environment
-    deployment_config_secret = module.github_actions[0].deployment_config_secret_id
-    workflow_file           = module.github_actions[0].workflow_file_path
-    workflow_created        = module.github_actions[0].workflow_file_created
-    secrets_configured      = module.github_actions[0].github_secrets_configured
-    variables_configured    = module.github_actions[0].github_variables_configured
-    next_steps              = module.github_actions[0].next_steps
-    message                 = null
-  } : {
-    enabled                 = false
-    repository              = null
-    environment             = null
-    deployment_config_secret = null
-    workflow_file           = null
-    workflow_created        = false
-    secrets_configured      = null
-    variables_configured    = null
-    next_steps              = null
-    message                 = "GitHub Actions automation is disabled. Set configure_github_actions = true to enable."
+  # NOTE: github_actions module is commented out (not implemented).
+  # Deployment config secret should be created manually via ./scripts/setup.sh create-secret <environment>
+  value = {
+    enabled                  = false
+    repository               = null
+    environment              = null
+    deployment_config_secret = "github-deployment-config-${var.environment}"
+    workflow_file            = null
+    workflow_created         = false
+    secrets_configured       = false
+    variables_configured     = false
+    next_steps               = "Run './scripts/setup.sh create-secret ${var.environment}' to create the deployment config secret"
+    message                  = "GitHub Actions module not implemented. Create deployment config secret manually using the setup script."
   }
 }
 

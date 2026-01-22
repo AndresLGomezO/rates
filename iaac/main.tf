@@ -209,55 +209,58 @@ module "cloud_run" {
 # ============================================================================
 # GitHub Actions Module
 # ============================================================================
-# Automates GitHub Actions configuration for deployment
-# Creates Secret Manager secrets, GitHub configuration, and workflow files
+# NOTE: This module is not implemented. The deployment config secret is created
+# manually via ./scripts/setup.sh create-secret <environment>
+# 
+# To enable automated GitHub Actions setup in the future, implement the
+# github-actions module or set configure_github_actions = false in terraform.tfvars
 
-module "github_actions" {
-  count = var.configure_github_actions ? 1 : 0
-  source = "./modules/github-actions"
-
-  # Project information
-  project_id     = module.project.project_id
-  project_number = module.project.project_number
-
-  # GitHub repository information
-  github_owner     = local.github_owner_auto
-  github_repo_name = local.github_repo_name_auto
-
-  # Environment
-  environment = var.environment
-
-  # Workload Identity Federation
-  workload_identity_provider_name = module.workload_identity.workload_identity_provider_name
-  cicd_service_account_email      = module.iam.cicd_deployer_service_account
-
-  # Artifact Registry
-  artifact_registry_url = module.artifact_registry.repository_url
-
-  # Cloud Run
-  cloud_run_service_name = module.cloud_run.service_name
-  cloud_run_region       = var.region
-  cloudrun_config        = module.cloud_run.free_tier_config
-
-  # GitHub environments
-  github_environments = var.github_environments
-
-  # Workflow configuration
-  workflow_branch            = "main" # Default branch
-  workflow_path              = ".github/workflows"
-  workflow_filename          = "deploy"
-  enable_workflow_generation  = true
-  # Workflow file path: relative to repository root (one level up from iaac/)
-  workflow_file_path = "../.github/workflows/deploy-${var.environment}.yml"
-
-  # Labels
-  labels = local.cost_labels
-
-  depends_on = [
-    module.project,
-    module.iam,
-    module.workload_identity,
-    module.artifact_registry,
-    module.cloud_run
-  ]
-}
+# module "github_actions" {
+#   count = var.configure_github_actions ? 1 : 0
+#   source = "./modules/github-actions"
+#
+#   # Project information
+#   project_id     = module.project.project_id
+#   project_number = module.project.project_number
+#
+#   # GitHub repository information
+#   github_owner     = local.github_owner_auto
+#   github_repo_name = local.github_repo_name_auto
+#
+#   # Environment
+#   environment = var.environment
+#
+#   # Workload Identity Federation
+#   workload_identity_provider_name = module.workload_identity.workload_identity_provider_name
+#   cicd_service_account_email      = module.iam.cicd_deployer_service_account
+#
+#   # Artifact Registry
+#   artifact_registry_url = module.artifact_registry.repository_url
+#
+#   # Cloud Run
+#   cloud_run_service_name = module.cloud_run.service_name
+#   cloud_run_region       = var.region
+#   cloudrun_config        = module.cloud_run.free_tier_config
+#
+#   # GitHub environments
+#   github_environments = var.github_environments
+#
+#   # Workflow configuration
+#   workflow_branch            = "main" # Default branch
+#   workflow_path              = ".github/workflows"
+#   workflow_filename          = "deploy"
+#   enable_workflow_generation  = true
+#   # Workflow file path: relative to repository root (one level up from iaac/)
+#   workflow_file_path = "../.github/workflows/deploy-${var.environment}.yml"
+#
+#   # Labels
+#   labels = local.cost_labels
+#
+#   depends_on = [
+#     module.project,
+#     module.iam,
+#     module.workload_identity,
+#     module.artifact_registry,
+#     module.cloud_run
+#   ]
+# }

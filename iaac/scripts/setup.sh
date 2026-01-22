@@ -201,6 +201,30 @@ check_gcp_auth() {
 }
 
 # ============================================================================
+# Set Quota Project for ADC
+# ============================================================================
+
+set_quota_project() {
+  local project_id=$1
+  
+  if [ -z "${project_id}" ]; then
+    return 0  # Skip if project ID not yet determined
+  fi
+  
+  print_info "Setting quota project for Application Default Credentials..."
+  
+  # Set quota project for ADC (required for Identity Platform API and others)
+  if gcloud auth application-default set-quota-project "${project_id}" &> /dev/null; then
+    print_success "Quota project set to: ${project_id}"
+  else
+    print_warning "Could not set quota project automatically"
+    print_info "Run manually: gcloud auth application-default set-quota-project ${project_id}"
+  fi
+  
+  echo ""
+}
+
+# ============================================================================
 # User Input Collection
 # ============================================================================
 
@@ -209,27 +233,102 @@ collect_user_input() {
   
   # Project selection
   echo -e "${CYAN}Project Configuration${NC}"
-  read -p "Do you have an existing GCP project? [y/N]: " has_existing_project
-  has_existing_project=${has_existing_project:-N}
+  echo ""
+  echo -e "${YELLOW}⚠️  IMPORTANT: GCP Project Quota${NC}"
+  echo "GCP accounts have project quotas (typically 5-10 projects)."
+  echo "If you've exceeded your quota, you MUST use an existing project."
+  echo ""
+  echo -e "${GREEN}Recommended: Use an existing project to avoid quota issues.${NC}"
+  echo ""
+  read -p "Do you have an existing GCP project you want to use? [Y/n]: " has_existing_project
+  has_existing_project=${has_existing_project:-Y}
   
   if [[ "${has_existing_project}" =~ ^[Yy]$ ]]; then
+    echo ""
+    echo "Using existing project (brownfield deployment)"
+    echo ""
     read -p "Enter existing GCP Project ID: " PROJECT_ID
+    
+    if [ -z "${PROJECT_ID}" ]; then
+      print_error "Project ID is required"
+      exit 1
+    fi
+    
+    # Trim whitespace
+    PROJECT_ID=$(echo "${PROJECT_ID}" | xargs)
+    
+    # Validate project ID format (alphanumeric, hyphens, max 30 chars)
+    if ! [[ "${PROJECT_ID}" =~ ^[a-z][a-z0-9-]{4,28}[a-z0-9]$ ]]; then
+      print_warning "Project ID format may be invalid. GCP project IDs must be:"
+      echo "  - 6-30 characters"
+      echo "  - Lowercase letters, numbers, and hyphens"
+      echo "  - Start with a letter"
+      echo "  - End with a letter or number"
+      read -p "Continue anyway? [y/N]: " continue_anyway
+      if [[ ! "${continue_anyway}" =~ ^[Yy]$ ]]; then
+        exit 1
+      fi
+    fi
+    
+    # Verify project exists and is accessible
+    echo ""
+    print_info "Verifying project access: ${PROJECT_ID}"
+    if gcloud projects describe "${PROJECT_ID}" &>/dev/null; then
+      print_success "Project exists and is accessible"
+    else
+      print_error "Cannot access project ${PROJECT_ID}"
+      echo "   Please verify:"
+      echo "   1. Project ID is correct"
+      echo "   2. You have permissions to access the project"
+      echo "   3. You're authenticated: gcloud auth login"
+      exit 1
+    fi
+    
     BILLING_ACCOUNT_ID=""
+    echo ""
+    print_success "Will use existing project: ${PROJECT_ID}"
   else
     PROJECT_ID=""
-    read -p "Enter billing account ID (format: XXXXXX-XXXXXX-XXXXXX): " BILLING_ACCOUNT_ID
-    
-    if [ -z "${BILLING_ACCOUNT_ID}" ]; then
-      print_error "Billing account ID is required for new projects"
-      exit 1
-    fi
-    
-    # Validate billing account format
-    if ! [[ "${BILLING_ACCOUNT_ID}" =~ ^[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{6}$ ]]; then
-      print_error "Invalid billing account ID format. Expected: XXXXXX-XXXXXX-XXXXXX"
-      exit 1
+    echo ""
+    echo -e "${YELLOW}Creating new project (greenfield deployment)${NC}"
+    echo -e "${RED}⚠️  WARNING: This will count against your GCP project quota!${NC}"
+    echo ""
+    echo "If you're unsure about your quota, it's safer to use an existing project."
+    read -p "Are you sure you want to create a new project? [y/N]: " confirm_new_project
+    if [[ ! "${confirm_new_project}" =~ ^[Yy]$ ]]; then
+      echo ""
+      print_info "Switching to existing project mode..."
+      read -p "Enter existing GCP Project ID: " PROJECT_ID
+      if [ -z "${PROJECT_ID}" ]; then
+        print_error "Project ID is required"
+        exit 1
+      fi
+      PROJECT_ID=$(echo "${PROJECT_ID}" | xargs)
+      BILLING_ACCOUNT_ID=""
+      echo ""
+      print_success "Will use existing project: ${PROJECT_ID}"
+    else
+      read -p "Enter billing account ID (format: XXXXXX-XXXXXX-XXXXXX): " BILLING_ACCOUNT_ID
+      
+      if [ -z "${BILLING_ACCOUNT_ID}" ]; then
+        print_error "Billing account ID is required for new projects"
+        exit 1
+      fi
+      
+      # Trim whitespace
+      BILLING_ACCOUNT_ID=$(echo "${BILLING_ACCOUNT_ID}" | xargs)
+      
+      # Validate billing account format
+      if ! [[ "${BILLING_ACCOUNT_ID}" =~ ^[A-Z0-9]{6}-[A-Z0-9]{6}-[A-Z0-9]{6}$ ]]; then
+        print_error "Invalid billing account ID format. Expected: XXXXXX-XXXXXX-XXXXXX"
+        exit 1
+      fi
+      
+      echo ""
+      print_success "Will create new project with billing: ${BILLING_ACCOUNT_ID}"
     fi
   fi
+  echo ""
   
   # Admin email
   read -p "Enter admin email: " ADMIN_EMAIL
@@ -330,61 +429,139 @@ configure_free_tier() {
 generate_tfvars() {
   print_header "Generating terraform.tfvars"
   
-  cat > "${TFVARS_FILE}" <<EOF
-# terraform.tfvars
-# Generated by setup.sh on $(date)
-# 
-# This file contains your infrastructure configuration.
-# Review and modify as needed before running terraform apply.
+  # Validate configuration before generating
+  if [ -z "${PROJECT_ID:-}" ] && [ -z "${BILLING_ACCOUNT_ID:-}" ]; then
+    print_error "Either project_id (existing project) or billing_account_id (new project) must be provided"
+    exit 1
+  fi
+  
+  if [ -n "${PROJECT_ID:-}" ] && [ -n "${BILLING_ACCOUNT_ID:-}" ]; then
+    print_warning "Both project_id and billing_account_id are set."
+    echo "   When using an existing project, billing_account_id should not be set."
+    echo "   project_id: ${PROJECT_ID}"
+    echo "   billing_account_id: ${BILLING_ACCOUNT_ID}"
+    read -p "Continue with both set? [y/N]: " continue_both
+    if [[ ! "${continue_both}" =~ ^[Yy]$ ]]; then
+      exit 1
+    fi
+  fi
+  
+  # Show what will be generated
+  echo ""
+  echo "Configuration summary:"
+  if [ -n "${PROJECT_ID:-}" ]; then
+    echo "  ✓ Using existing project: ${PROJECT_ID}"
+    echo "  ✓ billing_account_id: NOT SET (not needed for existing projects)"
+  else
+    echo "  ✓ Creating new project"
+    echo "  ✓ billing_account_id: ${BILLING_ACCOUNT_ID}"
+  fi
+  echo ""
+  read -p "Generate terraform.tfvars with this configuration? [Y/n]: " confirm_generate
+  if [[ "${confirm_generate}" =~ ^[Nn]$ ]]; then
+    print_info "Cancelled. Run the script again to change configuration."
+    exit 0
+  fi
+  echo ""
+  
+  # Build the file using explicit echo statements to ensure proper quoting
+  {
+    echo "# terraform.tfvars"
+    echo "# Generated by setup.sh on $(date)"
+    echo "# "
+    echo "# This file contains your infrastructure configuration."
+    echo "# Review and modify as needed before running terraform apply."
+    echo ""
+    echo "# Project Configuration"
+    if [ -n "${PROJECT_ID:-}" ]; then
+      echo "# Using existing project (brownfield deployment)"
+      echo "project_id = \"${PROJECT_ID}\""
+      echo "# billing_account_id is not needed for existing projects"
+    else
+      echo "# Creating new project (greenfield deployment)"
+      echo "# project_id = null  # Will be auto-generated"
+      echo "billing_account_id = \"${BILLING_ACCOUNT_ID}\""
+    fi
+    echo "admin_email = \"${ADMIN_EMAIL}\""
+    echo ""
+    echo "# Application Configuration"
+    echo "app_name = \"${APP_NAME}\""
+    echo "environment = \"${ENVIRONMENT}\""
+    echo "region = \"${REGION}\""
+    echo "firestore_location = \"${FIRESTORE_LOCATION}\""
+    echo ""
+    echo "# GitHub Actions / CI/CD"
+    echo "github_repo = \"${GITHUB_REPO}\""
+    echo "github_environments = [\"dev\", \"staging\", \"prod\"]"
+    echo ""
+    echo "# FREE TIER Configuration"
+    echo "enable_free_tier_only = ${ENABLE_FREE_TIER_ONLY}"
+    echo ""
+    echo "# Cloud Run Configuration (FREE TIER DEFAULTS)"
+    echo "cloudrun_min_instances = 0  # Scale to zero (FREE)"
+    echo "cloudrun_max_instances = 2"
+    echo "cloudrun_memory = \"512Mi\"  # Gen2 requires minimum 512Mi (still within free tier)"
+    echo "cloudrun_cpu = \"1\""
+    echo ""
+    echo "# Firestore Configuration (FREE TIER DEFAULTS)"
+    echo "enable_firestore_pitr = false      # PITR costs ~\$0.10/GB/month"
+    echo "enable_firestore_backups = false   # Backups cost money"
+    echo "enable_deletion_protection = false # Easy dev cleanup"
+    echo ""
+    echo "# Identity Platform Configuration (FREE TIER DEFAULTS)"
+    echo "enable_mfa = false  # SMS costs after 10/day"
+    echo "enable_google_signin = false  # Requires OAuth credentials"
+    echo ""
+    echo "# Firebase App Check"
+    echo "enable_app_check = false  # Requires reCAPTCHA setup"
+    echo ""
+    echo "# Artifact Registry Configuration (FREE TIER DEFAULTS)"
+    echo "enable_immutable_tags = false  # Can increase storage usage"
+    echo ""
+    echo "# Optional: OAuth Credentials (if enabling Google Sign-In)"
+    echo "# google_oauth_client_id = \"YOUR_CLIENT_ID\""
+    echo "# google_oauth_client_secret = \"YOUR_CLIENT_SECRET\"  # Store in Secret Manager"
+    echo ""
+    echo "# Optional: reCAPTCHA (if enabling App Check)"
+    echo "# recaptcha_site_secret = \"YOUR_SITE_SECRET\"  # Store in Secret Manager"
+  } > "${TFVARS_FILE}"
 
-# Project Configuration
-${PROJECT_ID:+project_id = "${PROJECT_ID}"}
-${BILLING_ACCOUNT_ID:+billing_account_id = "${BILLING_ACCOUNT_ID}"}
-admin_email = "${ADMIN_EMAIL}"
-
-# Application Configuration
-app_name = "${APP_NAME}"
-environment = "${ENVIRONMENT}"
-region = "${REGION}"
-firestore_location = "${FIRESTORE_LOCATION}"
-
-# GitHub Actions / CI/CD
-github_repo = "${GITHUB_REPO}"
-github_environments = ["dev", "staging", "prod"]
-
-# FREE TIER Configuration
-enable_free_tier_only = ${ENABLE_FREE_TIER_ONLY}
-
-# Cloud Run Configuration (FREE TIER DEFAULTS)
-cloudrun_min_instances = 0  # Scale to zero (FREE)
-cloudrun_max_instances = 2
-cloudrun_memory = "512Mi"  # Gen2 requires minimum 512Mi (still within free tier)
-cloudrun_cpu = "1"
-
-# Firestore Configuration (FREE TIER DEFAULTS)
-enable_firestore_pitr = false      # PITR costs ~\$0.10/GB/month
-enable_firestore_backups = false   # Backups cost money
-enable_deletion_protection = false # Easy dev cleanup
-
-# Identity Platform Configuration (FREE TIER DEFAULTS)
-enable_mfa = false  # SMS costs after 10/day
-enable_google_signin = false  # Requires OAuth credentials
-
-# Firebase App Check
-enable_app_check = false  # Requires reCAPTCHA setup
-
-# Artifact Registry Configuration (FREE TIER DEFAULTS)
-enable_immutable_tags = false  # Can increase storage usage
-
-# Optional: OAuth Credentials (if enabling Google Sign-In)
-# google_oauth_client_id = "YOUR_CLIENT_ID"
-# google_oauth_client_secret = "YOUR_CLIENT_SECRET"  # Store in Secret Manager
-
-# Optional: reCAPTCHA (if enabling App Check)
-# recaptcha_site_secret = "YOUR_SITE_SECRET"  # Store in Secret Manager
-EOF
-
+  # Validate the generated file
+  echo ""
+  print_info "Validating generated terraform.tfvars..."
+  
+  # Check that the file has the correct configuration
+  if [ -n "${PROJECT_ID:-}" ]; then
+    if ! grep -q "project_id = \"${PROJECT_ID}\"" "${TFVARS_FILE}"; then
+      print_error "Failed to write project_id to terraform.tfvars"
+      exit 1
+    fi
+    if grep -q "^billing_account_id" "${TFVARS_FILE}"; then
+      print_warning "billing_account_id found in terraform.tfvars but project_id is set"
+      echo "   This may cause Terraform to try creating a new project."
+      echo "   Consider removing the billing_account_id line if using an existing project."
+    fi
+  else
+    if ! grep -q "billing_account_id = \"${BILLING_ACCOUNT_ID}\"" "${TFVARS_FILE}"; then
+      print_error "Failed to write billing_account_id to terraform.tfvars"
+      exit 1
+    fi
+    if grep -q "^project_id = " "${TFVARS_FILE}" && ! grep -q "^# project_id" "${TFVARS_FILE}"; then
+      print_warning "project_id found in terraform.tfvars but billing_account_id is set"
+      echo "   This may cause confusion. Terraform will use project_id if set."
+    fi
+  fi
+  
   print_success "Generated ${TFVARS_FILE}"
+  echo ""
+  echo "📋 Configuration written:"
+  if [ -n "${PROJECT_ID:-}" ]; then
+    echo "   • project_id: ${PROJECT_ID} (existing project)"
+    echo "   • billing_account_id: NOT SET"
+  else
+    echo "   • project_id: null (will create new project)"
+    echo "   • billing_account_id: ${BILLING_ACCOUNT_ID}"
+  fi
   echo ""
 }
 
@@ -464,8 +641,9 @@ show_next_steps() {
   echo "4. Apply infrastructure:"
   echo "   ${CYAN}terraform apply${NC}"
   echo ""
-  echo "5. Configure GitHub Actions (after apply):"
-  echo "   ${CYAN}./scripts/github-secrets.sh${NC}"
+  echo "5. After terraform apply, create GitHub deployment config secret:"
+  echo "   ${CYAN}cd ${PROJECT_ROOT}${NC}"
+  echo "   ${CYAN}./scripts/setup.sh create-secret dev${NC}"
   echo ""
   echo "6. View outputs:"
   echo "   ${CYAN}terraform output${NC}"
@@ -474,6 +652,117 @@ show_next_steps() {
   
   print_success "Setup complete! Ready to run terraform init && terraform apply"
   echo ""
+}
+
+# ============================================================================
+# Create GitHub Deployment Config Secret
+# ============================================================================
+# Creates the Secret Manager secret that GitHub Actions workflows use
+# This should be run AFTER terraform apply
+
+create_deployment_secret() {
+  local ENVIRONMENT="${1:-dev}"
+  local SECRET_NAME="github-deployment-config-${ENVIRONMENT}"
+  
+  print_header "Creating GitHub Deployment Config Secret"
+  
+  # Check if terraform has been applied
+  if [ ! -f "terraform.tfstate" ] && [ ! -f ".terraform/terraform.tfstate" ]; then
+    print_error "Terraform state not found. Please run 'terraform apply' first."
+    exit 1
+  fi
+  
+  # Get values from terraform outputs
+  echo "📦 Retrieving configuration from Terraform outputs..."
+  
+  # Get project_id and project_number as raw strings
+  PROJECT_ID=$(terraform output -raw project_id 2>/dev/null || echo "")
+  PROJECT_NUMBER=$(terraform output -raw project_number 2>/dev/null || echo "")
+  
+  # Get github_actions_config as JSON and parse it
+  GITHUB_ACTIONS_CONFIG_JSON=$(terraform output -json github_actions_config 2>/dev/null || echo "{}")
+  
+  # Extract values from JSON
+  REGION=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.cloud_run_region // ""' 2>/dev/null || echo "")
+  ARTIFACT_REGISTRY_URL=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.artifact_registry_url // ""' 2>/dev/null || echo "")
+  SERVICE_NAME=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.cloud_run_service_name // ""' 2>/dev/null || echo "")
+  
+  # Get Cloud Run config from outputs
+  MIN_INSTANCES=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.cloudrun_config.min_instances // 0' 2>/dev/null || echo "0")
+  MAX_INSTANCES=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.cloudrun_config.max_instances // 2' 2>/dev/null || echo "2")
+  MEMORY=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.cloudrun_config.memory // "256Mi"' 2>/dev/null || echo "256Mi")
+  CPU=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.cloudrun_config.cpu // "1"' 2>/dev/null || echo "1")
+  TIMEOUT_SECONDS=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.cloudrun_config.timeout_seconds // 300' 2>/dev/null || echo "300")
+  
+  # Debug: Show retrieved values (non-sensitive)
+  echo "   Debug: PROJECT_ID='${PROJECT_ID}'"
+  echo "   Debug: REGION='${REGION}'"
+  echo "   Debug: ARTIFACT_REGISTRY_URL='${ARTIFACT_REGISTRY_URL}'"
+  echo "   Debug: SERVICE_NAME='${SERVICE_NAME}'"
+  
+  # Validate required values
+  if [ -z "$PROJECT_ID" ] || [ "$PROJECT_ID" = "null" ]; then
+    print_error "Failed to retrieve project_id from Terraform outputs"
+    echo "   Run: terraform output project_id"
+    exit 1
+  fi
+  
+  if [ -z "$REGION" ] || [ "$REGION" = "null" ]; then
+    print_error "Failed to retrieve region from github_actions_config output"
+    echo "   Run: terraform output -json github_actions_config | jq -r '.cloud_run_region'"
+    exit 1
+  fi
+  
+  if [ -z "$ARTIFACT_REGISTRY_URL" ] || [ "$ARTIFACT_REGISTRY_URL" = "null" ]; then
+    print_error "Failed to retrieve artifact_registry_url from github_actions_config output"
+    echo "   Run: terraform output -json github_actions_config | jq -r '.artifact_registry_url'"
+    exit 1
+  fi
+  
+  # Build deployment config JSON
+  DEPLOYMENT_CONFIG=$(cat <<EOF
+{
+  "project_id": "${PROJECT_ID}",
+  "project_number": "${PROJECT_NUMBER}",
+  "region": "${REGION}",
+  "service_name": "${SERVICE_NAME}",
+  "artifact_registry_url": "${ARTIFACT_REGISTRY_URL}",
+  "cloudrun_config": {
+    "min_instances": ${MIN_INSTANCES},
+    "max_instances": ${MAX_INSTANCES},
+    "memory": "${MEMORY}",
+    "cpu": "${CPU}",
+    "timeout_seconds": ${TIMEOUT_SECONDS}
+  }
+}
+EOF
+)
+  
+  echo "🔐 Creating secret: ${SECRET_NAME}"
+  echo "   Project: ${PROJECT_ID}"
+  echo "   Region: ${REGION}"
+  echo "   Artifact Registry: ${ARTIFACT_REGISTRY_URL}"
+  
+  # Create or update secret
+  if gcloud secrets describe "${SECRET_NAME}" --project="${PROJECT_ID}" &>/dev/null; then
+    echo "   Secret exists, creating new version..."
+    echo "${DEPLOYMENT_CONFIG}" | gcloud secrets versions add "${SECRET_NAME}" \
+      --project="${PROJECT_ID}" \
+      --data-file=-
+  else
+    echo "   Creating new secret..."
+    echo "${DEPLOYMENT_CONFIG}" | gcloud secrets create "${SECRET_NAME}" \
+      --project="${PROJECT_ID}" \
+      --replication-policy="automatic" \
+      --data-file=-
+  fi
+  
+  if [ $? -eq 0 ]; then
+    print_success "Secret '${SECRET_NAME}' created/updated successfully"
+  else
+    print_error "Failed to create secret"
+    exit 1
+  fi
 }
 
 # ============================================================================
@@ -490,12 +779,34 @@ main() {
   check_tool_versions
   check_gcp_auth
   collect_user_input
+  
+  # Set quota project if project ID is known (for existing projects)
+  if [ -n "${PROJECT_ID:-}" ]; then
+    set_quota_project "${PROJECT_ID}"
+  fi
+  
   configure_free_tier
   generate_tfvars
+  
+  # Set quota project after generating tfvars (for new projects, will be set after terraform apply)
+  if [ -n "${PROJECT_ID:-}" ]; then
+    set_quota_project "${PROJECT_ID}"
+  fi
+  
   validate_config
   show_cost_estimate
   show_next_steps
 }
 
-# Run main function
-main "$@"
+# ============================================================================
+# Script Entry Point
+# ============================================================================
+
+# Check if script is being called with 'create-secret' command
+if [ "${1:-}" = "create-secret" ]; then
+  shift
+  create_deployment_secret "$@"
+else
+  # Run main setup function
+  main "$@"
+fi

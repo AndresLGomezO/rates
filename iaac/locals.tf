@@ -120,7 +120,8 @@ locals {
   # Enabling APIs is FREE (usage may cost)
 
   required_apis = [
-    # Core GCP APIs
+    # Core GCP APIs (Service Usage MUST be first - required to enable other APIs)
+    "serviceusage.googleapis.com", # Required to enable other APIs - MUST be enabled first
     "cloudresourcemanager.googleapis.com",
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",
@@ -182,7 +183,7 @@ locals {
   # Parse github_repo string (format: "owner/repo-name") into components
   # Used by GitHub Actions module for repository configuration
 
-  github_repo_parts = split("/", var.github_repo)
-  github_owner_auto = length(local.github_repo_parts) > 1 ? local.github_repo_parts[0] : ""
+  github_repo_parts     = split("/", var.github_repo)
+  github_owner_auto     = length(local.github_repo_parts) > 1 ? local.github_repo_parts[0] : ""
   github_repo_name_auto = length(local.github_repo_parts) > 1 ? local.github_repo_parts[1] : var.github_repo
 }
