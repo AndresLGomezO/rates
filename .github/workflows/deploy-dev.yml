@@ -9,10 +9,11 @@ on:
   push:
     branches:
       - develop
+      - empty-change # This is the current branch. This is temporary.
     paths:
       - "apps/**"
       - "packages/**"
-      - "Dockerfile"
+      - "apps/app/Dockerfile"
       - ".dockerignore"
   workflow_dispatch:
     inputs:
@@ -88,24 +89,37 @@ jobs:
             exit 1
           fi
           
+          # Extract and validate configuration values
+          PROJECT_ID_VAL=$(echo "$CONFIG_JSON" | jq -r '.project_id // empty')
+          REGION_VAL=$(echo "$CONFIG_JSON" | jq -r '.region // empty')
+          ARTIFACT_REGISTRY_URL_VAL=$(echo "$CONFIG_JSON" | jq -r '.artifact_registry_url // empty')
+          
+          if [ -z "$PROJECT_ID_VAL" ] || [ -z "$REGION_VAL" ] || [ -z "$ARTIFACT_REGISTRY_URL_VAL" ]; then
+            echo "❌ Error: Missing required configuration values"
+            echo "   project_id: ${PROJECT_ID_VAL:-MISSING}"
+            echo "   region: ${REGION_VAL:-MISSING}"
+            echo "   artifact_registry_url: ${ARTIFACT_REGISTRY_URL_VAL:-MISSING}"
+            exit 1
+          fi
+          
           # Extract configuration values
-          echo "project_id=$(echo "$CONFIG_JSON" | jq -r '.project_id')" >> $GITHUB_OUTPUT
-          echo "project_number=$(echo "$CONFIG_JSON" | jq -r '.project_number')" >> $GITHUB_OUTPUT
-          echo "region=$(echo "$CONFIG_JSON" | jq -r '.region')" >> $GITHUB_OUTPUT
-          echo "service_name=$(echo "$CONFIG_JSON" | jq -r '.service_name')" >> $GITHUB_OUTPUT
-          echo "artifact_registry_url=$(echo "$CONFIG_JSON" | jq -r '.artifact_registry_url')" >> $GITHUB_OUTPUT
-          echo "min_instances=$(echo "$CONFIG_JSON" | jq -r '.cloudrun_config.min_instances')" >> $GITHUB_OUTPUT
-          echo "max_instances=$(echo "$CONFIG_JSON" | jq -r '.cloudrun_config.max_instances')" >> $GITHUB_OUTPUT
-          echo "memory=$(echo "$CONFIG_JSON" | jq -r '.cloudrun_config.memory')" >> $GITHUB_OUTPUT
-          echo "cpu=$(echo "$CONFIG_JSON" | jq -r '.cloudrun_config.cpu')" >> $GITHUB_OUTPUT
-          echo "timeout_seconds=$(echo "$CONFIG_JSON" | jq -r '.cloudrun_config.timeout_seconds')" >> $GITHUB_OUTPUT
+          echo "project_id=$PROJECT_ID_VAL" >> $GITHUB_OUTPUT
+          echo "project_number=$(echo "$CONFIG_JSON" | jq -r '.project_number // ""')" >> $GITHUB_OUTPUT
+          echo "region=$REGION_VAL" >> $GITHUB_OUTPUT
+          echo "service_name=$(echo "$CONFIG_JSON" | jq -r '.service_name // ""')" >> $GITHUB_OUTPUT
+          echo "artifact_registry_url=$ARTIFACT_REGISTRY_URL_VAL" >> $GITHUB_OUTPUT
+          echo "min_instances=$(echo "$CONFIG_JSON" | jq -r '.cloudrun_config.min_instances // 0')" >> $GITHUB_OUTPUT
+          echo "max_instances=$(echo "$CONFIG_JSON" | jq -r '.cloudrun_config.max_instances // 2')" >> $GITHUB_OUTPUT
+          echo "memory=$(echo "$CONFIG_JSON" | jq -r '.cloudrun_config.memory // "256Mi"')" >> $GITHUB_OUTPUT
+          echo "cpu=$(echo "$CONFIG_JSON" | jq -r '.cloudrun_config.cpu // "1"')" >> $GITHUB_OUTPUT
+          echo "timeout_seconds=$(echo "$CONFIG_JSON" | jq -r '.cloudrun_config.timeout_seconds // 300')" >> $GITHUB_OUTPUT
           
           # Display configuration (non-sensitive)
           echo "✅ Configuration retrieved successfully"
-          echo "   Project: $(echo "$CONFIG_JSON" | jq -r '.project_id')"
-          echo "   Region: $(echo "$CONFIG_JSON" | jq -r '.region')"
-          echo "   Service: $(echo "$CONFIG_JSON" | jq -r '.service_name')"
-          echo "   Environment: ${{ vars.ENVIRONMENT }}"
+          echo "   Project: $PROJECT_ID_VAL"
+          echo "   Region: $REGION_VAL"
+          echo "   Service: $(echo "$CONFIG_JSON" | jq -r '.service_name // "N/A"')"
+          echo "   Artifact Registry: $ARTIFACT_REGISTRY_URL_VAL"
 
   # ============================================================================
   # Job 2: Build and Push Container Image
@@ -136,7 +150,10 @@ jobs:
 
       - name: Configure Docker for Artifact Registry
         run: |
-          gcloud auth configure-docker ${{ needs.retrieve-config.outputs.region }}-docker.pkg.dev --quiet
+          REGION="${{ needs.retrieve-config.outputs.region }}"
+          PROJECT_ID="${{ needs.retrieve-config.outputs.project_id }}"
+          echo "🔐 Configuring Docker for Artifact Registry in region: $${REGION}"
+          gcloud auth configure-docker $${REGION}-docker.pkg.dev --quiet
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3.7.1
@@ -144,16 +161,43 @@ jobs:
       - name: Generate image metadata
         id: meta
         run: |
+          set -euo pipefail
+          
+          PROJECT_ID="${{ needs.retrieve-config.outputs.project_id }}"
+          REGION="${{ needs.retrieve-config.outputs.region }}"
+          ARTIFACT_REGISTRY_URL="${{ needs.retrieve-config.outputs.artifact_registry_url }}"
           IMAGE_TAG="${{ github.event.inputs.image_tag || github.sha }}"
-          IMAGE_URL="${{ needs.retrieve-config.outputs.artifact_registry_url }}/app:$$${IMAGE_TAG}"
-          echo "tags=$$${IMAGE_URL}" >> $GITHUB_OUTPUT
-          echo "📦 Image URL: $$${IMAGE_URL}"
+          
+          # Validate artifact_registry_url
+          if [ -z "$${ARTIFACT_REGISTRY_URL}" ]; then
+            echo "❌ Error: artifact_registry_url is empty"
+            echo "   Project ID: $${PROJECT_ID}"
+            echo "   Region: $${REGION}"
+            exit 1
+          fi
+          
+          # Construct full image URL: <region>-docker.pkg.dev/<project-id>/<repo-id>/<image-name>:<tag>
+          IMAGE_URL="$${ARTIFACT_REGISTRY_URL}/app:$${IMAGE_TAG}"
+          
+          # Validate image URL format
+          if [[ ! "$${IMAGE_URL}" =~ ^[a-z0-9-]+-docker\.pkg\.dev/[a-z0-9-]+/[a-z0-9-]+/app: ]]; then
+            echo "❌ Error: Invalid image URL format: $${IMAGE_URL}"
+            echo "   Expected format: <region>-docker.pkg.dev/<project-id>/<repo-id>/app:<tag>"
+            exit 1
+          fi
+          
+          echo "tags=$${IMAGE_URL}" >> $GITHUB_OUTPUT
+          echo "📦 Image URL: $${IMAGE_URL}"
+          echo "   Project: $${PROJECT_ID}"
+          echo "   Region: $${REGION}"
+          echo "   Tag: $${IMAGE_TAG}"
 
       - name: Build and Push Container
         id: build
         uses: docker/build-push-action@v6.10.0
         with:
           context: .
+          file: ./apps/app/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha

@@ -201,6 +201,30 @@ check_gcp_auth() {
 }
 
 # ============================================================================
+# Set Quota Project for ADC
+# ============================================================================
+
+set_quota_project() {
+  local project_id=$1
+  
+  if [ -z "${project_id}" ]; then
+    return 0  # Skip if project ID not yet determined
+  fi
+  
+  print_info "Setting quota project for Application Default Credentials..."
+  
+  # Set quota project for ADC (required for Identity Platform API and others)
+  if gcloud auth application-default set-quota-project "${project_id}" &> /dev/null; then
+    print_success "Quota project set to: ${project_id}"
+  else
+    print_warning "Could not set quota project automatically"
+    print_info "Run manually: gcloud auth application-default set-quota-project ${project_id}"
+  fi
+  
+  echo ""
+}
+
+# ============================================================================
 # User Input Collection
 # ============================================================================
 
@@ -464,8 +488,9 @@ show_next_steps() {
   echo "4. Apply infrastructure:"
   echo "   ${CYAN}terraform apply${NC}"
   echo ""
-  echo "5. Configure GitHub Actions (after apply):"
-  echo "   ${CYAN}./scripts/github-secrets.sh${NC}"
+  echo "5. After terraform apply, create GitHub deployment config secret:"
+  echo "   ${CYAN}cd ${PROJECT_ROOT}${NC}"
+  echo "   ${CYAN}./scripts/setup.sh create-secret dev${NC}"
   echo ""
   echo "6. View outputs:"
   echo "   ${CYAN}terraform output${NC}"
@@ -474,6 +499,94 @@ show_next_steps() {
   
   print_success "Setup complete! Ready to run terraform init && terraform apply"
   echo ""
+}
+
+# ============================================================================
+# Create GitHub Deployment Config Secret
+# ============================================================================
+# Creates the Secret Manager secret that GitHub Actions workflows use
+# This should be run AFTER terraform apply
+
+create_deployment_secret() {
+  local ENVIRONMENT="${1:-dev}"
+  local SECRET_NAME="github-deployment-config-${ENVIRONMENT}"
+  
+  print_header "Creating GitHub Deployment Config Secret"
+  
+  # Check if terraform has been applied
+  if [ ! -f "terraform.tfstate" ] && [ ! -f ".terraform/terraform.tfstate" ]; then
+    print_error "Terraform state not found. Please run 'terraform apply' first."
+    exit 1
+  fi
+  
+  # Get values from terraform outputs
+  echo "📦 Retrieving configuration from Terraform outputs..."
+  
+  PROJECT_ID=$(terraform output -raw project_id 2>/dev/null || echo "")
+  REGION=$(terraform output -raw github_actions_config 2>/dev/null | jq -r '.cloud_run_region // ""' || echo "")
+  ARTIFACT_REGISTRY_URL=$(terraform output -raw github_actions_config 2>/dev/null | jq -r '.artifact_registry_url // ""' || echo "")
+  SERVICE_NAME=$(terraform output -raw github_actions_config 2>/dev/null | jq -r '.cloud_run_service_name // ""' || echo "")
+  PROJECT_NUMBER=$(terraform output -raw project_number 2>/dev/null || echo "")
+  
+  # Get Cloud Run config from outputs
+  MIN_INSTANCES=$(terraform output -raw github_actions_config 2>/dev/null | jq -r '.cloudrun_config.min_instances // 0' || echo "0")
+  MAX_INSTANCES=$(terraform output -raw github_actions_config 2>/dev/null | jq -r '.cloudrun_config.max_instances // 2' || echo "2")
+  MEMORY=$(terraform output -raw github_actions_config 2>/dev/null | jq -r '.cloudrun_config.memory // "256Mi"' || echo "256Mi")
+  CPU=$(terraform output -raw github_actions_config 2>/dev/null | jq -r '.cloudrun_config.cpu // "1"' || echo "1")
+  TIMEOUT_SECONDS=$(terraform output -raw github_actions_config 2>/dev/null | jq -r '.cloudrun_config.timeout_seconds // 300' || echo "300")
+  
+  # Validate required values
+  if [ -z "$PROJECT_ID" ] || [ -z "$REGION" ] || [ -z "$ARTIFACT_REGISTRY_URL" ]; then
+    print_error "Failed to retrieve required values from Terraform outputs"
+    echo "   Please ensure terraform apply completed successfully"
+    echo "   Run: terraform output github_actions_config"
+    exit 1
+  fi
+  
+  # Build deployment config JSON
+  DEPLOYMENT_CONFIG=$(cat <<EOF
+{
+  "project_id": "${PROJECT_ID}",
+  "project_number": "${PROJECT_NUMBER}",
+  "region": "${REGION}",
+  "service_name": "${SERVICE_NAME}",
+  "artifact_registry_url": "${ARTIFACT_REGISTRY_URL}",
+  "cloudrun_config": {
+    "min_instances": ${MIN_INSTANCES},
+    "max_instances": ${MAX_INSTANCES},
+    "memory": "${MEMORY}",
+    "cpu": "${CPU}",
+    "timeout_seconds": ${TIMEOUT_SECONDS}
+  }
+}
+EOF
+)
+  
+  echo "🔐 Creating secret: ${SECRET_NAME}"
+  echo "   Project: ${PROJECT_ID}"
+  echo "   Region: ${REGION}"
+  echo "   Artifact Registry: ${ARTIFACT_REGISTRY_URL}"
+  
+  # Create or update secret
+  if gcloud secrets describe "${SECRET_NAME}" --project="${PROJECT_ID}" &>/dev/null; then
+    echo "   Secret exists, creating new version..."
+    echo "${DEPLOYMENT_CONFIG}" | gcloud secrets versions add "${SECRET_NAME}" \
+      --project="${PROJECT_ID}" \
+      --data-file=-
+  else
+    echo "   Creating new secret..."
+    echo "${DEPLOYMENT_CONFIG}" | gcloud secrets create "${SECRET_NAME}" \
+      --project="${PROJECT_ID}" \
+      --replication-policy="automatic" \
+      --data-file=-
+  fi
+  
+  if [ $? -eq 0 ]; then
+    print_success "Secret '${SECRET_NAME}' created/updated successfully"
+  else
+    print_error "Failed to create secret"
+    exit 1
+  fi
 }
 
 # ============================================================================
@@ -490,12 +603,34 @@ main() {
   check_tool_versions
   check_gcp_auth
   collect_user_input
+  
+  # Set quota project if project ID is known (for existing projects)
+  if [ -n "${PROJECT_ID:-}" ]; then
+    set_quota_project "${PROJECT_ID}"
+  fi
+  
   configure_free_tier
   generate_tfvars
+  
+  # Set quota project after generating tfvars (for new projects, will be set after terraform apply)
+  if [ -n "${PROJECT_ID:-}" ]; then
+    set_quota_project "${PROJECT_ID}"
+  fi
+  
   validate_config
   show_cost_estimate
   show_next_steps
 }
 
-# Run main function
-main "$@"
+# ============================================================================
+# Script Entry Point
+# ============================================================================
+
+# Check if script is being called with 'create-secret' command
+if [ "${1:-}" = "create-secret" ]; then
+  shift
+  create_deployment_secret "$@"
+else
+  # Run main setup function
+  main "$@"
+fi
