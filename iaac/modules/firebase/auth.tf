@@ -12,6 +12,10 @@
 # ============================================================================
 # Configures Firebase Authentication (Identity Platform)
 # Ref: https://registry.terraform.io/providers/hashicorp/google/6.14.1/docs/resources/identity_platform_config
+#
+# NOTE: Identity Platform is automatically enabled when Firebase project is linked.
+# If it already exists, Terraform will import it automatically or you can import it manually.
+# To import: terraform import module.firebase.google_identity_platform_config.default projects/PROJECT_ID
 
 resource "google_identity_platform_config" "default" {
   project = var.project_id
@@ -41,6 +45,12 @@ resource "google_identity_platform_config" "default" {
     var.api_propagation_delay,
     google_firebase_project.default
   ]
+
+  # Lifecycle: If Identity Platform is already enabled, import it instead of failing
+  lifecycle {
+    # Allow Terraform to import existing resources
+    create_before_destroy = false
+  }
 }
 
 # ============================================================================

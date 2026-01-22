@@ -36,10 +36,15 @@ module "iam" {
   service_account_prefix = local.service_account_prefix
   labels                 = local.cost_labels
   # Runtime secrets: Firebase config secret + any additional secrets
-  runtime_secrets = concat(
-    [module.firebase.firebase_config_secret_id],
-    module.secrets.secret_ids
-  )
+  # Use compact() to remove null values and prevent Terraform crashes
+  runtime_secrets = compact(concat(
+    try([module.firebase.firebase_config_secret_id], []),
+    try(module.secrets.secret_ids, [])
+  ))
+  # CI/CD secrets: Deployment config secrets that GitHub Actions needs to read
+  cicd_secrets = [
+    "github-deployment-config-${var.environment}"
+  ]
   region                                = var.region
   artifact_registry_repository_id       = module.artifact_registry.repository_id
   artifact_registry_repository_location = module.artifact_registry.location
@@ -179,14 +184,16 @@ module "cloud_run" {
 
   # Secrets (Firebase config + any additional secrets)
   # Note: Firebase config secret is always created by Firebase module
+  # Conditionally include Firebase config secret only if it exists (not null)
   secrets = concat(
-    [
+    # Include Firebase config secret if it exists
+    try(module.firebase.firebase_config_secret_id != null ? [
       {
         name        = "FIREBASE_CONFIG"
         secret_name = module.firebase.firebase_config_secret_id
         version     = "latest"
       }
-    ],
+    ] : [], []),
     # Add additional secrets here as needed
     # Example:
     # [

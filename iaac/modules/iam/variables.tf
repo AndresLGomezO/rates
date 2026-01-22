@@ -50,3 +50,9 @@ variable "artifact_registry_repository_location" {
   description = "Artifact Registry repository location"
   default     = null
 }
+
+variable "cicd_secrets" {
+  type        = list(string)
+  description = "List of Secret Manager secret IDs that the CI/CD service account can access (e.g., deployment config secrets)"
+  default     = []
+}

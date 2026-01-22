@@ -73,14 +73,21 @@ check_version() {
   fi
   
   # Simple version comparison (assumes semantic versioning)
-  local current_major=$(echo "${current_version}" | cut -d. -f1 | tr -d '[:alpha:]')
-  local current_minor=$(echo "${current_version}" | cut -d. -f2 | tr -d '[:alpha:]')
-  local min_major=$(echo "${min_version}" | cut -d. -f1)
-  local min_minor=$(echo "${min_version}" | cut -d. -f2)
+  local current_major=$(echo "${current_version}" | cut -d. -f1 | tr -d '[:alpha:]' 2>/dev/null || echo "0")
+  local current_minor=$(echo "${current_version}" | cut -d. -f2 | tr -d '[:alpha:]' 2>/dev/null || echo "0")
+  local min_major=$(echo "${min_version}" | cut -d. -f1 2>/dev/null || echo "0")
+  local min_minor=$(echo "${min_version}" | cut -d. -f2 2>/dev/null || echo "0")
   
   # Ensure we have numeric values
-  if ! [[ "${current_major}" =~ ^[0-9]+$ ]] || ! [[ "${current_minor}" =~ ^[0-9]+$ ]]; then
+  if [ -z "${current_major}" ] || [ -z "${current_minor}" ] || \
+     ! [[ "${current_major}" =~ ^[0-9]+$ ]] || ! [[ "${current_minor}" =~ ^[0-9]+$ ]]; then
     print_warning "${tool} version format could not be parsed (continuing anyway)"
+    return 0
+  fi
+  
+  if [ -z "${min_major}" ] || [ -z "${min_minor}" ] || \
+     ! [[ "${min_major}" =~ ^[0-9]+$ ]] || ! [[ "${min_minor}" =~ ^[0-9]+$ ]]; then
+    print_warning "Minimum version format could not be parsed (continuing anyway)"
     return 0
   fi
   
@@ -645,6 +652,10 @@ show_next_steps() {
   echo "   ${CYAN}cd ${PROJECT_ROOT}${NC}"
   echo "   ${CYAN}./scripts/setup.sh create-secret dev${NC}"
   echo ""
+  echo "6. After creating the secret, grant CI/CD access:"
+  echo "   ${CYAN}terraform apply${NC}"
+  echo "   (This creates the IAM binding for the deployment config secret)"
+  echo ""
   echo "6. View outputs:"
   echo "   ${CYAN}terraform output${NC}"
   echo "   ${CYAN}terraform output cost_summary${NC}"
@@ -672,27 +683,69 @@ create_deployment_secret() {
     exit 1
   fi
   
-  # Get values from terraform outputs
+  # Get values from terraform outputs (with fallback to terraform.tfvars)
   echo "📦 Retrieving configuration from Terraform outputs..."
   
   # Get project_id and project_number as raw strings
   PROJECT_ID=$(terraform output -raw project_id 2>/dev/null || echo "")
   PROJECT_NUMBER=$(terraform output -raw project_number 2>/dev/null || echo "")
   
+  # Helper function to extract value from terraform.tfvars
+  get_tfvars_value() {
+    local key=$1
+    local default=$2
+    if [ -f "terraform.tfvars" ]; then
+      # Extract value, handling both quoted and unquoted values
+      # Pattern: key = "value" or key = value
+      local value=$(grep -E "^\s*${key}\s*=" terraform.tfvars 2>/dev/null | sed -E 's/^\s*'"${key}"'\s*=\s*"?([^"]*)"?.*/\1/' | head -1)
+      # Remove any remaining quotes
+      value=$(echo "$value" | sed -E 's/^["'\'']|["'\'']$//g')
+      echo "${value:-${default}}"
+    else
+      echo "${default}"
+    fi
+  }
+  
+  # Fallback to terraform.tfvars if outputs are not available
+  if [ -z "$PROJECT_ID" ] && [ -f "terraform.tfvars" ]; then
+    print_warning "Terraform outputs not available, reading from terraform.tfvars..."
+    PROJECT_ID=$(get_tfvars_value "project_id" "")
+  fi
+  
   # Get github_actions_config as JSON and parse it
   GITHUB_ACTIONS_CONFIG_JSON=$(terraform output -json github_actions_config 2>/dev/null || echo "{}")
   
-  # Extract values from JSON
+  # Extract values from JSON (with fallbacks)
   REGION=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.cloud_run_region // ""' 2>/dev/null || echo "")
   ARTIFACT_REGISTRY_URL=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.artifact_registry_url // ""' 2>/dev/null || echo "")
   SERVICE_NAME=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.cloud_run_service_name // ""' 2>/dev/null || echo "")
   
-  # Get Cloud Run config from outputs
+  # Fallback to terraform.tfvars for region and service name
+  if [ -z "$REGION" ] && [ -f "terraform.tfvars" ]; then
+    REGION=$(get_tfvars_value "region" "")
+  fi
+  
+  if [ -z "$SERVICE_NAME" ] && [ -f "terraform.tfvars" ]; then
+    local app_name=$(get_tfvars_value "app_name" "rates")
+    SERVICE_NAME="${app_name}-${ENVIRONMENT}"
+  fi
+  
+  # Get Cloud Run config from outputs (with defaults)
   MIN_INSTANCES=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.cloudrun_config.min_instances // 0' 2>/dev/null || echo "0")
   MAX_INSTANCES=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.cloudrun_config.max_instances // 2' 2>/dev/null || echo "2")
   MEMORY=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.cloudrun_config.memory // "256Mi"' 2>/dev/null || echo "256Mi")
   CPU=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.cloudrun_config.cpu // "1"' 2>/dev/null || echo "1")
   TIMEOUT_SECONDS=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.cloudrun_config.timeout_seconds // 300' 2>/dev/null || echo "300")
+  
+  # Build Artifact Registry URL if not available from outputs
+  if [ -z "$ARTIFACT_REGISTRY_URL" ] && [ -n "$PROJECT_ID" ] && [ -n "$REGION" ]; then
+    local repo_id=$(get_tfvars_value "artifact_registry_repository_id" "")
+    if [ -z "$repo_id" ]; then
+      local app_name=$(get_tfvars_value "app_name" "rates")
+      repo_id="${app_name}-${ENVIRONMENT}-containers"
+    fi
+    ARTIFACT_REGISTRY_URL="${REGION}-docker.pkg.dev/${PROJECT_ID}/${repo_id}"
+  fi
   
   # Debug: Show retrieved values (non-sensitive)
   echo "   Debug: PROJECT_ID='${PROJECT_ID}'"
@@ -702,21 +755,25 @@ create_deployment_secret() {
   
   # Validate required values
   if [ -z "$PROJECT_ID" ] || [ "$PROJECT_ID" = "null" ]; then
-    print_error "Failed to retrieve project_id from Terraform outputs"
-    echo "   Run: terraform output project_id"
+    print_error "Failed to retrieve project_id from Terraform outputs or terraform.tfvars"
+    echo "   Please ensure terraform.tfvars exists with project_id set, or run 'terraform apply' first"
     exit 1
   fi
   
   if [ -z "$REGION" ] || [ "$REGION" = "null" ]; then
-    print_error "Failed to retrieve region from github_actions_config output"
-    echo "   Run: terraform output -json github_actions_config | jq -r '.cloud_run_region'"
+    print_error "Failed to retrieve region from Terraform outputs or terraform.tfvars"
+    echo "   Please ensure terraform.tfvars exists with region set, or run 'terraform apply' first"
     exit 1
   fi
   
   if [ -z "$ARTIFACT_REGISTRY_URL" ] || [ "$ARTIFACT_REGISTRY_URL" = "null" ]; then
-    print_error "Failed to retrieve artifact_registry_url from github_actions_config output"
-    echo "   Run: terraform output -json github_actions_config | jq -r '.artifact_registry_url'"
-    exit 1
+    print_warning "Could not retrieve artifact_registry_url from outputs"
+    print_info "Will construct from project_id and region (may need to be updated after terraform apply)"
+    # Construct a default URL (will be updated after terraform apply)
+    local app_name=$(grep -E '^\s*app_name\s*=' terraform.tfvars 2>/dev/null | sed -E 's/.*app_name\s*=\s*"([^"]+)".*/\1/' | head -1 || echo "rates")
+    local repo_id="${app_name}-${ENVIRONMENT}-containers"
+    ARTIFACT_REGISTRY_URL="${REGION}-docker.pkg.dev/${PROJECT_ID}/${repo_id}"
+    print_info "Using constructed URL: ${ARTIFACT_REGISTRY_URL}"
   fi
   
   # Build deployment config JSON
@@ -760,19 +817,51 @@ EOF
   if [ $? -eq 0 ]; then
     print_success "Secret '${SECRET_NAME}' created/updated successfully"
     echo ""
-    echo "📋 Next steps: Configure GitHub repository secrets"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📋 Next Steps"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
-    echo "1. Go to: https://github.com/${GITHUB_REPO}/settings/secrets/actions"
+    echo "1. ${CYAN}Grant CI/CD service account access to the secret${NC}"
+    echo "   Run: ${GREEN}terraform apply${NC}"
+    echo "   This will create the IAM binding that allows GitHub Actions to read this secret."
     echo ""
-    echo "2. Add the following secrets:"
+    # Get GitHub repo from terraform.tfvars or outputs for the next steps message
+    local github_repo=$(get_tfvars_value "github_repo" "")
+    if [ -z "$github_repo" ]; then
+      # Try to get from terraform outputs
+      github_repo=$(terraform output -raw github_repo 2>/dev/null || echo "")
+    fi
+    
+    if [ -n "$github_repo" ] && [ "$github_repo" != "null" ]; then
+      echo "2. ${CYAN}Configure GitHub repository secrets${NC}"
+      echo "   Go to: https://github.com/${github_repo}/settings/secrets/actions"
+      echo ""
+      echo "   Add the following secrets:"
+      echo ""
+      echo "   ${CYAN}WIF_PROVIDER${NC}"
+      echo "   Value: (retrieve from terraform output workload_identity)"
+      echo ""
+      echo "   ${CYAN}WIF_SERVICE_ACCOUNT${NC}"
+      echo "   Value: (retrieve from terraform output service_accounts)"
+      echo ""
+    else
+      echo "2. ${CYAN}Configure GitHub repository secrets${NC}"
+      echo "   Go to: https://github.com/YOUR_REPO/settings/secrets/actions"
+      echo ""
+      echo "   Add the following secrets (retrieve values from terraform outputs):"
+      echo ""
+      echo "   ${CYAN}WIF_PROVIDER${NC}"
+      echo "   Run: terraform output -json workload_identity | jq -r '.github_actions_config.workload_identity_provider'"
+      echo ""
+      echo "   ${CYAN}WIF_SERVICE_ACCOUNT${NC}"
+      echo "   Run: terraform output -json service_accounts | jq -r '.cicd.email'"
+      echo ""
+    fi
+    echo "3. After completing steps 1 and 2, your GitHub Actions workflows will be able to:"
+    echo "   • Authenticate via Workload Identity Federation"
+    echo "   • Retrieve deployment configuration from Secret Manager"
     echo ""
-    echo "   ${CYAN}WIF_PROVIDER${NC}"
-    echo "   Value: ${WORKLOAD_IDENTITY_PROVIDER}"
-    echo ""
-    echo "   ${CYAN}WIF_SERVICE_ACCOUNT${NC}"
-    echo "   Value: ${SERVICE_ACCOUNT_EMAIL}"
-    echo ""
-    echo "3. After adding secrets, your GitHub Actions workflows will be able to authenticate."
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
   else
     print_error "Failed to create secret"
@@ -1009,7 +1098,203 @@ main() {
   
   validate_config
   show_cost_estimate
+  
+  # If using existing project, offer to import existing resources
+  if [ -n "${PROJECT_ID:-}" ]; then
+    echo ""
+    read -p "Do you want to check for and import existing resources? [Y/n]: " import_existing
+    import_existing=${import_existing:-Y}
+    
+    if [[ "${import_existing}" =~ ^[Yy]$ ]]; then
+      # Check if terraform is initialized
+      if [ -d "${PROJECT_ROOT}/.terraform" ]; then
+        echo ""
+        import_existing_resources "${PROJECT_ID}" "${ENVIRONMENT}"
+      else
+        echo ""
+        print_info "Terraform not initialized yet. Run 'terraform init' first, then:"
+        echo "   ${CYAN}./scripts/setup.sh auto-import${NC}"
+        echo ""
+      fi
+    fi
+  fi
+  
   show_next_steps
+}
+
+# ============================================================================
+# Script Entry Point
+# ============================================================================
+
+# ============================================================================
+# Import Existing Resources
+# ============================================================================
+# Automatically detects and imports existing GCP resources into Terraform state
+# This prevents "already exists" errors when running terraform apply
+
+import_existing_resources() {
+  local PROJECT_ID="${1:-}"
+  local ENVIRONMENT="${2:-dev}"
+  
+  if [ -z "$PROJECT_ID" ]; then
+    print_error "Project ID is required for import"
+    return 1
+  fi
+  
+  print_header "Checking for Existing Resources"
+  
+  # Check if terraform has been initialized
+  if [ ! -d ".terraform" ]; then
+    print_warning "Terraform not initialized. Skipping import check."
+    return 0
+  fi
+  
+  echo ""
+  echo "Checking for existing resources in project: ${PROJECT_ID}"
+  echo "This will import any existing resources to prevent 'already exists' errors."
+  echo ""
+  
+  local IMPORTED_COUNT=0
+  local SKIPPED_COUNT=0
+  
+  # 1. Firebase config secret
+  print_info "Checking Firebase config secret..."
+  if gcloud secrets describe "firebase-client-config-${ENVIRONMENT}" --project="${PROJECT_ID}" &>/dev/null; then
+    local IMPORT_OUTPUT=$(terraform import module.firebase.google_secret_manager_secret.firebase_config "projects/${PROJECT_ID}/secrets/firebase-client-config-${ENVIRONMENT}" 2>&1)
+    if [ $? -eq 0 ]; then
+      print_success "✓ Firebase config secret imported"
+      ((IMPORTED_COUNT++))
+    else
+      if echo "$IMPORT_OUTPUT" | grep -q "already managed"; then
+        print_warning "  Firebase config secret already in state"
+      else
+        print_warning "  Firebase config secret exists but import failed"
+        echo "    Error: ${IMPORT_OUTPUT}"
+      fi
+      ((SKIPPED_COUNT++))
+    fi
+  else
+    echo "  Secret doesn't exist (will be created)"
+  fi
+  
+  # 2. Deployment config secret
+  print_info "Checking deployment config secret..."
+  if gcloud secrets describe "github-deployment-config-${ENVIRONMENT}" --project="${PROJECT_ID}" &>/dev/null; then
+    # Try to import - note the escaped brackets for the map key
+    if terraform import "module.secrets.google_secret_manager_secret.additional_secrets[\"github-deployment-config-${ENVIRONMENT}\"]" "projects/${PROJECT_ID}/secrets/github-deployment-config-${ENVIRONMENT}" 2>/dev/null; then
+      print_success "✓ Deployment config secret imported"
+      ((IMPORTED_COUNT++))
+    else
+      print_warning "  Deployment config secret exists but may already be in state"
+      ((SKIPPED_COUNT++))
+    fi
+  else
+    echo "  Secret doesn't exist (will be created)"
+  fi
+  
+  # 3. Artifact Registry repository
+  print_info "Checking Artifact Registry repository..."
+  local REPO_NAME="rates-${ENVIRONMENT}-containers"
+  # Get region from terraform.tfvars or use default
+  local REGION=$(grep -E '^region\s*=' terraform.tfvars 2>/dev/null | sed 's/.*= *"\(.*\)".*/\1/' || echo "us-central1")
+  if gcloud artifacts repositories describe "${REPO_NAME}" --location="${REGION}" --project="${PROJECT_ID}" &>/dev/null; then
+    if terraform import module.artifact_registry.google_artifact_registry_repository.containers "projects/${PROJECT_ID}/locations/${REGION}/repositories/${REPO_NAME}" 2>/dev/null; then
+      print_success "✓ Artifact Registry repository imported"
+      ((IMPORTED_COUNT++))
+    else
+      # Show the actual error for debugging
+      local IMPORT_ERROR=$(terraform import module.artifact_registry.google_artifact_registry_repository.containers "projects/${PROJECT_ID}/locations/${REGION}/repositories/${REPO_NAME}" 2>&1)
+      if echo "$IMPORT_ERROR" | grep -q "already managed"; then
+        print_warning "  Repository already in state"
+      else
+        print_warning "  Repository exists but import failed: ${IMPORT_ERROR}"
+      fi
+      ((SKIPPED_COUNT++))
+    fi
+  else
+    echo "  Repository doesn't exist (will be created)"
+  fi
+  
+  # 4. Firestore database
+  print_info "Checking Firestore database..."
+  if gcloud firestore databases describe --database="(default)" --project="${PROJECT_ID}" &>/dev/null 2>&1; then
+    local IMPORT_OUTPUT=$(terraform import module.firebase.google_firestore_database.default "projects/${PROJECT_ID}/databases/(default)" 2>&1)
+    if [ $? -eq 0 ]; then
+      print_success "✓ Firestore database imported"
+      ((IMPORTED_COUNT++))
+    else
+      if echo "$IMPORT_OUTPUT" | grep -q "already managed"; then
+        print_warning "  Firestore database already in state"
+      else
+        print_warning "  Firestore database exists but import failed"
+        echo "    Error: ${IMPORT_OUTPUT}"
+      fi
+      ((SKIPPED_COUNT++))
+    fi
+  else
+    echo "  Database doesn't exist (will be created)"
+  fi
+  
+  # 5. Identity Platform config (check if enabled)
+  print_info "Checking Identity Platform..."
+  if gcloud identity config describe --project="${PROJECT_ID}" &>/dev/null 2>&1; then
+    local IMPORT_OUTPUT=$(terraform import module.firebase.google_identity_platform_config.default "projects/${PROJECT_ID}/identityPlatform" 2>&1)
+    if [ $? -eq 0 ]; then
+      print_success "✓ Identity Platform config imported"
+      ((IMPORTED_COUNT++))
+    else
+      if echo "$IMPORT_OUTPUT" | grep -q "already managed"; then
+        print_warning "  Identity Platform already in state"
+      else
+        print_warning "  Identity Platform exists but import failed"
+        echo "    Error: ${IMPORT_OUTPUT}"
+      fi
+      ((SKIPPED_COUNT++))
+    fi
+  else
+    echo "  Identity Platform not configured (will be created)"
+  fi
+  
+  echo ""
+  if [ $IMPORTED_COUNT -gt 0 ]; then
+    print_success "Imported ${IMPORTED_COUNT} existing resource(s)"
+  fi
+  if [ $SKIPPED_COUNT -gt 0 ]; then
+    print_info "Skipped ${SKIPPED_COUNT} resource(s) (already in state or not found)"
+  fi
+  if [ $IMPORTED_COUNT -eq 0 ] && [ $SKIPPED_COUNT -eq 0 ]; then
+    print_info "No existing resources found to import"
+  fi
+  echo ""
+}
+
+# ============================================================================
+# Auto-Import Command
+# ============================================================================
+# Standalone command to auto-import existing resources
+
+auto_import() {
+  print_header "Auto-Import Existing Resources"
+  
+  # Check if terraform has been initialized
+  if [ ! -d ".terraform" ]; then
+    print_error "Terraform not initialized. Run 'terraform init' first."
+    exit 1
+  fi
+  
+  # Get project ID and environment from terraform.tfvars or terraform state
+  PROJECT_ID=$(terraform output -raw project_id 2>/dev/null || grep -E '^project_id\s*=' terraform.tfvars 2>/dev/null | sed 's/.*= *"\(.*\)".*/\1/' || echo "")
+  ENVIRONMENT=$(grep -E '^environment\s*=' terraform.tfvars 2>/dev/null | sed 's/.*= *"\(.*\)".*/\1/' || echo "dev")
+  
+  if [ -z "$PROJECT_ID" ] || [ "$PROJECT_ID" = "null" ]; then
+    print_error "Failed to retrieve project_id."
+    read -p "Enter project ID: " PROJECT_ID
+    if [ -z "$PROJECT_ID" ]; then
+      exit 1
+    fi
+  fi
+  
+  import_existing_resources "${PROJECT_ID}" "${ENVIRONMENT}"
 }
 
 # ============================================================================
@@ -1025,8 +1310,12 @@ case "${1:-}" in
   "show-secrets")
     show_github_secrets
     ;;
-  "set-secrets")
-    set_github_secrets
+  "auto-import")
+    auto_import
+    ;;
+  "import")
+    # Legacy command - redirect to auto-import
+    auto_import
     ;;
   *)
     # Run main setup function

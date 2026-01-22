@@ -57,4 +57,15 @@ resource "google_artifact_registry_repository" "containers" {
   }
 
   labels = local.repository_labels
+
+  # Lifecycle: If repository already exists, use it instead of failing
+  lifecycle {
+    create_before_destroy = false
+    # Ignore changes to immutable fields if repository was created outside Terraform
+    ignore_changes = [
+      format,
+      mode,
+      location
+    ]
+  }
 }

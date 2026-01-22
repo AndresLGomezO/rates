@@ -39,6 +39,18 @@ resource "google_firestore_database" "default" {
   depends_on = [
     var.api_propagation_delay
   ]
+
+  # Lifecycle: If database already exists, import it instead of failing
+  lifecycle {
+    create_before_destroy = false
+    # Ignore changes to location_id and type (immutable after creation)
+    ignore_changes = [
+      location_id,
+      type,
+      concurrency_mode,
+      app_engine_integration_mode
+    ]
+  }
 }
 
 # ============================================================================

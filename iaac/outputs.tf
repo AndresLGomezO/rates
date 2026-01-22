@@ -237,9 +237,9 @@ output "backend_config" {
   value = {
     project_id             = module.project.project_id
     region                 = var.region
-    firestore_database     = module.firebase.firestore_database.name
+    firestore_database     = try(module.firebase.firestore_database.name, "(default)")
     runtime_sa_email       = module.iam.cloudrun_runtime_service_account
-    firebase_config_secret = module.firebase.firebase_config_secret_id
+    firebase_config_secret = try(module.firebase.firebase_config_secret_id, null)
     free_tier_mode         = var.enable_free_tier_only
   }
 }

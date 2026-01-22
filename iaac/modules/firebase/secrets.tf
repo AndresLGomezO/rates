@@ -47,6 +47,13 @@ resource "google_secret_manager_secret" "firebase_config" {
 
   # Wait for Firebase Web App to be created
   depends_on = [google_firebase_web_app.default]
+
+  # Lifecycle: If secret already exists, use it instead of failing
+  lifecycle {
+    create_before_destroy = false
+    # Ignore label changes if secret was created outside Terraform
+    ignore_changes = [labels]
+  }
 }
 
 # Secret version containing Firebase client configuration

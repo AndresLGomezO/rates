@@ -243,6 +243,48 @@ run_validate() {
 }
 
 # ============================================================================
+# Step 3.5: Import Existing Resources (if any)
+# ============================================================================
+
+run_import_existing() {
+  print_header "Step 3.5: Import Existing Resources"
+
+  cd "${IAAC_DIR}"
+
+  local import_script="${IAAC_DIR}/scripts/import-existing.sh"
+  
+  if [ ! -f "${import_script}" ]; then
+    print_warning "Import script not found, skipping import step"
+    return 0
+  fi
+
+  print_info "Checking for existing resources to import..."
+  print_info "This prevents 'already exists' errors during apply."
+  echo ""
+
+  if [ "${AUTO_APPROVE}" = false ]; then
+    read -p "Do you want to import existing resources? [Y/n]: " import_resources
+    import_resources=${import_resources:-Y}
+    
+    if [[ ! "${import_resources}" =~ ^[Yy]$ ]]; then
+      print_info "Skipping import step"
+      return 0
+    fi
+  fi
+
+  echo ""
+  print_step "Running import script..."
+
+  if bash "${import_script}"; then
+    print_success "Import process completed"
+  else
+    print_warning "Some resources could not be imported (this is OK if they don't exist)"
+  fi
+
+  echo ""
+}
+
+# ============================================================================
 # Step 4: Plan Changes
 # ============================================================================
 
@@ -397,6 +439,7 @@ main() {
   run_setup
   run_init
   run_validate
+  run_import_existing
   run_plan
   run_apply
   show_summary
