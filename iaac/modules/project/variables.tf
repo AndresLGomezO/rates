@@ -1,25 +1,58 @@
-variable "project_id_dev" {
-  description = "GCP Project ID for development"
-  type        = string
-}
+# modules/project/variables.tf
+# Project module input variables
 
-variable "project_id_staging" {
-  description = "GCP Project ID for staging"
+variable "project_id" {
   type        = string
-}
-
-variable "project_id_prod" {
-  description = "GCP Project ID for production"
-  type        = string
+  description = "GCP Project ID. If null, a new project will be created."
+  default     = null
 }
 
 variable "billing_account_id" {
-  description = "GCP Billing Account ID"
   type        = string
+  description = "GCP Billing Account ID (required for new projects)"
+  default     = null
 }
 
-variable "organization_id" {
-  description = "GCP Organization ID (optional)"
+variable "org_id" {
   type        = string
-  default     = ""
+  description = "GCP Organization ID (optional, for project hierarchy)"
+  default     = null
+}
+
+variable "folder_id" {
+  type        = string
+  description = "GCP Folder ID (optional, for project hierarchy)"
+  default     = null
+}
+
+variable "admin_email" {
+  type        = string
+  description = "Email address of the administrator"
+}
+
+variable "app_name" {
+  type        = string
+  description = "Application name for resource naming"
+}
+
+variable "environment" {
+  type        = string
+  description = "Environment name (dev, staging, prod)"
+}
+
+variable "region" {
+  type        = string
+  description = "GCP region for resources"
+}
+
+variable "labels" {
+  type        = map(string)
+  description = "Labels to apply to the project"
+  default     = {}
+}
+
+variable "required_apis" {
+  type        = list(string)
+  description = "List of GCP APIs to enable"
+  default     = []
 }

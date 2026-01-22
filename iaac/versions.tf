@@ -1,26 +1,113 @@
+# versions.tf
+# Last updated: January 2025
+# Terraform Registry: https://registry.terraform.io/
+#
+# This file pins all provider versions to ensure reproducible infrastructure.
+# Minimum Terraform version: 1.6.0 (for check blocks and improved validation)
+# Recommended Terraform version: 1.9.8
+
 terraform {
-  # Note: repo authors may use newer Terraform, but this constraint supports local installs like 1.5.x too.
-  required_version = ">= 1.5.0, < 2.0.0"
+  # Minimum version for check blocks, testing framework, and improved validation
+  # Ref: https://developer.hashicorp.com/terraform/language/upgrade-guides
+  required_version = ">= 1.6.0, < 2.0.0"
 
   required_providers {
+    # Google Cloud Provider
+    # Changelog: https://github.com/hashicorp/terraform-provider-google/blob/main/CHANGELOG.md
+    # Registry: https://registry.terraform.io/providers/hashicorp/google/6.14.1/docs
     google = {
       source  = "hashicorp/google"
-      version = "~> 6.0"
+      version = "~> 6.14.0"
     }
+
+    # Google Beta Provider (required for Firebase resources)
+    # Changelog: https://github.com/hashicorp/terraform-provider-google-beta/blob/main/CHANGELOG.md
+    # Registry: https://registry.terraform.io/providers/hashicorp/google-beta/6.14.1/docs
     google-beta = {
       source  = "hashicorp/google-beta"
-      version = "~> 6.0"
+      version = "~> 6.14.0"
     }
+
+    # Random Provider (for unique naming and resource IDs)
+    # Registry: https://registry.terraform.io/providers/hashicorp/random/latest
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6.0"
+    }
+
+    # Time Provider (for delays and timestamps)
+    # Registry: https://registry.terraform.io/providers/hashicorp/time/latest
     time = {
       source  = "hashicorp/time"
-      version = "~> 0.12"
+      version = "~> 0.12.0"
+    }
+
+    # Null Provider (for triggers and local-exec)
+    # Registry: https://registry.terraform.io/providers/hashicorp/null/latest
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.2.0"
+    }
+
+    # GitHub Provider (for GitHub Actions automation)
+    # Changelog: https://github.com/integrations/terraform-provider-github/blob/main/CHANGELOG.md
+    # Registry: https://registry.terraform.io/providers/integrations/github/latest/docs
+    github = {
+      source  = "integrations/github"
+      version = "~> 6.4.0"
     }
   }
+}
 
-  # Optional: Configure remote state backend
-  # Uncomment and configure if you want to use remote state
-  # backend "gcs" {
-  #   bucket = var.tf_state_bucket
-  #   prefix = var.tf_state_prefix
-  # }
+# Provider configurations
+# Note: project_id will be resolved by the project module (Step 1.3)
+# For initial setup, providers use application default credentials
+# Run: gcloud auth application-default login
+
+provider "google" {
+  project = var.project_id # Will be set by project module or provided directly
+  region  = var.region
+
+  # Set quota project for Application Default Credentials (ADC)
+  # This is required when using ADC locally with APIs that require a quota project
+  # Ref: https://cloud.google.com/docs/authentication/adc-troubleshooting/user-creds
+  user_project_override = true
+  billing_project       = var.project_id
+
+  # Recommended: Use application default credentials
+  # Run: gcloud auth application-default login
+  # Ref: https://cloud.google.com/docs/authentication/application-default-credentials
+}
+
+provider "google-beta" {
+  project = var.project_id # Will be set by project module or provided directly
+  region  = var.region
+
+  # Set quota project for Application Default Credentials (ADC)
+  # This is required when using ADC locally with APIs that require a quota project
+  # Ref: https://cloud.google.com/docs/authentication/adc-troubleshooting/user-creds
+  user_project_override = true
+  billing_project       = var.project_id
+
+  # Required for Firebase resources (google_firebase_project, etc.)
+}
+
+# GitHub Provider Configuration
+# Authentication via GITHUB_TOKEN environment variable or GitHub App
+# For local development: export GITHUB_TOKEN=$(gh auth token)
+# For CI/CD: Use GitHub App or Personal Access Token
+# Ref: https://registry.terraform.io/providers/integrations/github/latest/docs#authentication
+provider "github" {
+  # Token can be provided via:
+  # 1. GITHUB_TOKEN environment variable (recommended)
+  # 2. token argument (not recommended - use env var instead)
+  # 3. GitHub App authentication (advanced)
+  #
+  # To get a token:
+  # - Personal Access Token: https://github.com/settings/tokens
+  # - GitHub CLI: gh auth token
+  # - Required scopes: repo, admin:repo_hook, admin:org (if org repo)
+  #
+  # Note: Token is only needed for Terraform apply (to configure GitHub)
+  # GitHub Actions workflows use WIF (keyless) for GCP authentication
 }

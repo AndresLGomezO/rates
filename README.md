@@ -200,6 +200,46 @@ For detailed Firebase usage, see:
 - `packages/firebase-client/README.md` - Complete API documentation
 - `packages/firebase-client/src/example-usage.ts` - Usage examples
 
+## Infrastructure as Code
+
+This repository includes Terraform configuration for automated infrastructure provisioning on Google Cloud Platform.
+
+### Quick Start
+
+1. **Configure Terraform**:
+
+   ```bash
+   cd iaac
+   cp terraform.tfvars.example terraform.tfvars
+   # Edit terraform.tfvars with your values
+   ```
+
+2. **Run Setup Script**:
+
+   ```bash
+   ./scripts/setup.sh
+   ```
+
+3. **Deploy Infrastructure**:
+   ```bash
+   terraform apply
+   ```
+
+### Features
+
+- ✅ **GCP Project** - Automated project creation
+- ✅ **Firebase** - Firestore, Auth, App Check
+- ✅ **Cloud Run** - Serverless container hosting (FREE TIER optimized)
+- ✅ **Artifact Registry** - Container image repository
+- ✅ **GitHub Actions** - Automated deployment pipeline with keyless authentication
+- ✅ **Secret Manager** - Secure configuration storage
+
+### Documentation
+
+- [Infrastructure README](./iaac/README.md) - Infrastructure overview
+- [GitHub Actions Setup](./docs/GITHUB_ACTIONS_SETUP.md) - Deployment pipeline setup
+- [Dynamic Configuration](./docs/DYNAMIC_CONFIG.md) - Configuration management
+
 ## Using Branches
 
 This monorepo is designed to be used as a base structure. You can create branches for different application implementations:
