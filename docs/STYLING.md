@@ -77,7 +77,7 @@ apps/auth-app/
    - Adds light theme base layer overrides
    - Purpose: Wrapper to import shared styles + light theme customization
 
-**Migration Status:** All component CSS files have been migrated to Tailwind. See `docs/TAILWIND_MIGRATION_TRACKER.md` for details (100% complete).
+**Migration Status:** All component CSS files have been migrated to Tailwind. Historical migration helper docs have been consolidated into this file.
 
 ### Class Naming and Ordering Conventions
 
@@ -1502,27 +1502,87 @@ className = 'ease-[cubic-bezier(0.4,0,0.2,1)]';
 
 ---
 
-## Migration Status
+## 9. Tailwind Migration History (Summary)
 
-**Current Status:** 100% Complete ✅
+This section summarizes the previous Tailwind migration helper docs (`TAILWIND_SETUP.md`, `TAILWIND_MAPPING_STRATEGY.md`, `TAILWIND_COLOR_MAPPING.md`, `CSS_AUDIT.md`, `TAILWIND_CLEANUP_REPORT.md`), which have now been consolidated here.
 
-All components have been migrated from CSS files to Tailwind utility classes. See `docs/TAILWIND_MIGRATION_TRACKER.md` for detailed migration history.
+### 9.1 Original CSS Audit (Now Migrated)
 
-**Remaining CSS Files:** 3 files (all required for Tailwind setup)
+- Main CSS files were:
+  - `Dashboard.css`, `AccountDetail.css`, `PrivateLayout.css`, `PublicLayout.css`
+  - `SearchBar.css`, `Filters.css`, `Modal.css`
+  - `CreateAccountForm.css`, `NewAccountWizard.css`, `LogPaymentModal.css`
+  - `apps/app/src/index.css`, `apps/auth-app/src/index.css`
+- Patterns identified:
+  - Heavy reuse of glassmorphism (rgba white/black with many opacity levels)
+  - Consistent brand gradients and semantic colors (success/warning/danger/info)
+  - Mobile‑first media queries around 480/720/768/1024/1280px
+  - Several shared “card” and “badge” patterns used across pages
+- Difficulty rating:
+  - **Easy**: `PublicLayout.css`, `Filters.css`, `CreateAccountForm.css`, `LogPaymentModal.css`
+  - **Medium**: `AccountDetail.css`, `NewAccountWizard.css`, `Modal.css`, both `index.css`
+  - **Hard**: `Dashboard.css`, `PrivateLayout.css`
 
-- `packages/ui-theme/styles.css` - Design system definitions
-- `apps/app/src/index.css` - Import wrapper
-- `apps/auth-app/src/index.css` - Import wrapper + light theme
+All of these have been migrated to Tailwind utilities and/or design‑system classes; only the three CSS entrypoints listed earlier remain.
 
----
+### 9.2 Tailwind Setup & Mapping Strategy
 
-## References
+The migration followed a three‑phase plan:
 
-- **Migration Tracker:** `docs/TAILWIND_MIGRATION_TRACKER.md`
-- **Tailwind Config:** `packages/ui-theme/tailwind.config.cjs`
-- **Design System:** `packages/ui-theme/styles.css`
-- **Project Rules:** `.cursorrules`
+- **Phase 1 – Setup**
+  - Introduced `packages/ui-theme` with shared `tailwind.config.cjs`, `styles.css`, and `tokens.ts`.
+  - Extended that preset from both apps’ `tailwind.config.cjs`.
+  - Switched app `index.css` files to `@import '@rates/ui-theme/styles.css';`.
 
----
+- **Phase 2 – Gradual Migration**
+  - Migrated easy, isolated CSS files first (Public layout, filters, form components).
+  - Then moved medium/complex files page‑by‑page, extracting shared patterns into:
+    - Theme tokens in the shared Tailwind config
+    - Component classes in `styles.css` (e.g. `.ds-card`, `.glass-panel`, `.ds-button`)
 
-**Last Updated:** 2026-01-20
+- **Phase 3 – Cleanup**
+  - Removed page/component CSS files once fully replaced by Tailwind.
+  - Audited Tailwind config for unused custom values (many `glass-*`, custom font sizes, and legacy light‑theme colors are candidates to remove).
+
+Key mapping strategies:
+
+- **Colors**: Grouped by semantics (primary/brand, accent, success/warning/danger, neutrals, glass backgrounds) and mapped exact hex/rgba values into named tokens wherever they are still used.
+- **Typography**: Mapped common font sizes to the standard Tailwind scale and removed most bespoke size tokens in favor of `text-xs`–`text-4xl` and the letter‑spacing/line‑height extensions defined earlier.
+- **Spacing**: Normalized margins/gaps/padding to the Tailwind spacing scale, allowing arbitrary values only when there wasn’t a clean match.
+- **Breakpoints**: Collapsed CSS media queries into the Tailwind `screens` configuration documented above, adding only a handful of custom keys (`xs`, `md-sm`, `dashboard-*`) where necessary.
+
+### 9.3 Color Mapping (Practical View)
+
+The old `TAILWIND_COLOR_MAPPING.md` is now reflected in:
+
+- The **color palette** section above (primary/accent/semantic/neutral/background).
+- The **tokens** in `packages/ui-theme/tailwind.config.cjs` and `tokens.ts`.
+
+When migrating or adding components:
+
+- Prefer **semantic colors**:
+  - Status: `success-*`, `warning-*`, `danger-*`, `info-*`
+  - Neutral text/surfaces: `neutral-*` or `neutral-auth-*`
+- Prefer **brand colors**:
+  - Primary: `bg-primary-500`, `text-primary-400`, gradient variants (`from-primary-gradient-start`, `to-primary-gradient-end`)
+- Prefer **glass surfaces**:
+  - `bg-white/5`, `bg-white/10`, `bg-white/15`, `border-white/10` etc., rather than inventing new rgba values.
+
+### 9.4 Cleanup Recommendations (From Tailwind Cleanup Report)
+
+High‑impact follow‑ups (optional but recommended):
+
+- **Use design‑system classes instead of ad‑hoc combinations**:
+  - Replace repeated glassmorphism patterns with `.ds-card`, `.ds-card-medium`, `.glass-panel`, `.glass-sidebar`.
+  - Replace custom gradient/button combinations with `.ds-button`, `.ds-button-secondary`, `.ds-button-gradient`.
+- **Trim unused Tailwind config values**:
+  - Remove truly unused custom colors (legacy light‑theme values, unused gradient variants).
+  - Remove unused custom font sizes and spacing tokens once confirmed by search.
+- **Enforce class ordering automatically**:
+  - Add `eslint-plugin-tailwindcss` and enable its ordering rule to keep the manual ordering convention from drifting.
+
+### 9.5 Current Status (After Consolidation)
+
+- All UI styling is Tailwind‑based plus the shared `@rates/ui-theme` design system.
+- Only three CSS files remain (shared styles + two import wrappers).
+- Former helper docs for Tailwind migration, mapping, and cleanup have been merged into this section and removed to keep the documentation surface small.

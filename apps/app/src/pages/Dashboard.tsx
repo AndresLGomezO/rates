@@ -990,7 +990,7 @@ export default function Dashboard() {
                   key={periodKey}
                   className={`ds-card-medium relative overflow-hidden before:absolute before:left-0 before:right-0 before:top-0 before:h-0.5 before:bg-gradient-to-r before:from-[#1e40af] before:via-[#1e3a8a] before:via-[#334155] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:border-neutral-600/50 hover:shadow-[0_8px_24px_0_rgba(10,14,26,0.5)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] hover:before:opacity-100 ${
                     isExpanded
-                      ? 'border-neutral-600/50 shadow-[0_12px_32px_0_rgba(10,14,26,0.6)] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)] before:opacity-100'
+                      ? 'border-neutral-600/50 shadow-[0_12px_32px_0_rgba(10,14,26,0.6)] before:opacity-100'
                       : 'border-white/15'
                   }`}
                 >

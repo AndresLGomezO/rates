@@ -248,3 +248,17 @@ This monorepo is designed to be used as a base structure. You can create branche
 2. Modify or extend the `apps/app` application
 3. Or create new applications under `apps/`
 4. Each branch can represent a different application or feature set
+
+## CI/CD (GCP + GitHub Actions, OIDC/WIF)
+
+This repo includes production-ready GitHub Actions workflows that:
+
+- Run **PR validation** (format, lint, type-check, build) in a **monorepo-aware** way (only affected apps build)
+- Deploy on **push to `main`** using **Workload Identity Federation (OIDC)** (no service account keys)
+- Build/push container images to **Artifact Registry** and deploy to **Cloud Run**
+
+See `docs/CICD_GITHUB_ACTIONS_GCP.md` for:
+
+- The **security model** (least privilege, repo/branch-restricted identity binding)
+- **GCP setup commands** (WIF pool/provider + per-env service accounts + IAM)
+- How to add a new deployable service

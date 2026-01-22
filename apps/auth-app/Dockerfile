@@ -1,0 +1,78 @@
+# Production container for the auth SPA (apps/auth-app)
+#
+# Note: this image serves the built SPA. If you rely on server-side endpoints,
+# implement them as a proper backend (Cloud Run service) and route via a load balancer.
+
+FROM node:20-alpine AS build
+
+WORKDIR /repo
+
+# Build-time config for Vite (VITE_* are embedded at build time)
+ARG VITE_ALLOWED_REDIRECTS
+ARG VITE_DEFAULT_RETURN_URL
+ARG VITE_NONCE_SECRET
+# Firebase Web SDK config (required for production)
+ARG VITE_FIREBASE_API_KEY
+ARG VITE_FIREBASE_AUTH_DOMAIN
+ARG VITE_FIREBASE_PROJECT_ID
+ARG VITE_GCP_PROJECT_ID
+ARG VITE_FIREBASE_STORAGE_BUCKET
+ARG VITE_FIREBASE_MESSAGING_SENDER_ID
+ARG VITE_FIREBASE_APP_ID
+ARG VITE_FIREBASE_MEASUREMENT_ID
+# Production mode flags (disable emulator)
+ARG VITE_USE_FIREBASE_EMULATOR=false
+ARG VITE_FIREBASE_MODE=live
+# GCP Project ID as fallback (passed from workflow)
+ARG GCP_PROJECT_ID
+# Cookie configuration
+ARG VITE_ENABLE_AUTH_COOKIE=true
+ARG VITE_AUTH_COOKIE_NAME=auth_app_token
+ARG VITE_AUTH_COOKIE_MAX_AGE=3600
+ARG VITE_AUTH_COOKIE_DOMAIN
+ARG VITE_AUTH_COOKIE_SAMESITE=Lax
+
+ENV VITE_ALLOWED_REDIRECTS=${VITE_ALLOWED_REDIRECTS}
+ENV VITE_DEFAULT_RETURN_URL=${VITE_DEFAULT_RETURN_URL}
+ENV VITE_NONCE_SECRET=${VITE_NONCE_SECRET}
+ENV VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY}
+ENV VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN}
+# Set project IDs with fallback: use VITE_GCP_PROJECT_ID or GCP_PROJECT_ID if VITE_FIREBASE_PROJECT_ID is empty
+ENV VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID}
+ENV VITE_GCP_PROJECT_ID=${VITE_GCP_PROJECT_ID}
+ENV GCP_PROJECT_ID=${GCP_PROJECT_ID}
+ENV VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET}
+ENV VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID}
+ENV VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID}
+ENV VITE_FIREBASE_MEASUREMENT_ID=${VITE_FIREBASE_MEASUREMENT_ID}
+ENV VITE_USE_FIREBASE_EMULATOR=${VITE_USE_FIREBASE_EMULATOR}
+ENV VITE_FIREBASE_MODE=${VITE_FIREBASE_MODE}
+ENV VITE_ENABLE_AUTH_COOKIE=${VITE_ENABLE_AUTH_COOKIE}
+ENV VITE_AUTH_COOKIE_NAME=${VITE_AUTH_COOKIE_NAME}
+ENV VITE_AUTH_COOKIE_MAX_AGE=${VITE_AUTH_COOKIE_MAX_AGE}
+ENV VITE_AUTH_COOKIE_DOMAIN=${VITE_AUTH_COOKIE_DOMAIN}
+ENV VITE_AUTH_COOKIE_SAMESITE=${VITE_AUTH_COOKIE_SAMESITE}
+
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY tsconfig.base.json tsconfig.base.json
+COPY apps/auth-app/package.json apps/auth-app/package.json
+COPY packages/ui-theme/package.json packages/ui-theme/package.json
+
+RUN pnpm install --frozen-lockfile
+
+COPY apps/auth-app apps/auth-app
+COPY packages/ui-theme packages/ui-theme
+
+RUN pnpm --filter auth-app build
+
+FROM nginx:1.27-alpine AS runtime
+
+ENV PORT=8080
+
+COPY apps/auth-app/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /repo/apps/auth-app/dist /usr/share/nginx/html
+
+EXPOSE 8080
+

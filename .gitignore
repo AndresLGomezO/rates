@@ -46,7 +46,9 @@ lerna-debug.log*
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
-*.cache# Docker
+*.cache
+
+# Docker
 docker-compose.override.yml
 .env.docker
 
