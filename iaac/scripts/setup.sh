@@ -759,10 +759,224 @@ EOF
   
   if [ $? -eq 0 ]; then
     print_success "Secret '${SECRET_NAME}' created/updated successfully"
+    echo ""
+    echo "📋 Next steps: Configure GitHub repository secrets"
+    echo ""
+    echo "1. Go to: https://github.com/${GITHUB_REPO}/settings/secrets/actions"
+    echo ""
+    echo "2. Add the following secrets:"
+    echo ""
+    echo "   ${CYAN}WIF_PROVIDER${NC}"
+    echo "   Value: ${WORKLOAD_IDENTITY_PROVIDER}"
+    echo ""
+    echo "   ${CYAN}WIF_SERVICE_ACCOUNT${NC}"
+    echo "   Value: ${SERVICE_ACCOUNT_EMAIL}"
+    echo ""
+    echo "3. After adding secrets, your GitHub Actions workflows will be able to authenticate."
+    echo ""
   else
     print_error "Failed to create secret"
     exit 1
   fi
+}
+
+# ============================================================================
+# Show GitHub Actions Secrets
+# ============================================================================
+# Displays the values that need to be set as GitHub repository secrets
+
+show_github_secrets() {
+  print_header "GitHub Actions Secrets Configuration"
+  
+  # Check if terraform has been applied
+  if [ ! -f "terraform.tfstate" ] && [ ! -f ".terraform/terraform.tfstate" ]; then
+    print_error "Terraform state not found. Please run 'terraform apply' first."
+    exit 1
+  fi
+  
+  echo "📦 Retrieving Workload Identity Federation configuration..."
+  
+  # Get WIF configuration from terraform outputs
+  WORKLOAD_IDENTITY_JSON=$(terraform output -json workload_identity 2>/dev/null || echo "{}")
+  
+  WORKLOAD_IDENTITY_PROVIDER=$(echo "$WORKLOAD_IDENTITY_JSON" | jq -r '.provider_name // ""' 2>/dev/null || echo "")
+  SERVICE_ACCOUNT_EMAIL=$(terraform output -raw github_actions_config 2>/dev/null | jq -r '.service_account_email // ""' 2>/dev/null || echo "")
+  
+  # Also try from github_actions_config
+  if [ -z "$WORKLOAD_IDENTITY_PROVIDER" ] || [ "$WORKLOAD_IDENTITY_PROVIDER" = "null" ]; then
+    GITHUB_ACTIONS_CONFIG_JSON=$(terraform output -json github_actions_config 2>/dev/null || echo "{}")
+    WORKLOAD_IDENTITY_PROVIDER=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.workload_identity_provider // ""' 2>/dev/null || echo "")
+    SERVICE_ACCOUNT_EMAIL=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.service_account_email // ""' 2>/dev/null || echo "")
+  fi
+  
+  # Get GitHub repo from terraform
+  GITHUB_REPO=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.github_repo // ""' 2>/dev/null || echo "")
+  
+  if [ -z "$WORKLOAD_IDENTITY_PROVIDER" ] || [ "$WORKLOAD_IDENTITY_PROVIDER" = "null" ]; then
+    print_error "Failed to retrieve workload_identity_provider from Terraform outputs"
+    echo "   Run: terraform output -json workload_identity"
+    exit 1
+  fi
+  
+  if [ -z "$SERVICE_ACCOUNT_EMAIL" ] || [ "$SERVICE_ACCOUNT_EMAIL" = "null" ]; then
+    print_error "Failed to retrieve service_account_email from Terraform outputs"
+    echo "   Run: terraform output -json github_actions_config"
+    exit 1
+  fi
+  
+  echo ""
+  echo "✅ Configuration retrieved successfully"
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "📋 GitHub Repository Secrets"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+  echo "Go to: ${CYAN}https://github.com/${GITHUB_REPO}/settings/secrets/actions${NC}"
+  echo ""
+  echo "Add the following secrets:"
+  echo ""
+  echo "${GREEN}Secret Name:${NC} ${CYAN}WIF_PROVIDER${NC}"
+  echo "${GREEN}Secret Value:${NC}"
+  echo "${WORKLOAD_IDENTITY_PROVIDER}"
+  echo ""
+  echo "${GREEN}Secret Name:${NC} ${CYAN}WIF_SERVICE_ACCOUNT${NC}"
+  echo "${GREEN}Secret Value:${NC}"
+  echo "${SERVICE_ACCOUNT_EMAIL}"
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+  echo "⚠️  Important:"
+  echo "   • The WIF_PROVIDER value must be the FULL resource name"
+  echo "   • Format: projects/{project_number}/locations/global/workloadIdentityPools/{pool_id}/providers/{provider_id}"
+  echo "   • Current value: ${WORKLOAD_IDENTITY_PROVIDER}"
+  echo ""
+  echo "   • The WIF_SERVICE_ACCOUNT value must be the service account email"
+  echo "   • Format: {service-account-name}@{project-id}.iam.gserviceaccount.com"
+  echo "   • Current value: ${SERVICE_ACCOUNT_EMAIL}"
+  echo ""
+  print_success "Copy the values above and add them as GitHub repository secrets"
+  echo ""
+}
+
+# ============================================================================
+# Set GitHub Actions Secrets Automatically
+# ============================================================================
+# Automatically sets GitHub repository secrets using GitHub CLI
+# This should be run AFTER terraform apply
+
+set_github_secrets() {
+  print_header "Setting GitHub Repository Secrets Automatically"
+  
+  # Check if terraform has been applied
+  if [ ! -f "terraform.tfstate" ] && [ ! -f ".terraform/terraform.tfstate" ]; then
+    print_error "Terraform state not found. Please run 'terraform apply' first."
+    exit 1
+  fi
+  
+  # Check if GitHub CLI is installed and authenticated
+  if ! command -v gh &> /dev/null; then
+    print_error "GitHub CLI (gh) is not installed."
+    echo "   Install: https://cli.github.com/"
+    exit 1
+  fi
+  
+  if ! gh auth status &> /dev/null; then
+    print_error "GitHub CLI is not authenticated."
+    echo "   Run: gh auth login"
+    exit 1
+  fi
+  
+  echo "📦 Retrieving Workload Identity Federation configuration..."
+  
+  # Get WIF configuration from terraform outputs
+  WORKLOAD_IDENTITY_JSON=$(terraform output -json workload_identity 2>/dev/null || echo "{}")
+  GITHUB_ACTIONS_CONFIG_JSON=$(terraform output -json github_actions_config 2>/dev/null || echo "{}")
+  
+  # Try to get WIF provider from workload_identity output first
+  WORKLOAD_IDENTITY_PROVIDER=$(echo "$WORKLOAD_IDENTITY_JSON" | jq -r '.provider_name // ""' 2>/dev/null || echo "")
+  
+  # If not found, try from github_actions_config
+  if [ -z "$WORKLOAD_IDENTITY_PROVIDER" ] || [ "$WORKLOAD_IDENTITY_PROVIDER" = "null" ]; then
+    WORKLOAD_IDENTITY_PROVIDER=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.workload_identity_provider // ""' 2>/dev/null || echo "")
+  fi
+  
+  # Get service account email
+  SERVICE_ACCOUNT_EMAIL=$(echo "$GITHUB_ACTIONS_CONFIG_JSON" | jq -r '.service_account_email // ""' 2>/dev/null || echo "")
+  
+  # Get GitHub repo from workload_identity output (it's nested in github_actions_config)
+  GITHUB_REPO=$(echo "$WORKLOAD_IDENTITY_JSON" | jq -r '.github_actions_config.github_repo // ""' 2>/dev/null || echo "")
+  
+  # If not found, try from terraform variables (fallback)
+  if [ -z "$GITHUB_REPO" ] || [ "$GITHUB_REPO" = "null" ]; then
+    # Try to get from terraform.tfvars as last resort
+    if [ -f "terraform.tfvars" ]; then
+      GITHUB_REPO=$(grep -E '^\s*github_repo\s*=' terraform.tfvars 2>/dev/null | sed -E 's/.*github_repo\s*=\s*"([^"]+)".*/\1/' || echo "")
+    fi
+  fi
+  
+  if [ -z "$WORKLOAD_IDENTITY_PROVIDER" ] || [ "$WORKLOAD_IDENTITY_PROVIDER" = "null" ]; then
+    print_error "Failed to retrieve workload_identity_provider from Terraform outputs"
+    echo "   Run: terraform output -json workload_identity"
+    exit 1
+  fi
+  
+  if [ -z "$SERVICE_ACCOUNT_EMAIL" ] || [ "$SERVICE_ACCOUNT_EMAIL" = "null" ]; then
+    print_error "Failed to retrieve service_account_email from Terraform outputs"
+    echo "   Run: terraform output -json github_actions_config"
+    exit 1
+  fi
+  
+  if [ -z "$GITHUB_REPO" ] || [ "$GITHUB_REPO" = "null" ]; then
+    print_error "Failed to retrieve github_repo from Terraform outputs"
+    echo "   Run: terraform output -json github_actions_config"
+    exit 1
+  fi
+  
+  echo ""
+  echo "✅ Configuration retrieved successfully"
+  echo ""
+  echo "📋 Setting GitHub repository secrets for: ${CYAN}${GITHUB_REPO}${NC}"
+  echo ""
+  
+  # Set WIF_PROVIDER secret
+  echo "🔐 Setting secret: ${CYAN}WIF_PROVIDER${NC}"
+  echo "${WORKLOAD_IDENTITY_PROVIDER}" | gh secret set WIF_PROVIDER \
+    --repo "${GITHUB_REPO}" 2>&1
+  
+  if [ $? -eq 0 ]; then
+    print_success "Secret 'WIF_PROVIDER' set successfully"
+  else
+    print_error "Failed to set secret 'WIF_PROVIDER'"
+    echo "   Value: ${WORKLOAD_IDENTITY_PROVIDER}"
+    exit 1
+  fi
+  
+  echo ""
+  
+  # Set WIF_SERVICE_ACCOUNT secret
+  echo "🔐 Setting secret: ${CYAN}WIF_SERVICE_ACCOUNT${NC}"
+  echo "${SERVICE_ACCOUNT_EMAIL}" | gh secret set WIF_SERVICE_ACCOUNT \
+    --repo "${GITHUB_REPO}" 2>&1
+  
+  if [ $? -eq 0 ]; then
+    print_success "Secret 'WIF_SERVICE_ACCOUNT' set successfully"
+  else
+    print_error "Failed to set secret 'WIF_SERVICE_ACCOUNT'"
+    echo "   Value: ${SERVICE_ACCOUNT_EMAIL}"
+    exit 1
+  fi
+  
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+  print_success "All GitHub repository secrets have been set successfully!"
+  echo ""
+  echo "📋 Secrets configured:"
+  echo "   • ${CYAN}WIF_PROVIDER${NC}: ${WORKLOAD_IDENTITY_PROVIDER}"
+  echo "   • ${CYAN}WIF_SERVICE_ACCOUNT${NC}: ${SERVICE_ACCOUNT_EMAIL}"
+  echo ""
+  echo "✅ Your GitHub Actions workflows can now authenticate to GCP"
+  echo ""
 }
 
 # ============================================================================
@@ -802,11 +1016,20 @@ main() {
 # Script Entry Point
 # ============================================================================
 
-# Check if script is being called with 'create-secret' command
-if [ "${1:-}" = "create-secret" ]; then
-  shift
-  create_deployment_secret "$@"
-else
-  # Run main setup function
-  main "$@"
-fi
+# Check if script is being called with specific commands
+case "${1:-}" in
+  "create-secret")
+    shift
+    create_deployment_secret "$@"
+    ;;
+  "show-secrets")
+    show_github_secrets
+    ;;
+  "set-secrets")
+    set_github_secrets
+    ;;
+  *)
+    # Run main setup function
+    main "$@"
+    ;;
+esac
