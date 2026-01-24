@@ -518,3 +518,5 @@ Key variables:
 - `VITE_USE_FIREBASE_EMULATOR` - Set to `true` to use emulators
 - `VITE_AUTH_APP_URL` - Auth app URL
 - `VITE_NONCE_SECRET` - Shared nonce secret (must match auth-app)
+
+# Test
