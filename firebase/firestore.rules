@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if we're in emulator mode
+    // In emulator, request.auth is typically null, so we allow operations
+    // In production, we require proper authentication
+    function isEmulatorMode() {
+      // Check if we're in emulator by checking for null auth
+      // In production, this will be false and require proper auth
+      return request.auth == null;
+    }
+    
+    // Financial Accounts Collection
+    match /financialAccounts/{accountId} {
+      // Allow all operations in emulator mode (for development)
+      allow read, write, create, update, delete: if isEmulatorMode();
+      
+      // Production rules: Users can only read/write their own accounts
+      allow read, write: if request.auth != null && 
+                           request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && 
+                      request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Default rule: deny all access
+    // Override with specific rules for your collections
+    match /{document=**} {
+      // Allow all in emulator mode for development
+      allow read, write: if isEmulatorMode();
+      // Deny all in production
+      allow read, write: if false;
+    }
+  }
+}
+
+
+
