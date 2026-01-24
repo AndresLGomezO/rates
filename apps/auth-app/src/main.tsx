@@ -1,4 +1,4 @@
-// Cloud Build trigger: auth app entry point
+// Cloud Build trigger entry point
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { AppRouter } from './routes';

@@ -1,4 +1,4 @@
-// Cloud Build trigger: auth app component
+// Cloud Build trigger entry point
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import './index.css';
 
