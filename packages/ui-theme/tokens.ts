@@ -5,7 +5,7 @@
  * These values match the Tailwind config in tailwind.config.cjs.
  *
  * Usage:
- *   import { colors, spacing, breakpoints } from '@rates/ui-theme/tokens';.
+ *   import { colors, spacing, breakpoints } from '@rates/ui-theme/tokens';
  */
 
 export const colors = {

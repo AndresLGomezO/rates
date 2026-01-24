@@ -1,30 +1,18 @@
-import { StrictMode, Suspense, lazy } from 'react';
+import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import './firebase'; // Initialize Firebase
-// CI/CD trigger.
 import './index.css';
+import Login from './pages/Login.tsx';
+import Dashboard from './pages/Dashboard.tsx';
+import AccountsByType from './pages/AccountsByType.tsx';
+import AccountDetail from './pages/AccountDetail.tsx';
+import MigrateAccounts from './pages/MigrateAccounts.tsx';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthRedirectHandler } from './components/AuthRedirectHandler';
 import { PublicLayout } from './components/PublicLayout';
 import { PrivateLayout } from './components/PrivateLayout';
-
-// Lazy load pages for code-splitting
-const Login = lazy(() => import('./pages/Login.tsx'));
-const Dashboard = lazy(() => import('./pages/Dashboard.tsx'));
-const AccountsByType = lazy(() => import('./pages/AccountsByType.tsx'));
-const AccountDetail = lazy(() => import('./pages/AccountDetail.tsx'));
-const MigrateAccounts = lazy(() => import('./pages/MigrateAccounts.tsx'));
-
-// Loading fallback component
-export function PageLoader() {
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="h-[50px] w-[50px] animate-spin rounded-full border-4 border-neutral-600/40 border-t-neutral-500/60"></div>
-    </div>
-  );
-}
 
 const router = createBrowserRouter([
   {
@@ -40,9 +28,7 @@ const router = createBrowserRouter([
         path: 'login',
         element: (
           <PublicLayout>
-            <Suspense fallback={<PageLoader />}>
-              <Login />
-            </Suspense>
+            <Login />
           </PublicLayout>
         ),
       },
@@ -51,9 +37,7 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <PrivateLayout>
-              <Suspense fallback={<PageLoader />}>
-                <Dashboard />
-              </Suspense>
+              <Dashboard />
             </PrivateLayout>
           </ProtectedRoute>
         ),
@@ -63,9 +47,7 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <PrivateLayout>
-              <Suspense fallback={<PageLoader />}>
-                <AccountsByType />
-              </Suspense>
+              <AccountsByType />
             </PrivateLayout>
           </ProtectedRoute>
         ),
@@ -75,9 +57,7 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <PrivateLayout>
-              <Suspense fallback={<PageLoader />}>
-                <AccountDetail />
-              </Suspense>
+              <AccountDetail />
             </PrivateLayout>
           </ProtectedRoute>
         ),
@@ -87,9 +67,7 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <PrivateLayout>
-              <Suspense fallback={<PageLoader />}>
-                <MigrateAccounts />
-              </Suspense>
+              <MigrateAccounts />
             </PrivateLayout>
           </ProtectedRoute>
         ),
@@ -99,9 +77,7 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <PrivateLayout>
-              <Suspense fallback={<PageLoader />}>
-                <Dashboard />
-              </Suspense>
+              <Dashboard />
             </PrivateLayout>
           </ProtectedRoute>
         ),
