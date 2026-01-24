@@ -1,0 +1,59 @@
+# Dependencies
+node_modules
+.pnpm-store
+.pnpm-debug.log
+
+# Build outputs
+dist
+build
+.next
+out
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing
+coverage
+.nyc_output
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+*.cache
+
+# Docker
+docker-compose.override.yml
+
+# Documentation (not needed in container)
+*.md
+!README.md
+
+# Apps and packages (not needed for emulators)
+apps/
+packages/
