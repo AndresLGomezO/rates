@@ -1,31 +1,95 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import './index.css'
-import App from './App.tsx'
-import Home from './pages/Home.tsx'
-import About from './pages/About.tsx'
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
+import './firebase'; // Initialize Firebase
+import './index.css';
+import Login from './pages/Login.tsx';
+import Dashboard from './pages/Dashboard.tsx';
+import AccountsByType from './pages/AccountsByType.tsx';
+import AccountDetail from './pages/AccountDetail.tsx';
+import MigrateAccounts from './pages/MigrateAccounts.tsx';
+import { AuthProvider } from './contexts/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { AuthRedirectHandler } from './components/AuthRedirectHandler';
+import { PublicLayout } from './components/PublicLayout';
+import { PrivateLayout } from './components/PrivateLayout';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
+    element: (
+      <>
+        <AuthRedirectHandler />
+        <Outlet />
+      </>
+    ),
     children: [
       {
-        index: true,
-        element: <Home />,
+        path: 'login',
+        element: (
+          <PublicLayout>
+            <Login />
+          </PublicLayout>
+        ),
       },
       {
-        path: 'about',
-        element: <About />,
+        path: 'dashboard',
+        element: (
+          <ProtectedRoute>
+            <PrivateLayout>
+              <Dashboard />
+            </PrivateLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'accounts/:type',
+        element: (
+          <ProtectedRoute>
+            <PrivateLayout>
+              <AccountsByType />
+            </PrivateLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'account/:accountNumber',
+        element: (
+          <ProtectedRoute>
+            <PrivateLayout>
+              <AccountDetail />
+            </PrivateLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'migrate',
+        element: (
+          <ProtectedRoute>
+            <PrivateLayout>
+              <MigrateAccounts />
+            </PrivateLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        index: true,
+        element: (
+          <ProtectedRoute>
+            <PrivateLayout>
+              <Dashboard />
+            </PrivateLayout>
+          </ProtectedRoute>
+        ),
       },
     ],
   },
-])
+]);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
-  </StrictMode>,
-)
-
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  </StrictMode>
+);

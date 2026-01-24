@@ -124,20 +124,20 @@ export function Filters({
   };
 
   return (
-    <div className="modal-scrollbar overflow-y-auto xs:max-h-[50vh] md:max-h-[60vh]">
+    <div className="overflow-y-auto modal-scrollbar md:max-h-[60vh] xs:max-h-[50vh]">
       {/* Status Filters */}
-      <div className="mb-8 last:mb-4 xs:mb-5 md:mb-6">
-        <label className="mb-3 block text-xs font-bold uppercase tracking-wide text-white/70">
+      <div className="mb-8 last:mb-4 md:mb-6 xs:mb-5">
+        <label className="block text-xs font-bold uppercase tracking-wide text-white/70 mb-3">
           Status
         </label>
-        <div className="flex flex-wrap gap-2 xs:gap-[0.35rem] md:gap-[0.4rem]">
+        <div className="flex flex-wrap gap-2 md:gap-[0.4rem] xs:gap-[0.35rem]">
           {ACCOUNT_STATUSES.map((status) => (
             <button
               key={status.value}
-              className={`flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg text-[0.85rem] font-medium transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] xs:px-3 xs:py-[0.4rem] xs:text-xs md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] ${
+              className={`flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-lg text-[0.85rem] font-medium md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] xs:px-3 xs:py-[0.4rem] xs:text-xs ${
                 statusFilters.includes(status.value)
-                  ? 'border border-[rgba(30,64,175,0.5)] bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)] px-4 py-2 text-white shadow-[0_2px_8px_rgba(30,64,175,0.3)] hover:from-[rgba(30,64,175,0.4)] hover:to-[rgba(51,65,85,0.4)] hover:shadow-[0_4px_12px_rgba(30,64,175,0.4)]'
-                  : 'border border-neutral-600/40 bg-white/10 px-4 py-2 text-white/90 hover:-translate-y-0.5 hover:border-neutral-500/50 hover:bg-white/15 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+                  ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)] border border-[rgba(30,64,175,0.5)] shadow-[0_2px_8px_rgba(30,64,175,0.3)] hover:shadow-[0_4px_12px_rgba(30,64,175,0.4)] hover:from-[rgba(30,64,175,0.4)] hover:to-[rgba(51,65,85,0.4)]'
+                  : 'px-4 py-2 text-white/90 bg-white/10 border border-neutral-600/40 hover:bg-white/15 hover:border-neutral-500/50 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
               }`}
               onClick={() => toggleStatus(status.value)}
               type="button"
@@ -153,18 +153,18 @@ export function Filters({
 
       {/* Account Type Filters */}
       {!hideAccountType && (
-        <div className="mb-8 last:mb-4 xs:mb-5 md:mb-6">
-          <label className="mb-3 block text-xs font-bold uppercase tracking-wide text-white/70">
+        <div className="mb-8 last:mb-4 md:mb-6 xs:mb-5">
+          <label className="block text-xs font-bold uppercase tracking-wide text-white/70 mb-3">
             Account Type
           </label>
-          <div className="flex flex-wrap gap-2 xs:gap-[0.35rem] md:gap-[0.4rem]">
+          <div className="flex flex-wrap gap-2 md:gap-[0.4rem] xs:gap-[0.35rem]">
             {ACCOUNT_TYPES.map((type) => (
               <button
                 key={type.value}
-                className={`flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg text-[0.85rem] font-medium transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] xs:px-3 xs:py-[0.4rem] xs:text-xs md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] ${
+                className={`flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-lg text-[0.85rem] font-medium md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] xs:px-3 xs:py-[0.4rem] xs:text-xs ${
                   typeFilters.includes(type.value)
-                    ? 'border border-[rgba(30,64,175,0.5)] bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)] px-4 py-2 text-white shadow-[0_2px_8px_rgba(30,64,175,0.3)] hover:from-[rgba(30,64,175,0.4)] hover:to-[rgba(51,65,85,0.4)] hover:shadow-[0_4px_12px_rgba(30,64,175,0.4)]'
-                    : 'border border-neutral-600/40 bg-white/10 px-4 py-2 text-white/90 hover:-translate-y-0.5 hover:border-neutral-500/50 hover:bg-white/15 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+                    ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)] border border-[rgba(30,64,175,0.5)] shadow-[0_2px_8px_rgba(30,64,175,0.3)] hover:shadow-[0_4px_12px_rgba(30,64,175,0.4)] hover:from-[rgba(30,64,175,0.4)] hover:to-[rgba(51,65,85,0.4)]'
+                    : 'px-4 py-2 text-white/90 bg-white/10 border border-neutral-600/40 hover:bg-white/15 hover:border-neutral-500/50 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
                 }`}
                 onClick={() => toggleType(type.value)}
                 type="button"
@@ -180,16 +180,16 @@ export function Filters({
       )}
 
       {/* Currency Filter */}
-      <div className="mb-8 last:mb-4 xs:mb-5 md:mb-6">
-        <label className="mb-3 block text-xs font-bold uppercase tracking-wide text-white/70">
+      <div className="mb-8 last:mb-4 md:mb-6 xs:mb-5">
+        <label className="block text-xs font-bold uppercase tracking-wide text-white/70 mb-3">
           Currency
         </label>
-        <div className="flex flex-wrap gap-2 xs:gap-[0.35rem] md:gap-[0.4rem]">
+        <div className="flex flex-wrap gap-2 md:gap-[0.4rem] xs:gap-[0.35rem]">
           <button
-            className={`flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg text-[0.85rem] font-medium transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] xs:px-3 xs:py-[0.4rem] xs:text-xs md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] ${
+            className={`flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-lg text-[0.85rem] font-medium md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] xs:px-3 xs:py-[0.4rem] xs:text-xs ${
               currencyFilter === ''
-                ? 'border border-[rgba(102,126,234,0.5)] bg-gradient-to-br from-[rgba(102,126,234,0.3)] to-[rgba(118,75,162,0.3)] px-4 py-2 text-white shadow-[0_2px_8px_rgba(102,126,234,0.2)] hover:from-[rgba(102,126,234,0.4)] hover:to-[rgba(118,75,162,0.4)] hover:shadow-[0_4px_12px_rgba(102,126,234,0.3)]'
-                : 'border border-white/20 bg-white/10 px-4 py-2 text-white/90 hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/15 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+                ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(102,126,234,0.3)] to-[rgba(118,75,162,0.3)] border border-[rgba(102,126,234,0.5)] shadow-[0_2px_8px_rgba(102,126,234,0.2)] hover:shadow-[0_4px_12px_rgba(102,126,234,0.3)] hover:from-[rgba(102,126,234,0.4)] hover:to-[rgba(118,75,162,0.4)]'
+                : 'px-4 py-2 text-white/90 bg-white/10 border border-white/20 hover:bg-white/15 hover:border-white/30 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
             }`}
             onClick={() => setCurrency('')}
             type="button"
@@ -199,10 +199,10 @@ export function Filters({
           {CURRENCIES.map((currency) => (
             <button
               key={currency}
-              className={`flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg text-[0.85rem] font-medium transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] xs:px-3 xs:py-[0.4rem] xs:text-xs md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] ${
+              className={`flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-lg text-[0.85rem] font-medium md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] xs:px-3 xs:py-[0.4rem] xs:text-xs ${
                 currencyFilter === currency
-                  ? 'border border-[rgba(30,64,175,0.5)] bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)] px-4 py-2 text-white shadow-[0_2px_8px_rgba(30,64,175,0.3)] hover:from-[rgba(30,64,175,0.4)] hover:to-[rgba(51,65,85,0.4)] hover:shadow-[0_4px_12px_rgba(30,64,175,0.4)]'
-                  : 'border border-neutral-600/40 bg-white/10 px-4 py-2 text-white/90 hover:-translate-y-0.5 hover:border-neutral-500/50 hover:bg-white/15 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+                  ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)] border border-[rgba(30,64,175,0.5)] shadow-[0_2px_8px_rgba(30,64,175,0.3)] hover:shadow-[0_4px_12px_rgba(30,64,175,0.4)] hover:from-[rgba(30,64,175,0.4)] hover:to-[rgba(51,65,85,0.4)]'
+                  : 'px-4 py-2 text-white/90 bg-white/10 border border-neutral-600/40 hover:bg-white/15 hover:border-neutral-500/50 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
               }`}
               onClick={() => setCurrency(currency)}
               type="button"
@@ -215,18 +215,18 @@ export function Filters({
 
       {/* Days Ahead Filter (for Dashboard) */}
       {showDaysFilter && (
-        <div className="mb-8 last:mb-4 xs:mb-5 md:mb-6">
-          <label className="mb-3 block text-xs font-bold uppercase tracking-wide text-white/70">
+        <div className="mb-8 last:mb-4 md:mb-6 xs:mb-5">
+          <label className="block text-xs font-bold uppercase tracking-wide text-white/70 mb-3">
             Days Ahead
           </label>
-          <div className="flex flex-wrap gap-2 xs:gap-[0.35rem] md:gap-[0.4rem]">
+          <div className="flex flex-wrap gap-2 md:gap-[0.4rem] xs:gap-[0.35rem]">
             {[7, 15, 30, 60, 90].map((days) => (
               <button
                 key={days}
-                className={`flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg text-[0.85rem] font-medium transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] xs:px-3 xs:py-[0.4rem] xs:text-xs md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] ${
+                className={`flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-lg text-[0.85rem] font-medium md:px-[0.875rem] md:py-[0.45rem] md:text-[0.8rem] xs:px-3 xs:py-[0.4rem] xs:text-xs ${
                   daysAhead === days
-                    ? 'border border-[rgba(30,64,175,0.5)] bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)] px-4 py-2 text-white shadow-[0_2px_8px_rgba(30,64,175,0.3)] hover:from-[rgba(30,64,175,0.4)] hover:to-[rgba(51,65,85,0.4)] hover:shadow-[0_4px_12px_rgba(30,64,175,0.4)]'
-                    : 'border border-neutral-600/40 bg-white/10 px-4 py-2 text-white/90 hover:-translate-y-0.5 hover:border-neutral-500/50 hover:bg-white/15 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
+                    ? 'px-4 py-2 text-white bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)] border border-[rgba(30,64,175,0.5)] shadow-[0_2px_8px_rgba(30,64,175,0.3)] hover:shadow-[0_4px_12px_rgba(30,64,175,0.4)] hover:from-[rgba(30,64,175,0.4)] hover:to-[rgba(51,65,85,0.4)]'
+                    : 'px-4 py-2 text-white/90 bg-white/10 border border-neutral-600/40 hover:bg-white/15 hover:border-neutral-500/50 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]'
                 }`}
                 onClick={() => setDaysAhead(days)}
                 type="button"
@@ -240,7 +240,7 @@ export function Filters({
 
       {hasActiveFilters && (
         <button
-          className="mt-6 block w-full cursor-pointer rounded-lg border border-danger-500/30 bg-danger-500/20 px-6 py-3.5 text-[0.9rem] font-semibold text-danger-500 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:border-danger-500/40 hover:bg-danger-500/30 hover:shadow-[0_4px_12px_rgba(239,68,68,0.2)]"
+          className="block w-full mt-6 px-6 py-3.5 text-[0.9rem] font-semibold cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-lg bg-danger-500/20 border border-danger-500/30 text-danger-500 hover:bg-danger-500/30 hover:border-danger-500/40 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(239,68,68,0.2)]"
           onClick={clearAllFilters}
           type="button"
         >
