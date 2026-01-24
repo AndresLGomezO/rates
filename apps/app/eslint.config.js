@@ -2,6 +2,7 @@ import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
+import { join } from 'path';
 import baseConfig from '../../eslint.config.js';
 
 let tailwindcssPlugin = null;
@@ -37,6 +38,16 @@ export default tseslint.config(
       'react-refresh': reactRefresh,
       ...(tailwindcssPlugin ? { tailwindcss: tailwindcssPlugin } : {}),
     },
+    ...(tailwindcssPlugin
+      ? {
+          settings: {
+            tailwindcss: {
+              // Explicitly configure Tailwind config path to avoid detection issues
+              config: join(import.meta.dirname, 'tailwind.config.cjs'),
+            },
+          },
+        }
+      : {}),
     rules: {
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': [
@@ -58,7 +69,10 @@ export default tseslint.config(
             // Tailwind CSS class ordering
             'tailwindcss/classnames-order': 'warn',
             'tailwindcss/no-custom-classname': 'off', // Allow custom classes like ds-card-light
-            'tailwindcss/no-contradicting-classname': 'error',
+            // Disabled: Known false positives with arbitrary values (e.g., to-[2.5px] + to-transparent)
+            // See: https://github.com/francoismassart/eslint-plugin-tailwindcss/issues/271
+            // Config path is set in settings above, but rule still has fundamental issues
+            'tailwindcss/no-contradicting-classname': 'off',
           }
         : {}),
     },

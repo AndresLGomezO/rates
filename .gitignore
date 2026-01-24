@@ -46,6 +46,38 @@ lerna-debug.log*
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
-*.cache# Docker
+*.cache
+
+# Docker
 docker-compose.override.yml
 .env.docker
+
+# Terraform / IaC
+# State files (contain sensitive data - NEVER commit)
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+
+# Terraform working directory (provider binaries and modules cache)
+.terraform/
+
+# Variable files with secrets (keep example files like terraform.tfvars.example)
+terraform.tfvars
+*.auto.tfvars
+*.auto.tfvars.json
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI configuration files (user-specific)
+.terraformrc
+terraform.rc
+
+# Note: .terraform.lock.hcl SHOULD be committed (ensures consistent provider versions)
