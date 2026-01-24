@@ -52,8 +52,3 @@ echo ""
 echo "📊 Verify with:"
 echo "   docker exec rates-firebase-emulators printenv FIREBASE_PROJECT_ID"
 
-
-
-
-
-

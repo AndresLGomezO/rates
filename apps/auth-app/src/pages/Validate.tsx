@@ -113,44 +113,38 @@ export default function Validate() {
 
   if (loading || isValidating) {
     return (
-      <div className="grid gap-4">
-        <div className="m-0 text-slate-600">Validating token...</div>
+      <div className="grid">
+        <div className="muted">Validating token...</div>
       </div>
     );
   }
 
   return (
-    <div className="grid gap-4">
-      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-100 text-sky-700 rounded-full text-xs font-semibold">
-        Token Validation
-      </div>
-      <h2 className="text-2xl m-0 text-slate-900">
-        Validate Firebase ID Token
-      </h2>
+    <div className="grid">
+      <div className="badge">Token Validation</div>
+      <h2 className="title">Validate Firebase ID Token</h2>
 
       {validationResult ? (
-        <div className="grid gap-4">
+        <div className="grid">
           {validationResult.valid ? (
             <>
-              <div className="p-2.5 px-3 rounded-[10px] bg-green-50 text-green-700 border border-green-200">
-                Token is valid
-              </div>
+              <div className="success">Token is valid</div>
               {validationResult.refreshedToken && (
-                <div className="m-0 text-slate-600">
+                <div className="muted">
                   Token refreshed:{' '}
                   {validationResult.refreshedToken.substring(0, 20)}...
                 </div>
               )}
               {validationResult.expiresAt && (
-                <div className="m-0 text-slate-600">
+                <div className="muted">
                   Expires at:{' '}
                   {new Date(validationResult.expiresAt).toLocaleString()}
                 </div>
               )}
               {user && (
-                <div className="flex justify-between gap-3 flex-wrap">
+                <div className="actions">
                   <button
-                    className="px-4 py-2.5 rounded-[10px] border-0 font-bold cursor-pointer inline-flex items-center gap-2 bg-slate-200 text-slate-900 shadow-none transition-[transform,box-shadow] duration-150 ease hover:-translate-y-px"
+                    className="button secondary"
                     onClick={() => void revokeToken()}
                   >
                     Revoke Token
@@ -159,14 +153,14 @@ export default function Validate() {
               )}
             </>
           ) : (
-            <div className="p-2.5 px-3 rounded-[10px] bg-red-50 text-red-700 border border-red-200">
+            <div className="error">
               Token is invalid: {validationResult.error}
             </div>
           )}
         </div>
       ) : (
-        <div className="grid gap-4">
-          <p className="m-0 text-slate-600">
+        <div className="grid">
+          <p className="muted">
             {tokenParam
               ? 'Validating token from URL...'
               : user

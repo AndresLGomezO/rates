@@ -45,8 +45,8 @@ export function NonceGuard({
 
   if (isValidating) {
     return (
-      <div className="grid gap-4">
-        <div className="m-0 text-slate-600">Validating request security...</div>
+      <div className="grid">
+        <div className="muted">Validating request security...</div>
       </div>
     );
   }

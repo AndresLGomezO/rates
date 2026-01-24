@@ -13,8 +13,3 @@ cd /app
 exec firebase emulators:start \
   --project "$PROJECT_ID"
 
-
-
-
-
-
