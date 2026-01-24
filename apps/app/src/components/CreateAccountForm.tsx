@@ -215,11 +215,11 @@ export function CreateAccountForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-6">
         <div className="flex flex-col gap-2">
           <label
             htmlFor="accountNumber"
-            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+            className="text-sm font-semibold uppercase tracking-wide text-white/90"
           >
             Account Number <span className="text-danger-500">*</span>
           </label>
@@ -228,7 +228,7 @@ export function CreateAccountForm({
             type="text"
             value={formData.accountNumber}
             onChange={(e) => handleChange('accountNumber', e.target.value)}
-            className={`bg-white/10 backdrop-blur-[10px] border rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+            className={`font-inherit rounded-lg border bg-white/10 px-4 py-3.5 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] placeholder:text-white/40 focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none ${
               errors.accountNumber
                 ? 'border-danger-500 bg-danger-500/10'
                 : 'border-white/20'
@@ -237,7 +237,7 @@ export function CreateAccountForm({
             disabled={mode === 'edit'}
           />
           {errors.accountNumber && (
-            <span className="text-danger-500 text-sm font-medium mt-1">
+            <span className="mt-1 text-sm font-medium text-danger-500">
               {errors.accountNumber}
             </span>
           )}
@@ -246,7 +246,7 @@ export function CreateAccountForm({
         <div className="flex flex-col gap-2">
           <label
             htmlFor="status"
-            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+            className="text-sm font-semibold uppercase tracking-wide text-white/90"
           >
             Status <span className="text-danger-500">*</span>
           </label>
@@ -256,7 +256,7 @@ export function CreateAccountForm({
             onChange={(e) =>
               handleChange('status', e.target.value as AccountStatus)
             }
-            className="bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-lg px-4 py-3.5 pr-10 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg_xmlns=\\'http://www.w3.org/2000/svg\\'_width=\\'12\\'_height=\\'12\\'_viewBox=\\'0_0_12_12\\'%3E%3Cpath_fill=\\'white\\'_d=\\'M6_9L1_4h10z\\'/%3E%3C/svg%3E')] bg-no-repeat bg-[right_1rem_center] focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)]"
+            className="font-inherit cursor-pointer appearance-none rounded-lg border border-white/20 bg-white/10 bg-[url('data:image/svg+xml,%3Csvg_xmlns=\\'http://www.w3.org/2000/svg\\'_width=\\'12\\'_height=\\'12\\'_viewBox=\\'0_0_12_12\\'%3E%3Cpath_fill=\\'white\\'_d=\\'M6_9L1_4h10z\\'/%3E%3C/svg%3E')] bg-[right_1rem_center] bg-no-repeat px-4 py-3.5 pr-10 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none"
           >
             {ACCOUNT_STATUSES.map((status) => (
               <option
@@ -274,7 +274,7 @@ export function CreateAccountForm({
       <div className="flex flex-col gap-2">
         <label
           htmlFor="accountName"
-          className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+          className="text-sm font-semibold uppercase tracking-wide text-white/90"
         >
           Account Name <span className="text-danger-500">*</span>
         </label>
@@ -283,7 +283,7 @@ export function CreateAccountForm({
           type="text"
           value={formData.accountName}
           onChange={(e) => handleChange('accountName', e.target.value)}
-          className={`bg-white/10 backdrop-blur-[10px] border rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+          className={`font-inherit rounded-lg border bg-white/10 px-4 py-3.5 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] placeholder:text-white/40 focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none ${
             errors.accountName
               ? 'border-danger-500 bg-danger-500/10'
               : 'border-white/20'
@@ -291,7 +291,7 @@ export function CreateAccountForm({
           placeholder="e.g., Personal Loan - Bank ABC"
         />
         {errors.accountName && (
-          <span className="text-danger-500 text-sm font-medium mt-1">
+          <span className="mt-1 text-sm font-medium text-danger-500">
             {errors.accountName}
           </span>
         )}
@@ -300,7 +300,7 @@ export function CreateAccountForm({
       <div className="flex flex-col gap-2">
         <label
           htmlFor="accountDescription"
-          className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+          className="text-sm font-semibold uppercase tracking-wide text-white/90"
         >
           Description <span className="text-danger-500">*</span>
         </label>
@@ -308,7 +308,7 @@ export function CreateAccountForm({
           id="accountDescription"
           value={formData.accountDescription}
           onChange={(e) => handleChange('accountDescription', e.target.value)}
-          className={`bg-white/10 backdrop-blur-[10px] border rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 resize-y min-h-[80px] focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+          className={`font-inherit min-h-[80px] resize-y rounded-lg border bg-white/10 px-4 py-3.5 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] placeholder:text-white/40 focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none ${
             errors.accountDescription
               ? 'border-danger-500 bg-danger-500/10'
               : 'border-white/20'
@@ -317,7 +317,7 @@ export function CreateAccountForm({
           rows={3}
         />
         {errors.accountDescription && (
-          <span className="text-danger-500 text-sm font-medium mt-1">
+          <span className="mt-1 text-sm font-medium text-danger-500">
             {errors.accountDescription}
           </span>
         )}
@@ -326,7 +326,7 @@ export function CreateAccountForm({
       <div className="flex flex-col gap-2">
         <label
           htmlFor="currency"
-          className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+          className="text-sm font-semibold uppercase tracking-wide text-white/90"
         >
           Currency <span className="text-danger-500">*</span>
         </label>
@@ -334,7 +334,7 @@ export function CreateAccountForm({
           id="currency"
           value={formData.currency}
           onChange={(e) => handleChange('currency', e.target.value)}
-          className="bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-lg px-4 py-3.5 pr-10 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg_xmlns=\\'http://www.w3.org/2000/svg\\'_width=\\'12\\'_height=\\'12\\'_viewBox=\\'0_0_12_12\\'%3E%3Cpath_fill=\\'white\\'_d=\\'M6_9L1_4h10z\\'/%3E%3C/svg%3E')] bg-no-repeat bg-[right_1rem_center] focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)]"
+          className="font-inherit cursor-pointer appearance-none rounded-lg border border-white/20 bg-white/10 bg-[url('data:image/svg+xml,%3Csvg_xmlns=\\'http://www.w3.org/2000/svg\\'_width=\\'12\\'_height=\\'12\\'_viewBox=\\'0_0_12_12\\'%3E%3Cpath_fill=\\'white\\'_d=\\'M6_9L1_4h10z\\'/%3E%3C/svg%3E')] bg-[right_1rem_center] bg-no-repeat px-4 py-3.5 pr-10 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none"
         >
           <option value="COP" className="bg-neutral-900 text-white">
             COP (Colombian Peso)
@@ -345,11 +345,11 @@ export function CreateAccountForm({
         </select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-6">
         <div className="flex flex-col gap-2">
           <label
             htmlFor="totalAmountRemaining"
-            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+            className="text-sm font-semibold uppercase tracking-wide text-white/90"
           >
             Total Amount Remaining <span className="text-danger-500">*</span>
           </label>
@@ -362,7 +362,7 @@ export function CreateAccountForm({
             onChange={(e) =>
               handleChange('totalAmountRemaining', e.target.value)
             }
-            className={`bg-white/10 backdrop-blur-[10px] border rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+            className={`font-inherit rounded-lg border bg-white/10 px-4 py-3.5 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] placeholder:text-white/40 focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none ${
               errors.totalAmountRemaining
                 ? 'border-danger-500 bg-danger-500/10'
                 : 'border-white/20'
@@ -370,7 +370,7 @@ export function CreateAccountForm({
             placeholder="0.00"
           />
           {errors.totalAmountRemaining && (
-            <span className="text-danger-500 text-sm font-medium mt-1">
+            <span className="mt-1 text-sm font-medium text-danger-500">
               {errors.totalAmountRemaining}
             </span>
           )}
@@ -379,7 +379,7 @@ export function CreateAccountForm({
         <div className="flex flex-col gap-2">
           <label
             htmlFor="monthlyPayment"
-            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+            className="text-sm font-semibold uppercase tracking-wide text-white/90"
           >
             Monthly Payment <span className="text-danger-500">*</span>
           </label>
@@ -390,7 +390,7 @@ export function CreateAccountForm({
             min="0"
             value={formData.monthlyPayment}
             onChange={(e) => handleChange('monthlyPayment', e.target.value)}
-            className={`bg-white/10 backdrop-blur-[10px] border rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+            className={`font-inherit rounded-lg border bg-white/10 px-4 py-3.5 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] placeholder:text-white/40 focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none ${
               errors.monthlyPayment
                 ? 'border-danger-500 bg-danger-500/10'
                 : 'border-white/20'
@@ -398,18 +398,18 @@ export function CreateAccountForm({
             placeholder="0.00"
           />
           {errors.monthlyPayment && (
-            <span className="text-danger-500 text-sm font-medium mt-1">
+            <span className="mt-1 text-sm font-medium text-danger-500">
               {errors.monthlyPayment}
             </span>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-6">
         <div className="flex flex-col gap-2">
           <label
             htmlFor="rate"
-            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+            className="text-sm font-semibold uppercase tracking-wide text-white/90"
           >
             Interest Rate (%) <span className="text-danger-500">*</span>
           </label>
@@ -421,7 +421,7 @@ export function CreateAccountForm({
             max="100"
             value={formData.rate}
             onChange={(e) => handleChange('rate', e.target.value)}
-            className={`bg-white/10 backdrop-blur-[10px] border rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+            className={`font-inherit rounded-lg border bg-white/10 px-4 py-3.5 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] placeholder:text-white/40 focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none ${
               errors.rate
                 ? 'border-danger-500 bg-danger-500/10'
                 : 'border-white/20'
@@ -429,7 +429,7 @@ export function CreateAccountForm({
             placeholder="0.0"
           />
           {errors.rate && (
-            <span className="text-danger-500 text-sm font-medium mt-1">
+            <span className="mt-1 text-sm font-medium text-danger-500">
               {errors.rate}
             </span>
           )}
@@ -438,7 +438,7 @@ export function CreateAccountForm({
         <div className="flex flex-col gap-2">
           <label
             htmlFor="nextDueDate"
-            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+            className="text-sm font-semibold uppercase tracking-wide text-white/90"
           >
             Next Due Date <span className="text-danger-500">*</span>
           </label>
@@ -447,7 +447,7 @@ export function CreateAccountForm({
             type="date"
             value={formData.nextDueDate || getDefaultDueDate()}
             onChange={(e) => handleChange('nextDueDate', e.target.value)}
-            className={`bg-white/10 backdrop-blur-[10px] border rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+            className={`font-inherit rounded-lg border bg-white/10 px-4 py-3.5 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none ${
               errors.nextDueDate
                 ? 'border-danger-500 bg-danger-500/10'
                 : 'border-white/20'
@@ -455,18 +455,18 @@ export function CreateAccountForm({
             min={new Date().toISOString().split('T')[0]}
           />
           {errors.nextDueDate && (
-            <span className="text-danger-500 text-sm font-medium mt-1">
+            <span className="mt-1 text-sm font-medium text-danger-500">
               {errors.nextDueDate}
             </span>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-6">
         <div className="flex flex-col gap-2">
           <label
             htmlFor="originalAmount"
-            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+            className="text-sm font-semibold uppercase tracking-wide text-white/90"
           >
             Original Amount (Optional)
           </label>
@@ -477,7 +477,7 @@ export function CreateAccountForm({
             min="0"
             value={formData.originalAmount}
             onChange={(e) => handleChange('originalAmount', e.target.value)}
-            className="bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)]"
+            className="font-inherit rounded-lg border border-white/20 bg-white/10 px-4 py-3.5 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] placeholder:text-white/40 focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none"
             placeholder="0.00"
           />
         </div>
@@ -485,7 +485,7 @@ export function CreateAccountForm({
         <div className="flex flex-col gap-2">
           <label
             htmlFor="startDate"
-            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+            className="text-sm font-semibold uppercase tracking-wide text-white/90"
           >
             Start Date (Optional)
           </label>
@@ -494,24 +494,24 @@ export function CreateAccountForm({
             type="date"
             value={formData.startDate}
             onChange={(e) => handleChange('startDate', e.target.value)}
-            className="bg-white/10 backdrop-blur-[10px] border border-white/20 rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)]"
+            className="font-inherit rounded-lg border border-white/20 bg-white/10 px-4 py-3.5 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none"
             max={new Date().toISOString().split('T')[0]}
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-6">
         <div className="flex flex-col gap-2">
           <label
             htmlFor="numberOfPayments"
-            className="text-white/90 text-sm font-semibold uppercase tracking-wide"
+            className="text-sm font-semibold uppercase tracking-wide text-white/90"
           >
             Number of Payments
             {accountType !== 'bill' && (
               <span className="text-danger-500">*</span>
             )}
             {accountType === 'bill' && (
-              <span className="text-sm font-normal ml-2 text-white/60">
+              <span className="ml-2 text-sm font-normal text-white/60">
                 (Optional for periodic bills)
               </span>
             )}
@@ -523,7 +523,7 @@ export function CreateAccountForm({
             min="1"
             value={formData.numberOfPayments}
             onChange={(e) => handleChange('numberOfPayments', e.target.value)}
-            className={`bg-white/10 backdrop-blur-[10px] border rounded-lg px-4 py-3.5 text-white text-base transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] font-inherit placeholder:text-white/40 focus:outline-none focus:bg-white/15 focus:border-white/40 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] ${
+            className={`font-inherit rounded-lg border bg-white/10 px-4 py-3.5 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] placeholder:text-white/40 focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none ${
               errors.numberOfPayments
                 ? 'border-danger-500 bg-danger-500/10'
                 : 'border-white/20'
@@ -535,26 +535,26 @@ export function CreateAccountForm({
             }
           />
           {errors.numberOfPayments && (
-            <span className="text-danger-500 text-sm font-medium mt-1">
+            <span className="mt-1 text-sm font-medium text-danger-500">
               {errors.numberOfPayments}
             </span>
           )}
           {accountType === 'bill' && (
-            <small className="text-sm text-white/60 mt-1 block">
+            <small className="mt-1 block text-sm text-white/60">
               Leave empty if this is a periodic bill (will generate periods
               automatically)
             </small>
           )}
         </div>
-        <div className="flex flex-col gap-2 invisible">
+        <div className="invisible flex flex-col gap-2">
           {/* Empty div to maintain form-row layout */}
         </div>
       </div>
 
-      <div className="flex flex-col-reverse md:flex-row gap-4 justify-end mt-4 pt-6 border-t border-white/10">
+      <div className="mt-4 flex flex-col-reverse justify-end gap-4 border-t border-white/10 pt-6 md:flex-row">
         <button
           type="button"
-          className="px-8 py-3.5 rounded-lg text-base font-semibold cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] border-none bg-white/10 backdrop-blur-[10px] text-white border border-white/20 hover:bg-white/15 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 w-full md:w-auto"
+          className="w-full cursor-pointer rounded-lg border border-none border-white/20 bg-white/10 px-8 py-3.5 text-base font-semibold text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:bg-white/15 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:translate-y-0 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 md:w-auto"
           onClick={onCancel}
           disabled={isSubmitting}
         >
@@ -562,7 +562,7 @@ export function CreateAccountForm({
         </button>
         <button
           type="submit"
-          className="ds-button-gradient px-8 py-3.5 text-base border-none w-full md:w-auto"
+          className="ds-button-gradient w-full border-none px-8 py-3.5 text-base md:w-auto"
           disabled={isSubmitting}
         >
           {isSubmitting
