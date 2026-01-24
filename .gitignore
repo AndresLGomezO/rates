@@ -41,14 +41,3 @@ lerna-debug.log*
 # pnpm
 .pnpm-store
 
-# Firebase
-.firebase/
-firebase-debug.log
-firestore-debug.log
-ui-debug.log
-*.cache
-
-# Docker
-docker-compose.override.yml
-.env.docker
-
