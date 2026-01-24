@@ -19,11 +19,6 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
 
 up: ## Start emulators in detached mode
-	@if [ ! -f ../.env.docker ]; then \
-		echo "⚠️  .env.docker not found, creating from env.docker.example..."; \
-		cp env.docker.example ../.env.docker; \
-		echo "✅ Created ../.env.docker"; \
-	fi
 	$(COMPOSE) up -d
 	@echo "Emulators starting... Check logs with 'make logs'"
 	@echo "Emulator UI: http://localhost:4000"
@@ -46,22 +41,6 @@ build: ## Rebuild Docker image
 clean: ## Stop and remove volumes (clears all data)
 	$(COMPOSE) down -v
 	@echo "Emulators stopped and volumes removed"
-
-clean-all: ## Complete cleanup: remove containers, images, volumes, and networks
-	@echo "🧹 Complete cleanup of Docker resources..."
-	$(COMPOSE) down -v --remove-orphans || true
-	@echo "Removing containers..."
-	@docker ps -a --filter "name=rates-firebase-emulators" --format "{{.ID}}" | xargs -r docker rm -f 2>/dev/null || true
-	@echo "Removing images..."
-	@docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "(rates|firebase-emulator|docker-firebase-emulators)" | xargs -r docker rmi -f 2>/dev/null || true
-	@echo "Removing volumes..."
-	@docker volume ls --format "{{.Name}}" | grep -E "(rates|firebase|docker)" | xargs -r docker volume rm 2>/dev/null || true
-	@echo "Removing networks..."
-	@docker network ls --format "{{.Name}}" | grep -E "(rates|docker)" | xargs -r docker network rm 2>/dev/null || true
-	@echo "✅ Cleanup complete!"
-
-recreate: clean-all build up ## Complete cleanup and recreate (clean-all + build + up)
-	@echo "✅ Emulators recreated and started!"
 
 ps: ## Show running containers
 	$(COMPOSE) ps
