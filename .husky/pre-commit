@@ -1,0 +1,44 @@
+#!/usr/bin/env sh
+# Run all checks before commit
+# 1. Format code (auto-fix)
+# 2. Fix linting issues (auto-fix)
+# 3. Type-check (no auto-fix, must pass)
+
+echo "🔍 Running pre-commit checks..."
+
+echo "📝 Formatting code..."
+pnpm format || {
+  echo "❌ Formatting failed"
+  exit 1
+}
+
+# Add formatted files back to staging
+git add -A || true
+
+echo "🔧 Fixing linting issues (includes Tailwind CSS class ordering)..."
+pnpm lint:fix || {
+  echo "❌ Lint auto-fix failed"
+  exit 1
+}
+
+# Add lint-fixed files back to staging
+git add -A || true
+
+echo "🔍 Running lint check..."
+pnpm lint || {
+  echo "❌ Linting failed. Please fix the errors above."
+  exit 1
+}
+
+echo "📘 Type-checking..."
+pnpm type-check || {
+  echo "❌ Type-checking failed. Please fix the type errors above."
+  exit 1
+}
+
+echo "✅ All pre-commit checks passed!"
+
+
+
+
+
