@@ -167,36 +167,36 @@ export function LogPaymentModal({
         }}
         className="flex flex-col gap-6 py-4"
       >
-        <div className="rounded-lg border border-white/10 bg-white/5 p-5">
-          <div className="flex items-center justify-between border-b border-white/5 py-3 last:border-b-0">
-            <span className="text-sm font-medium text-white/70">
+        <div className="rounded-lg bg-white/5 p-5 border border-white/10">
+          <div className="flex justify-between items-center py-3 border-b border-white/5 last:border-b-0">
+            <span className="text-sm text-white/70 font-medium">
               Account Number:
             </span>
-            <span className="text-base font-semibold text-white/95">
+            <span className="text-base text-white/95 font-semibold">
               {account.accountNumber}
             </span>
           </div>
           {period && (
-            <div className="flex items-center justify-between border-b border-white/5 py-3 last:border-b-0">
-              <span className="text-sm font-medium text-white/70">
+            <div className="flex justify-between items-center py-3 border-b border-white/5 last:border-b-0">
+              <span className="text-sm text-white/70 font-medium">
                 Period Number:
               </span>
-              <span className="text-base font-semibold text-white/95">
+              <span className="text-base text-white/95 font-semibold">
                 #{period.periodNumber}
               </span>
             </div>
           )}
-          <div className="flex items-center justify-between border-b border-white/5 py-3 last:border-b-0">
-            <span className="text-sm font-medium text-white/70">
+          <div className="flex justify-between items-center py-3 border-b border-white/5 last:border-b-0">
+            <span className="text-sm text-white/70 font-medium">
               {period ? 'Period Amount:' : 'Monthly Payment:'}
             </span>
-            <span className="text-base font-semibold text-white/95">
+            <span className="text-base text-white/95 font-semibold">
               {formatCurrency(periodAmount, currency)}
             </span>
           </div>
-          <div className="flex items-center justify-between border-b border-white/5 py-3 last:border-b-0">
-            <span className="text-sm font-medium text-white/70">Due Date:</span>
-            <span className="text-base font-semibold text-white/95">
+          <div className="flex justify-between items-center py-3 border-b border-white/5 last:border-b-0">
+            <span className="text-sm text-white/70 font-medium">Due Date:</span>
+            <span className="text-base text-white/95 font-semibold">
               {periodDueDate.toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
@@ -205,20 +205,20 @@ export function LogPaymentModal({
             </span>
           </div>
           {period && (
-            <div className="flex items-center justify-between border-b border-white/5 py-3 last:border-b-0">
-              <span className="text-sm font-medium text-white/70">
+            <div className="flex justify-between items-center py-3 border-b border-white/5 last:border-b-0">
+              <span className="text-sm text-white/70 font-medium">
                 Amount Paid:
               </span>
-              <span className="text-base font-semibold text-white/95">
+              <span className="text-base text-white/95 font-semibold">
                 {formatCurrency(periodAmountPaid, currency)}
               </span>
             </div>
           )}
-          <div className="flex items-center justify-between border-b border-white/5 py-3 last:border-b-0">
-            <span className="text-sm font-medium text-white/70">
+          <div className="flex justify-between items-center py-3 border-b border-white/5 last:border-b-0">
+            <span className="text-sm text-white/70 font-medium">
               {period ? 'Amount Remaining:' : 'Remaining Balance:'}
             </span>
-            <span className="text-base font-semibold text-white/95">
+            <span className="text-base text-white/95 font-semibold">
               {formatCurrency(periodAmountRemaining, currency)}
             </span>
           </div>
@@ -227,7 +227,7 @@ export function LogPaymentModal({
         <div className="flex flex-col gap-2">
           <label
             htmlFor="payment-date"
-            className="flex items-center gap-1 text-[0.95rem] font-semibold text-white/90"
+            className="text-[0.95rem] font-semibold text-white/90 flex items-center gap-1"
           >
             Payment Date <span className="text-danger-500">*</span>
           </label>
@@ -239,14 +239,14 @@ export function LogPaymentModal({
             required
             max={new Date().toISOString().split('T')[0]}
             disabled={isSubmitting}
-            className="bg-white/8 font-inherit ease focus:bg-white/12 rounded-lg border border-white/15 px-4 py-3 text-base text-white/95 transition-all duration-200 focus:border-primary-500/50 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+            className="bg-white/8 border border-white/15 rounded-lg px-4 py-3 text-base text-white/95 font-inherit transition-all duration-200 ease focus:outline-none focus:border-primary-500/50 focus:bg-white/12 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] disabled:opacity-60 disabled:cursor-not-allowed"
           />
         </div>
 
         <div className="flex flex-col gap-2">
           <label
             htmlFor="payment-amount"
-            className="flex items-center gap-1 text-[0.95rem] font-semibold text-white/90"
+            className="text-[0.95rem] font-semibold text-white/90 flex items-center gap-1"
           >
             Payment Amount ({currency}){' '}
             <span className="text-danger-500">*</span>
@@ -265,9 +265,9 @@ export function LogPaymentModal({
                 : periodAmount.toString()
             }
             disabled={isSubmitting}
-            className="bg-white/8 font-inherit ease focus:bg-white/12 rounded-lg border border-white/15 px-4 py-3 text-base text-white/95 transition-all duration-200 focus:border-primary-500/50 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+            className="bg-white/8 border border-white/15 rounded-lg px-4 py-3 text-base text-white/95 font-inherit transition-all duration-200 ease focus:outline-none focus:border-primary-500/50 focus:bg-white/12 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] disabled:opacity-60 disabled:cursor-not-allowed"
           />
-          <small className="-mt-1 text-[0.85rem] text-white/60">
+          <small className="text-[0.85rem] text-white/60 -mt-1">
             {period
               ? `Remaining: ${formatCurrency(periodAmountRemaining, currency)} (You can enter 0 to mark as paid when bill is 0)`
               : `Default: ${formatCurrency(periodAmount, currency)}${account.accountType === 'bill' ? ' (You can enter 0 to mark as paid when bill is 0)' : ''}`}
@@ -277,7 +277,7 @@ export function LogPaymentModal({
         <div className="flex flex-col gap-2">
           <label
             htmlFor="payment-notes"
-            className="flex items-center gap-1 text-[0.95rem] font-semibold text-white/90"
+            className="text-[0.95rem] font-semibold text-white/90 flex items-center gap-1"
           >
             Notes (Optional)
           </label>
@@ -288,29 +288,29 @@ export function LogPaymentModal({
             rows={3}
             placeholder="Add any notes about this payment..."
             disabled={isSubmitting}
-            className="bg-white/8 font-inherit ease focus:bg-white/12 min-h-[80px] resize-y rounded-lg border border-white/15 px-4 py-3 text-base text-white/95 transition-all duration-200 focus:border-primary-500/50 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+            className="bg-white/8 border border-white/15 rounded-lg px-4 py-3 text-base text-white/95 font-inherit transition-all duration-200 ease resize-y min-h-[80px] focus:outline-none focus:border-primary-500/50 focus:bg-white/12 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] disabled:opacity-60 disabled:cursor-not-allowed"
           />
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 rounded-lg border border-danger-500/30 bg-danger-500/15 px-4 py-3 text-sm text-danger-500">
+          <div className="flex items-center gap-2 px-4 py-3 bg-danger-500/15 border border-danger-500/30 rounded-lg text-danger-500 text-sm">
             <span className="text-xl">⚠️</span>
             {error}
           </div>
         )}
 
-        <div className="mt-2 flex justify-end gap-4">
+        <div className="flex gap-4 justify-end mt-2">
           <button
             type="button"
             onClick={onClose}
-            className="ease font-inherit cursor-pointer rounded-lg border border-none border-white/20 bg-white/10 px-6 py-3 text-base font-semibold text-white/90 transition-all duration-200 hover:border-white/30 hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60"
+            className="px-6 py-3 rounded-lg text-base font-semibold cursor-pointer transition-all duration-200 ease border-none font-inherit bg-white/10 text-white/90 border border-white/20 hover:bg-white/15 hover:border-white/30 disabled:opacity-60 disabled:cursor-not-allowed"
             disabled={isSubmitting}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="ease font-inherit cursor-pointer rounded-lg border-none bg-gradient-to-br from-primary-500 to-purple-500 px-6 py-3 text-base font-semibold text-white shadow-[0_4px_12px_rgba(99,102,241,0.3)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(99,102,241,0.4)] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+            className="px-6 py-3 rounded-lg text-base font-semibold cursor-pointer transition-all duration-200 ease border-none font-inherit bg-gradient-to-br from-primary-500 to-purple-500 text-white shadow-[0_4px_12px_rgba(99,102,241,0.3)] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(99,102,241,0.4)] disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0"
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Logging Payment...' : 'Log Payment'}

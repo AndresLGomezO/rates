@@ -46,24 +46,6 @@ lerna-debug.log*
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
-*.cache
-
-# Docker
+*.cache# Docker
 docker-compose.override.yml
 .env.docker
-
-# Terraform
-.terraform/
-.terraform.lock.hcl
-*.tfstate
-*.tfstate.*
-*.tfvars.backup
-*.tfvars.bak
-tfplan
-tfplan.*
-.terraformrc
-terraform.rc
-
-# Infrastructure setup scripts
-infra/.setup.config
-infra/.setup.log

@@ -54,13 +54,6 @@ docker-compose.override.yml
 *.md
 !README.md
 
-# Apps - exclude other apps and build artifacts
-apps/app/
-apps/auth-app/node_modules
-apps/auth-app/dist
-apps/auth-app/.vite
-
-# Packages - exclude other packages and build artifacts  
-packages/firebase-client/
-packages/ui-theme/node_modules
-packages/ui-theme/dist
+# Apps and packages (not needed for emulators)
+apps/
+packages/
