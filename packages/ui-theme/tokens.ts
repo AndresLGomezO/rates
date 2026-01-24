@@ -3,6 +3,7 @@
  *
  * Exported design tokens for programmatic access (e.g., charts, inline styles, calculations).
  * These values match the Tailwind config in tailwind.config.cjs.
+ * Cloud Build trigger: ui-theme package tokens
  *
  * Usage:
  *   import { colors, spacing, breakpoints } from '@rates/ui-theme/tokens';

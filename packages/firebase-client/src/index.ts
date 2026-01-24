@@ -3,6 +3,7 @@
  *
  * Centralized Firebase initialization and service exports.
  * Supports both emulator and live mode based on environment configuration.
+ * Cloud Build trigger: firebase-client package entry point
  */
 
 export { initializeFirebase } from './initialize';
