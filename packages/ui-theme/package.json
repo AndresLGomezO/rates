@@ -1,0 +1,13 @@
+{
+  "name": "@rates/ui-theme",
+  "version": "0.0.1",
+  "private": true,
+  "main": "index.cjs",
+  "type": "module",
+  "files": [
+    "tailwind.config.cjs",
+    "styles.css",
+    "tokens.ts",
+    "index.cjs"
+  ]
+}
