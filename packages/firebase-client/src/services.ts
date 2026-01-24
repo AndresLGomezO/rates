@@ -41,6 +41,7 @@ export function getAuth(): Auth {
  */
 export function getFirestore(databaseId?: string): Firestore {
   if (!firestoreInstance) {
+    // With Identity Platform, Firestore uses the same app as Auth (GCP project ID)
     const app = getFirebaseApp();
     firestoreInstance = databaseId
       ? getFirebaseFirestore(app, databaseId)
