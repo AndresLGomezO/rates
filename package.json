@@ -2,39 +2,18 @@
   "name": "rates-monorepo",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "description": "Monorepo for multiple applications",
   "scripts": {
     "dev": "pnpm --filter app dev",
     "build": "pnpm --filter app build",
     "preview": "pnpm --filter app preview",
-    "lint": "pnpm --filter \"./apps/*\" --filter \"./packages/*\" lint",
-    "lint:fix": "pnpm --filter \"./apps/*\" --filter \"./packages/*\" lint:fix",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "type-check": "pnpm --filter \"./apps/*\" --filter \"./packages/*\" type-check",
-    "check": "pnpm format:check && pnpm lint && pnpm type-check",
-    "prepare": "husky",
-    "firebase:emulators": "firebase emulators:start",
-    "firebase:emulators:exec": "firebase emulators:exec",
-    "firebase:deploy": "firebase deploy",
-    "firebase:deploy:rules": "firebase deploy --only firestore:rules",
-    "firebase:deploy:indexes": "firebase deploy --only firestore:indexes",
-    "docker:emulators:up": "docker-compose -f docker/docker-compose.yml up -d",
-    "docker:emulators:down": "docker-compose -f docker/docker-compose.yml down",
-    "docker:emulators:logs": "docker-compose -f docker/docker-compose.yml logs -f",
-    "docker:emulators:restart": "docker-compose -f docker/docker-compose.yml restart",
-    "docker:emulators:build": "docker-compose -f docker/docker-compose.yml build",
-    "docker:emulators:clean": "docker-compose -f docker/docker-compose.yml down -v"
+    "lint": "pnpm --filter app lint"
   },
-  "devDependencies": {
-    "firebase-tools": "^13.0.0",
-    "husky": "^9.1.7",
-    "prettier": "^3.4.2"
-  },
+  "devDependencies": {},
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
   },
   "packageManager": "pnpm@9.0.0"
 }
+

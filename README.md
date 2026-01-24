@@ -8,12 +8,6 @@ A monorepo structure for multiple applications using pnpm workspaces. This serve
 rates/
 ├── apps/
 │   └── app/          # React application with React Router v7
-├── packages/
-│   └── firebase-client/  # Firebase client SDK wrapper
-├── firebase/
-│   ├── firebase.json     # Firebase configuration
-│   ├── firestore.rules   # Firestore security rules
-│   └── firestore.indexes.json  # Firestore indexes
 ├── package.json      # Root package.json
 ├── pnpm-workspace.yaml
 └── README.md
@@ -83,9 +77,7 @@ To add a new application:
 
 ## Dependency Version Management
 
-This monorepo is configured to use pnpm's **catalog** feature to centralize dependency versions. All library versions are defined in `pnpm-workspace.yaml` for reference.
-
-**Note**: Due to a known issue with pnpm 9.0.0 catalog resolution, we're currently using direct version numbers in `package.json` files as a workaround. See `CATALOG_ISSUE.md` for details. The catalog is maintained for future use when this issue is resolved.
+This monorepo uses pnpm's **catalog** feature to centralize dependency versions. All library versions are defined in `pnpm-workspace.yaml` and referenced in each application's `package.json` using the `catalog:` protocol.
 
 ### Benefits
 
@@ -97,7 +89,6 @@ This monorepo is configured to use pnpm's **catalog** feature to centralize depe
 ### How It Works
 
 1. **Versions are defined in `pnpm-workspace.yaml`**:
-
    ```yaml
    catalog:
      react: ^18.3.1
@@ -106,7 +97,6 @@ This monorepo is configured to use pnpm's **catalog** feature to centralize depe
    ```
 
 2. **Applications reference catalog versions**:
-
    ```json
    {
      "dependencies": {
@@ -127,7 +117,6 @@ The following dependencies are centralized in the catalog:
 - **Build tools**: `vite`, `@vitejs/plugin-react`
 - **TypeScript**: `typescript`
 - **ESLint**: `eslint`, `@eslint/js`, `typescript-eslint`, and all ESLint plugins
-- **Firebase**: `firebase`, `@types/node`
 
 ## Technologies
 
@@ -137,68 +126,6 @@ The following dependencies are centralized in the catalog:
 - **Vite 6** - Build tool and dev server
 - **TypeScript 5.7** - Type safety
 - **ESLint 9** - Code linting
-- **Firebase 11.1** - Backend services (Auth, Firestore, Storage, Functions)
-
-## Firebase Setup
-
-This monorepo includes a global Firebase service package (`@rates/firebase-client`) that supports both emulator and live modes.
-
-### Quick Start
-
-1. **Install dependencies**:
-
-   ```bash
-   pnpm install
-   ```
-
-2. **Set up environment variables**:
-   - Copy `env.example` to `.env.local`
-   - Fill in your Firebase project configuration
-
-3. **Start Firebase emulators** (for local development):
-
-   ```bash
-   pnpm firebase:emulators
-   ```
-
-4. **Use Firebase in your app**:
-
-   ```typescript
-   import {
-     initializeFirebase,
-     getAuth,
-     getFirestore,
-   } from '@rates/firebase-client';
-
-   // Initialize Firebase (in your app entry point)
-   initializeFirebase();
-
-   // Use services
-   const auth = getAuth();
-   const firestore = getFirestore();
-   ```
-
-### Firebase Scripts
-
-- `pnpm firebase:emulators` - Start Firebase emulators
-- `pnpm firebase:deploy` - Deploy Firebase configuration
-- `pnpm firebase:deploy:rules` - Deploy Firestore rules only
-- `pnpm firebase:deploy:indexes` - Deploy Firestore indexes only
-
-### Environment Variables
-
-See `env.example` for all available environment variables. Key variables:
-
-- `VITE_FIREBASE_API_KEY` - Firebase API key
-- `VITE_FIREBASE_PROJECT_ID` - Firebase project ID
-- `VITE_USE_FIREBASE_EMULATOR` - Set to `true` to use emulators
-
-### Documentation
-
-For detailed Firebase usage, see:
-
-- `packages/firebase-client/README.md` - Complete API documentation
-- `packages/firebase-client/src/example-usage.ts` - Usage examples
 
 ## Using Branches
 
@@ -208,3 +135,4 @@ This monorepo is designed to be used as a base structure. You can create branche
 2. Modify or extend the `apps/app` application
 3. Or create new applications under `apps/`
 4. Each branch can represent a different application or feature set
+
