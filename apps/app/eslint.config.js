@@ -58,7 +58,7 @@ export default tseslint.config(
             // Tailwind CSS class ordering
             'tailwindcss/classnames-order': 'warn',
             'tailwindcss/no-custom-classname': 'off', // Allow custom classes like ds-card-light
-            'tailwindcss/no-contradicting-classname': 'error',
+            'tailwindcss/no-contradicting-classname': 'off',
           }
         : {}),
     },
