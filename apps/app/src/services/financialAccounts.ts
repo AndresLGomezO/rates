@@ -26,7 +26,6 @@ import type {
   UpdateFinancialAccountInput,
 } from '@rates/firebase-client';
 import { validateFinancialAccount } from '@rates/firebase-client';
-import { getUnpaidPaymentPeriods, logPaymentToPeriod } from './paymentPeriods';
 
 // Collection name constant
 export const FINANCIAL_ACCOUNTS_COLLECTION = 'financialAccounts';
@@ -373,6 +372,9 @@ export async function logPayment(
   let remainingPayment = paymentData.valuePaid;
 
   try {
+    const { getUnpaidPaymentPeriods, logPaymentToPeriod } =
+      await import('./paymentPeriods');
+
     // Get unpaid periods ordered by due date (oldest first)
     const unpaidPeriods = await getUnpaidPaymentPeriods(accountId, 365); // Get all unpaid periods
 

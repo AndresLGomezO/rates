@@ -54,16 +54,6 @@ docker-compose.override.yml
 *.md
 !README.md
 
-# Monorepo sources
-#
-# NOTE: This repo builds multiple images from the repo root (context: ".").
-# We exclude most of the monorepo by default for performance, but we must
-# explicitly re-include the workspaces that the app Dockerfiles `COPY`.
-apps/**
-!apps/app/**
-!apps/auth-app/**
-!apps/auth-api/**
-
-packages/**
-!packages/ui-theme/**
-!packages/firebase-client/**
+# Apps and packages (not needed for emulators)
+apps/
+packages/

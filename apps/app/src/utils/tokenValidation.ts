@@ -12,12 +12,6 @@ const AUTH_APP_URL =
   (import.meta.env as Record<string, string | undefined>).VITE_AUTH_APP_URL ??
   'http://localhost:5175';
 
-// Token validation endpoint base URL.
-// In local dev, auth-app (Vite) provides /api/validate. In production, use a real backend (auth-api).
-const AUTH_API_URL =
-  (import.meta.env as Record<string, string | undefined>).VITE_AUTH_API_URL ??
-  AUTH_APP_URL;
-
 export type TokenValidationResult = {
   isValid: boolean;
   token: string | null;
@@ -88,7 +82,7 @@ export async function validateToken(
     // Call auth-app server-side validation endpoint
     // This uses Firebase Admin SDK for proper token verification
     const response = await fetch(
-      `${AUTH_API_URL}/api/validate?token=${encodeURIComponent(token)}`,
+      `${AUTH_APP_URL}/api/validate?token=${encodeURIComponent(token)}`,
       {
         method: 'GET',
         headers: {

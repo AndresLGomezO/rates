@@ -4,7 +4,6 @@
  * Centralized Firebase initialization and service exports.
  * Supports both emulator and live mode based on environment configuration.
  */
-// CI/CD trigger.
 
 export { initializeFirebase } from './initialize';
 export { getAuth, getFirestore, getStorage, getFunctions } from './services';

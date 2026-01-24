@@ -7,9 +7,7 @@ const isEmulator =
   (env.VITE_USE_FIREBASE_EMULATOR !== 'false' && import.meta.env.PROD !== true);
 
 // Provide safe defaults so the emulator can run without real keys.
-// With Identity Platform, use GCP project ID if available, otherwise fall back to Firebase project ID
-const projectId =
-  env.VITE_GCP_PROJECT_ID ?? env.VITE_FIREBASE_PROJECT_ID ?? 'demo-project';
+const projectId = env.VITE_FIREBASE_PROJECT_ID ?? 'demo-project';
 const firebaseConfig: FirebaseOptions = {
   apiKey: env.VITE_FIREBASE_API_KEY ?? 'demo-api-key',
   authDomain: env.VITE_FIREBASE_AUTH_DOMAIN ?? `${projectId}.firebaseapp.com`,
