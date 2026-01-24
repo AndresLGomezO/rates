@@ -7,3 +7,18 @@ coverage
 .vscode
 .idea
 
+# OS
+.DS_Store
+Thumbs.db
+
+# Firebase
+.firebase
+firebase-debug.log
+firestore-debug.log
+ui-debug.log# Docker
+docker-compose.override.yml# Lock files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock# Generated files
+coverage
+.nyc_output

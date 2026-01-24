@@ -287,31 +287,31 @@ export function BatchPaymentModal({
         }}
         className="flex flex-col gap-6 py-4"
       >
-        <div className="bg-white/5 rounded-lg p-5 border border-neutral-700/30">
-          <div className="flex justify-between items-center py-3 border-b border-neutral-700/20 last:border-b-0">
-            <span className="text-sm text-white/70 font-medium">
+        <div className="rounded-lg border border-neutral-700/30 bg-white/5 p-5">
+          <div className="flex items-center justify-between border-b border-neutral-700/20 py-3 last:border-b-0">
+            <span className="text-sm font-medium text-white/70">
               Account Number:
             </span>
-            <span className="text-base text-white/95 font-semibold">
+            <span className="text-base font-semibold text-white/95">
               {account.accountNumber}
             </span>
           </div>
-          <div className="flex justify-between items-center py-3 border-b border-neutral-700/20 last:border-b-0">
-            <span className="text-sm text-white/70 font-medium">
+          <div className="flex items-center justify-between border-b border-neutral-700/20 py-3 last:border-b-0">
+            <span className="text-sm font-medium text-white/70">
               Pending Periods:
             </span>
-            <span className="text-base text-white/95 font-semibold">
+            <span className="text-base font-semibold text-white/95">
               {periods.length}
             </span>
           </div>
         </div>
 
         {loading ? (
-          <div className="text-center py-8 text-white/70">
+          <div className="py-8 text-center text-white/70">
             Loading periods...
           </div>
         ) : periods.length === 0 ? (
-          <div className="p-4 bg-warning-500/10 rounded-lg border border-warning-500/30 mb-4 text-white/90">
+          <div className="mb-4 rounded-lg border border-warning-500/30 bg-warning-500/10 p-4 text-white/90">
             No pending periods found for this account.
           </div>
         ) : (
@@ -319,7 +319,7 @@ export function BatchPaymentModal({
             <div className="flex flex-col gap-2">
               <label
                 htmlFor="start-period"
-                className="text-[0.95rem] font-semibold text-white/90 flex items-center gap-1"
+                className="flex items-center gap-1 text-[0.95rem] font-semibold text-white/90"
               >
                 From Period <span className="text-danger-500">*</span>
               </label>
@@ -336,7 +336,7 @@ export function BatchPaymentModal({
                 }}
                 required
                 disabled={isSubmitting}
-                className="bg-white/8 border border-white/15 rounded-lg px-4 py-3 text-base text-white/95 font-inherit transition-all duration-200 ease-in-out focus:outline-none focus:border-primary-500/50 focus:bg-white/12 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer [&>option]:bg-[rgba(30,30,30,0.95)] [&>option]:text-white/95"
+                className="bg-white/8 font-inherit focus:bg-white/12 cursor-pointer rounded-lg border border-white/15 px-4 py-3 text-base text-white/95 transition-all duration-200 ease-in-out focus:border-primary-500/50 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 [&>option]:bg-[rgba(30,30,30,0.95)] [&>option]:text-white/95"
               >
                 {availablePeriodNumbers.map((num) => (
                   <option key={num} value={num}>
@@ -349,11 +349,11 @@ export function BatchPaymentModal({
             <div className="flex flex-col gap-2">
               <label
                 htmlFor="end-period"
-                className="text-[0.95rem] font-semibold text-white/90 flex items-center gap-1"
+                className="flex items-center gap-1 text-[0.95rem] font-semibold text-white/90"
               >
                 To Period <span className="text-danger-500">*</span>
                 {currentPeriodNumber !== null && (
-                  <span className="text-sm text-white/60 font-normal ml-2">
+                  <span className="ml-2 text-sm font-normal text-white/60">
                     (Max: Period #{currentPeriodNumber})
                   </span>
                 )}
@@ -377,7 +377,7 @@ export function BatchPaymentModal({
                 }}
                 required
                 disabled={isSubmitting}
-                className="bg-white/8 border border-white/15 rounded-lg px-4 py-3 text-base text-white/95 font-inherit transition-all duration-200 ease-in-out focus:outline-none focus:border-primary-500/50 focus:bg-white/12 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer [&>option]:bg-[rgba(30,30,30,0.95)] [&>option]:text-white/95"
+                className="bg-white/8 font-inherit focus:bg-white/12 cursor-pointer rounded-lg border border-white/15 px-4 py-3 text-base text-white/95 transition-all duration-200 ease-in-out focus:border-primary-500/50 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 [&>option]:bg-[rgba(30,30,30,0.95)] [&>option]:text-white/95"
               >
                 {availablePeriodNumbers
                   .filter((num) => num >= startPeriod)
@@ -390,7 +390,7 @@ export function BatchPaymentModal({
             </div>
 
             {periodsInRange.length > 0 && (
-              <div className="p-4 bg-[rgba(33,150,243,0.1)] rounded-lg border border-[rgba(33,150,243,0.3)] mb-4 text-white/90">
+              <div className="mb-4 rounded-lg border border-[rgba(33,150,243,0.3)] bg-[rgba(33,150,243,0.1)] p-4 text-white/90">
                 <div className="mb-2 font-semibold text-[#2196f3]">
                   Preview:
                 </div>
@@ -419,7 +419,7 @@ export function BatchPaymentModal({
             <div className="flex flex-col gap-2">
               <label
                 htmlFor="use-custom-date"
-                className="flex items-center gap-2 cursor-pointer"
+                className="flex cursor-pointer items-center gap-2"
               >
                 <input
                   id="use-custom-date"
@@ -427,7 +427,7 @@ export function BatchPaymentModal({
                   checked={useCustomDate}
                   onChange={(e) => setUseCustomDate(e.target.checked)}
                   disabled={isSubmitting}
-                  className="w-[18px] h-[18px] cursor-pointer disabled:cursor-not-allowed"
+                  className="h-[18px] w-[18px] cursor-pointer disabled:cursor-not-allowed"
                 />
                 <span className="text-[0.95rem] font-semibold text-white/90">
                   Use custom payment date (otherwise uses each period's due
@@ -440,7 +440,7 @@ export function BatchPaymentModal({
               <div className="flex flex-col gap-2">
                 <label
                   htmlFor="custom-payment-date"
-                  className="text-[0.95rem] font-semibold text-white/90 flex items-center gap-1"
+                  className="flex items-center gap-1 text-[0.95rem] font-semibold text-white/90"
                 >
                   Payment Date <span className="text-danger-500">*</span>
                 </label>
@@ -452,7 +452,7 @@ export function BatchPaymentModal({
                   required={useCustomDate}
                   max={new Date().toISOString().split('T')[0]}
                   disabled={isSubmitting}
-                  className="bg-white/8 border border-white/15 rounded-lg px-4 py-3 text-base text-white/95 font-inherit transition-all duration-200 ease-in-out focus:outline-none focus:border-primary-500/50 focus:bg-white/12 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="bg-white/8 font-inherit focus:bg-white/12 rounded-lg border border-white/15 px-4 py-3 text-base text-white/95 transition-all duration-200 ease-in-out focus:border-primary-500/50 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </div>
             )}
@@ -460,7 +460,7 @@ export function BatchPaymentModal({
             <div className="flex flex-col gap-2">
               <label
                 htmlFor="batch-notes"
-                className="text-[0.95rem] font-semibold text-white/90 flex items-center gap-1"
+                className="flex items-center gap-1 text-[0.95rem] font-semibold text-white/90"
               >
                 Notes (Optional)
               </label>
@@ -471,12 +471,12 @@ export function BatchPaymentModal({
                 rows={3}
                 placeholder="Add notes for all payments (e.g., 'Historical payments migration')..."
                 disabled={isSubmitting}
-                className="bg-white/8 border border-white/15 rounded-lg px-4 py-3 text-base text-white/95 font-inherit transition-all duration-200 ease-in-out resize-y min-h-[80px] focus:outline-none focus:border-primary-500/50 focus:bg-white/12 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] disabled:opacity-60 disabled:cursor-not-allowed placeholder:text-white/40"
+                className="bg-white/8 font-inherit focus:bg-white/12 min-h-[80px] resize-y rounded-lg border border-white/15 px-4 py-3 text-base text-white/95 transition-all duration-200 ease-in-out placeholder:text-white/40 focus:border-primary-500/50 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
               />
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 px-4 py-3 bg-danger-500/15 border border-danger-500/30 rounded-lg text-danger-500 text-sm">
+              <div className="flex items-center gap-2 rounded-lg border border-danger-500/30 bg-danger-500/15 px-4 py-3 text-sm text-danger-500">
                 <span className="text-lg">⚠️</span>
                 {error}
               </div>
@@ -484,14 +484,14 @@ export function BatchPaymentModal({
 
             {result && (
               <div
-                className={`p-4 rounded-lg mb-4 text-white/90 ${
+                className={`mb-4 rounded-lg p-4 text-white/90 ${
                   result.failed > 0
-                    ? 'bg-danger-500/10 border border-danger-500/30'
-                    : 'bg-success-css/10 border border-success-css/30'
+                    ? 'border border-danger-500/30 bg-danger-500/10'
+                    : 'border border-success-css/30 bg-success-css/10'
                 }`}
               >
                 <div
-                  className={`font-semibold mb-2 ${
+                  className={`mb-2 font-semibold ${
                     result.failed > 0 ? 'text-danger-500' : 'text-success-css'
                   }`}
                 >
@@ -503,7 +503,7 @@ export function BatchPaymentModal({
                     {result.success !== 1 ? 's' : ''}
                   </div>
                   {result.failed > 0 && (
-                    <div className="text-danger-500 mt-2">
+                    <div className="mt-2 text-danger-500">
                       ✗ Failed: {result.failed} payment
                       {result.failed !== 1 ? 's' : ''}
                     </div>
@@ -526,11 +526,11 @@ export function BatchPaymentModal({
               </div>
             )}
 
-            <div className="flex gap-4 justify-end mt-2">
+            <div className="mt-2 flex justify-end gap-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-3 rounded-lg text-base font-semibold cursor-pointer transition-all duration-200 ease-in-out border-none bg-white/10 text-white/90 border border-white/20 hover:bg-white/15 hover:border-white/30 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="cursor-pointer rounded-lg border border-none border-white/20 bg-white/10 px-6 py-3 text-base font-semibold text-white/90 transition-all duration-200 ease-in-out hover:border-white/30 hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={isSubmitting}
               >
                 {result ? 'Close' : 'Cancel'}
@@ -538,7 +538,7 @@ export function BatchPaymentModal({
               {!result && (
                 <button
                   type="submit"
-                  className="px-6 py-3 rounded-lg text-base font-semibold cursor-pointer transition-all duration-200 ease-in-out border-none bg-gradient-to-br from-[#1e40af] to-[#334155] text-white shadow-[0_4px_12px_rgba(30,64,175,0.4)] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(30,64,175,0.5)] disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 font-inherit"
+                  className="font-inherit cursor-pointer rounded-lg border-none bg-gradient-to-br from-[#1e40af] to-[#334155] px-6 py-3 text-base font-semibold text-white shadow-[0_4px_12px_rgba(30,64,175,0.4)] transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(30,64,175,0.5)] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isSubmitting || periodsInRange.length === 0}
                 >
                   {isSubmitting
