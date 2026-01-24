@@ -6,44 +6,19 @@ import './index.css';
 import App from './App.tsx';
 import Home from './pages/Home.tsx';
 import About from './pages/About.tsx';
-import Dashboard from './pages/Dashboard.tsx';
-import { AuthProvider } from './contexts/AuthContext';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import { AuthRedirectHandler } from './components/AuthRedirectHandler';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: (
-      <>
-        <AuthRedirectHandler />
-        <App />
-      </>
-    ),
+    element: <App />,
     children: [
       {
         index: true,
-        element: (
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        ),
+        element: <Home />,
       },
       {
         path: 'about',
-        element: (
-          <ProtectedRoute>
-            <About />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'dashboard',
-        element: (
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        ),
+        element: <About />,
       },
     ],
   },
@@ -51,8 +26,6 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
+    <RouterProvider router={router} />
   </StrictMode>
 );

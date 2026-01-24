@@ -2,8 +2,7 @@
 set -e
 
 # Default project ID (using demo- prefix to avoid production API calls)
-# Must match VITE_FIREBASE_PROJECT_ID in your apps
-PROJECT_ID=${FIREBASE_PROJECT_ID:-demo-project}
+PROJECT_ID=${FIREBASE_PROJECT_ID:-demo-default}
 
 # Change to app directory where firebase.json is located
 cd /app

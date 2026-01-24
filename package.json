@@ -6,11 +6,8 @@
   "description": "Monorepo for multiple applications",
   "scripts": {
     "dev": "pnpm --filter app dev",
-    "dev:auth-app": "pnpm --filter auth-app dev",
     "build": "pnpm --filter app build",
-    "build:auth-app": "pnpm --filter auth-app build",
     "preview": "pnpm --filter app preview",
-    "preview:auth-app": "pnpm --filter auth-app preview",
     "lint": "pnpm --filter \"./apps/*\" --filter \"./packages/*\" lint",
     "lint:fix": "pnpm --filter \"./apps/*\" --filter \"./packages/*\" lint:fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
@@ -23,13 +20,12 @@
     "firebase:deploy": "firebase deploy",
     "firebase:deploy:rules": "firebase deploy --only firestore:rules",
     "firebase:deploy:indexes": "firebase deploy --only firestore:indexes",
-    "docker:emulators:up": "test -f .env.docker || cp docker/env.docker.example .env.docker; docker-compose -f docker/docker-compose.yml up -d",
+    "docker:emulators:up": "docker-compose -f docker/docker-compose.yml up -d",
     "docker:emulators:down": "docker-compose -f docker/docker-compose.yml down",
     "docker:emulators:logs": "docker-compose -f docker/docker-compose.yml logs -f",
     "docker:emulators:restart": "docker-compose -f docker/docker-compose.yml restart",
     "docker:emulators:build": "docker-compose -f docker/docker-compose.yml build",
-    "docker:emulators:clean": "docker-compose -f docker/docker-compose.yml down -v",
-    "docker:emulators:check": "docker/check-emulators.sh"
+    "docker:emulators:clean": "docker-compose -f docker/docker-compose.yml down -v"
   },
   "devDependencies": {
     "firebase-tools": "^13.0.0",
