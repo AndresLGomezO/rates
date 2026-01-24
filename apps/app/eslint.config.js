@@ -4,13 +4,6 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 import baseConfig from '../../eslint.config.js';
 
-let tailwindcssPlugin = null;
-try {
-  tailwindcssPlugin = (await import('eslint-plugin-tailwindcss')).default;
-} catch {
-  // Optional: keep lint working even if eslint-plugin-tailwindcss isn't installed yet.
-}
-
 /**
  * ESLint configuration for the React app
  * Extends the shared base configuration and adds React-specific rules
@@ -35,7 +28,6 @@ export default tseslint.config(
     plugins: {
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
-      ...(tailwindcssPlugin ? { tailwindcss: tailwindcssPlugin } : {}),
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
@@ -53,14 +45,6 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-return': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'warn',
       '@typescript-eslint/restrict-template-expressions': 'off',
-      ...(tailwindcssPlugin
-        ? {
-            // Tailwind CSS class ordering
-            'tailwindcss/classnames-order': 'warn',
-            'tailwindcss/no-custom-classname': 'off', // Allow custom classes like ds-card-light
-            'tailwindcss/no-contradicting-classname': 'error',
-          }
-        : {}),
     },
   }
 );

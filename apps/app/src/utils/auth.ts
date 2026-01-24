@@ -110,14 +110,6 @@ export function getAuthToken(
 }
 
 /**
- * Set auth token in cookie
- */
-export function setAuthToken(token: string, maxAgeSeconds?: number): void {
-  const maxAge = maxAgeSeconds ?? 3600; // Default 1 hour
-  setCookie(COOKIE_NAME, token, maxAge);
-}
-
-/**
  * Clear auth token from cookie and URL
  */
 export function clearAuthToken(): void {

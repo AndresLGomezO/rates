@@ -1,18 +1,15 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './firebase'; // Initialize Firebase
 import './index.css';
-import Login from './pages/Login.tsx';
+import App from './App.tsx';
+import Home from './pages/Home.tsx';
+import About from './pages/About.tsx';
 import Dashboard from './pages/Dashboard.tsx';
-import AccountsByType from './pages/AccountsByType.tsx';
-import AccountDetail from './pages/AccountDetail.tsx';
-import MigrateAccounts from './pages/MigrateAccounts.tsx';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthRedirectHandler } from './components/AuthRedirectHandler';
-import { PublicLayout } from './components/PublicLayout';
-import { PrivateLayout } from './components/PrivateLayout';
 
 const router = createBrowserRouter([
   {
@@ -20,65 +17,31 @@ const router = createBrowserRouter([
     element: (
       <>
         <AuthRedirectHandler />
-        <Outlet />
+        <App />
       </>
     ),
     children: [
       {
-        path: 'login',
+        index: true,
         element: (
-          <PublicLayout>
-            <Login />
-          </PublicLayout>
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'about',
+        element: (
+          <ProtectedRoute>
+            <About />
+          </ProtectedRoute>
         ),
       },
       {
         path: 'dashboard',
         element: (
           <ProtectedRoute>
-            <PrivateLayout>
-              <Dashboard />
-            </PrivateLayout>
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'accounts/:type',
-        element: (
-          <ProtectedRoute>
-            <PrivateLayout>
-              <AccountsByType />
-            </PrivateLayout>
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'account/:accountNumber',
-        element: (
-          <ProtectedRoute>
-            <PrivateLayout>
-              <AccountDetail />
-            </PrivateLayout>
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'migrate',
-        element: (
-          <ProtectedRoute>
-            <PrivateLayout>
-              <MigrateAccounts />
-            </PrivateLayout>
-          </ProtectedRoute>
-        ),
-      },
-      {
-        index: true,
-        element: (
-          <ProtectedRoute>
-            <PrivateLayout>
-              <Dashboard />
-            </PrivateLayout>
+            <Dashboard />
           </ProtectedRoute>
         ),
       },

@@ -15,7 +15,7 @@ pnpm format || {
 # Add formatted files back to staging
 git add -A || true
 
-echo "🔧 Fixing linting issues (includes Tailwind CSS class ordering)..."
+echo "🔧 Fixing linting issues..."
 pnpm lint:fix || {
   echo "❌ Lint auto-fix failed"
   exit 1
@@ -37,8 +37,3 @@ pnpm type-check || {
 }
 
 echo "✅ All pre-commit checks passed!"
-
-
-
-
-
