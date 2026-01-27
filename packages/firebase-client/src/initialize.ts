@@ -234,6 +234,23 @@ export function initializeFirebase(
     }
   } else {
     console.log('🔥 [initializeFirebase] Firebase initialized in live mode');
+    console.log(
+      '🔥 [initializeFirebase] Project ID:',
+      firebaseConfig.projectId
+    );
+    console.log(
+      '🔥 [initializeFirebase] API Key:',
+      firebaseConfig.apiKey ? 'SET' : 'NOT SET'
+    );
+    console.log(
+      '🔥 [initializeFirebase] Auth Domain:',
+      firebaseConfig.authDomain
+    );
+    console.log(
+      '🔥 [initializeFirebase] Storage Bucket:',
+      firebaseConfig.storageBucket
+    );
+    console.log('🔥 [initializeFirebase] App ID:', firebaseConfig.appId);
     if (mode !== 'emulator') {
       console.log('🔥 [initializeFirebase] Not in emulator mode, mode:', mode);
     }
@@ -241,6 +258,15 @@ export function initializeFirebase(
       console.log('🔥 [initializeFirebase] No emulator config found');
     }
   }
+
+  console.log('✅ [initializeFirebase] Firebase app initialized successfully');
+  console.log('✅ [initializeFirebase] App name:', firebaseApp.name);
+  console.log('✅ [initializeFirebase] App options:', {
+    projectId: firebaseApp.options.projectId,
+    apiKey: firebaseApp.options.apiKey ? 'SET' : 'NOT SET',
+    authDomain: firebaseApp.options.authDomain,
+    storageBucket: firebaseApp.options.storageBucket,
+  });
 
   initialized = true;
   return firebaseApp;

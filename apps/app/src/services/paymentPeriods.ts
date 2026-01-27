@@ -19,7 +19,8 @@ import {
   type DocumentReference,
   type QuerySnapshot,
 } from 'firebase/firestore';
-import { getFirestore } from '@rates/firebase-client';
+import { onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, getAuth } from '@rates/firebase-client';
 import type {
   PaymentPeriod,
   CreatePaymentPeriodInput,
@@ -70,11 +71,79 @@ function getPaymentPeriodRef(
 export async function createPaymentPeriod(
   periodData: CreatePaymentPeriodInput
 ): Promise<void> {
+  console.log('🟡 [createPaymentPeriod] Starting payment period creation...');
+  console.log(
+    '🟡 [createPaymentPeriod] Account Number:',
+    periodData.accountNumber
+  );
+  console.log(
+    '🟡 [createPaymentPeriod] Period Number:',
+    periodData.periodNumber
+  );
+
+  // Wait for Firebase Auth to be ready
+  const auth = getAuth();
+  let currentUser = auth.currentUser;
+  if (!currentUser) {
+    console.warn(
+      '⚠️ [createPaymentPeriod] No authenticated user, waiting for auth state...'
+    );
+    await new Promise<void>((resolve) => {
+      const unsubscribe = onAuthStateChanged(auth, (_user) => {
+        unsubscribe();
+        resolve();
+      });
+      setTimeout(() => {
+        unsubscribe();
+        resolve();
+      }, 5000);
+    });
+    // Re-check auth state after waiting
+    currentUser = auth.currentUser;
+  }
+  console.log('🟡 [createPaymentPeriod] Firebase Auth state:', {
+    isAuthenticated: !!currentUser,
+    uid: currentUser?.uid ?? 'null',
+  });
+
   const firestore: Firestore = getFirestore();
+  console.log('🟡 [createPaymentPeriod] Firestore instance retrieved');
+  console.log(
+    '🟡 [createPaymentPeriod] Project ID:',
+    firestore.app.options.projectId
+  );
+
+  // Verify the account exists and belongs to the user
+  const { getFinancialAccount } = await import('./financialAccounts');
+  const account = await getFinancialAccount(periodData.accountNumber);
+  if (!account) {
+    throw new Error(`Account ${periodData.accountNumber} not found`);
+  }
+  console.log('🟡 [createPaymentPeriod] Account found:', {
+    accountNumber: account.accountNumber,
+    userId: account.userId,
+    authUid: currentUser?.uid ?? 'null',
+    userIdMatches: account.userId === currentUser?.uid,
+  });
+
+  if (currentUser && account.userId !== currentUser.uid) {
+    throw new Error(
+      `Account ${periodData.accountNumber} does not belong to current user`
+    );
+  }
+
   const periodRef = getPaymentPeriodRef(
     firestore,
     periodData.accountNumber,
     periodData.periodNumber
+  );
+  console.log('🟡 [createPaymentPeriod] Period reference created');
+  console.log('🟡 [createPaymentPeriod] Full path:', periodRef.path);
+  console.log(
+    '🟡 [createPaymentPeriod] Full Firestore path: projects/' +
+      firestore.app.options.projectId +
+      '/databases/(default)/documents/' +
+      periodRef.path
   );
 
   const createdAt: ReturnType<typeof Timestamp.now> = Timestamp.now();
@@ -143,7 +212,36 @@ export async function createPaymentPeriod(
     }),
   };
 
-  await setDoc(periodRef, periodToSave as PaymentPeriod);
+  console.log('🟡 [createPaymentPeriod] Saving period to Firestore...');
+  console.log(
+    '🟡 [createPaymentPeriod] Period data keys:',
+    Object.keys(periodToSave)
+  );
+
+  try {
+    await setDoc(periodRef, periodToSave as PaymentPeriod);
+    console.log('✅ [createPaymentPeriod] Period saved successfully!');
+    console.log('✅ [createPaymentPeriod] Path:', periodRef.path);
+  } catch (error) {
+    console.error('🔴 [createPaymentPeriod] Firestore save error:', error);
+    console.error(
+      '🔴 [createPaymentPeriod] Error code:',
+      error && typeof error === 'object' && 'code' in error
+        ? error.code
+        : 'unknown'
+    );
+    console.error(
+      '🔴 [createPaymentPeriod] Error message:',
+      error instanceof Error ? error.message : String(error)
+    );
+    console.error('🔴 [createPaymentPeriod] Path:', periodRef.path);
+    console.error(
+      '🔴 [createPaymentPeriod] Auth UID:',
+      currentUser?.uid ?? 'null'
+    );
+    console.error('🔴 [createPaymentPeriod] Account userId:', account.userId);
+    throw error;
+  }
 }
 
 /**

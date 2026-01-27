@@ -18,8 +18,9 @@ import {
   type DocumentReference,
   type QuerySnapshot,
 } from 'firebase/firestore';
-import { getFirestore } from '@rates/firebase-client';
+import { getFirestore, getAuth } from '@rates/firebase-client';
 import { getAuthToken } from '../utils/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import type {
   FinancialAccount,
   CreateFinancialAccountInput,
@@ -205,12 +206,73 @@ export async function createFinancialAccount(
 
     console.log('🔵 [createFinancialAccount] Step 7: Saving to Firestore...');
     console.log(
+      '🔵 [createFinancialAccount] Firestore database:',
+      firestore.app.options.projectId
+    );
+    console.log(
+      '🔵 [createFinancialAccount] Collection path:',
+      FINANCIAL_ACCOUNTS_COLLECTION
+    );
+    console.log('🔵 [createFinancialAccount] Document ID:', accountId);
+    console.log(
+      '🔵 [createFinancialAccount] Full document path:',
+      accountRef.path
+    );
+    console.log(
+      '🔵 [createFinancialAccount] Full Firestore path: projects/' +
+        firestore.app.options.projectId +
+        '/databases/(default)/documents/' +
+        accountRef.path
+    );
+    console.log(
+      '🔵 [createFinancialAccount] Connection: Firebase SDK → GCP Firestore'
+    );
+    console.log(
+      '🔵 [createFinancialAccount] Database: (default) in project',
+      firestore.app.options.projectId
+    );
+    console.log(
       '🔵 [createFinancialAccount] Account data to save:',
       JSON.stringify(account, null, 2)
     );
-    await setDoc(accountRef, account);
-    console.log('✅ [createFinancialAccount] Account saved successfully!');
-    console.log('✅ [createFinancialAccount] Account ID:', accountId);
+
+    try {
+      await setDoc(accountRef, account);
+      console.log('✅ [createFinancialAccount] Account saved successfully!');
+      console.log('✅ [createFinancialAccount] Account ID:', accountId);
+      console.log(
+        '✅ [createFinancialAccount] Document path:',
+        accountRef.path
+      );
+      console.log(
+        '✅ [createFinancialAccount] Database:',
+        firestore.app.options.projectId
+      );
+    } catch (saveError) {
+      console.error(
+        '🔴 [createFinancialAccount] Firestore save error:',
+        saveError
+      );
+      console.error(
+        '🔴 [createFinancialAccount] Error code:',
+        saveError && typeof saveError === 'object' && 'code' in saveError
+          ? saveError.code
+          : 'unknown'
+      );
+      console.error(
+        '🔴 [createFinancialAccount] Error message:',
+        saveError instanceof Error ? saveError.message : String(saveError)
+      );
+      console.error(
+        '🔴 [createFinancialAccount] Document path:',
+        accountRef.path
+      );
+      console.error(
+        '🔴 [createFinancialAccount] Database:',
+        firestore.app.options.projectId
+      );
+      throw saveError;
+    }
 
     return accountId;
   } catch (error) {
@@ -240,37 +302,268 @@ export async function createFinancialAccount(
 export async function getFinancialAccount(
   accountId: string
 ): Promise<FinancialAccount | null> {
-  const firestore: Firestore = getFirestore();
-  const accountRef: DocumentReference<FinancialAccount> = doc(
-    firestore,
-    FINANCIAL_ACCOUNTS_COLLECTION,
-    accountId
-  ) as DocumentReference<FinancialAccount>;
-  const accountSnap = await getDoc(accountRef);
+  console.log('🔵 [getFinancialAccount] Starting account retrieval...');
+  console.log('🔵 [getFinancialAccount] Account ID:', accountId);
 
-  if (!accountSnap.exists()) {
-    return null;
+  try {
+    const firestore: Firestore = getFirestore();
+    console.log('🔵 [getFinancialAccount] Firestore instance retrieved');
+    console.log(
+      '🔵 [getFinancialAccount] Firestore database:',
+      firestore.app.options.projectId
+    );
+    console.log(
+      '🔵 [getFinancialAccount] Collection:',
+      FINANCIAL_ACCOUNTS_COLLECTION
+    );
+    console.log(
+      '🔵 [getFinancialAccount] Connection: Firebase SDK → GCP Firestore'
+    );
+    console.log(
+      '🔵 [getFinancialAccount] Full database path: projects/' +
+        firestore.app.options.projectId +
+        '/databases/(default)'
+    );
+
+    const accountRef: DocumentReference<FinancialAccount> = doc(
+      firestore,
+      FINANCIAL_ACCOUNTS_COLLECTION,
+      accountId
+    ) as DocumentReference<FinancialAccount>;
+    console.log('🔵 [getFinancialAccount] Document reference created');
+    console.log('🔵 [getFinancialAccount] Document path:', accountRef.path);
+    console.log(
+      '🔵 [getFinancialAccount] Full Firestore path:',
+      `projects/${firestore.app.options.projectId}/databases/(default)/documents/${accountRef.path}`
+    );
+    console.log(
+      '🔵 [getFinancialAccount] Connection: Firebase SDK → GCP Firestore'
+    );
+    console.log(
+      '🔵 [getFinancialAccount] Database: (default) in project',
+      firestore.app.options.projectId
+    );
+
+    console.log('🔵 [getFinancialAccount] Fetching document from Firestore...');
+    const accountSnap = await getDoc(accountRef);
+    console.log('🔵 [getFinancialAccount] Document snapshot received');
+    console.log(
+      '🔵 [getFinancialAccount] Document exists:',
+      accountSnap.exists()
+    );
+    console.log('🔵 [getFinancialAccount] Document ID:', accountSnap.id);
+    console.log(
+      '🔵 [getFinancialAccount] Document path:',
+      accountSnap.ref.path
+    );
+
+    if (!accountSnap.exists()) {
+      console.log('⚠️ [getFinancialAccount] Document does not exist');
+      return null;
+    }
+
+    const data = accountSnap.data() as unknown as FinancialAccount;
+    console.log('✅ [getFinancialAccount] Document retrieved successfully');
+    console.log(
+      '✅ [getFinancialAccount] Document data keys:',
+      Object.keys(data)
+    );
+    return data;
+  } catch (error) {
+    console.error('🔴 [getFinancialAccount] Error occurred:', error);
+    console.error(
+      '🔴 [getFinancialAccount] Error name:',
+      error instanceof Error ? error.name : 'Unknown'
+    );
+    console.error(
+      '🔴 [getFinancialAccount] Error message:',
+      error instanceof Error ? error.message : String(error)
+    );
+    if (error && typeof error === 'object' && 'code' in error) {
+      console.error('🔴 [getFinancialAccount] Error code:', error.code);
+    }
+    throw error;
   }
-
-  return accountSnap.data() as unknown as FinancialAccount;
 }
 
 /**
  * Get all financial accounts for the current user
  */
-export async function getUserFinancialAccounts(): Promise<FinancialAccount[]> {
-  const firestore: Firestore = getFirestore();
-  const userId = getCurrentUserId();
-  const accountsRef = collection(firestore, FINANCIAL_ACCOUNTS_COLLECTION);
-  const q = query(accountsRef, where('userId', '==', userId));
-  const querySnapshot: QuerySnapshot<FinancialAccount> = (await getDocs(
-    q
-  )) as QuerySnapshot<FinancialAccount>;
+/**
+ * Wait for Firebase Auth to be ready (user authenticated)
+ * This ensures request.auth is available for Firestore security rules
+ */
+function waitForAuth(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
 
-  return querySnapshot.docs.map((docSnapshot: { data: () => unknown }) => {
-    const data = docSnapshot.data();
-    return data as FinancialAccount;
+    if (currentUser) {
+      console.log(
+        '✅ [waitForAuth] User already authenticated:',
+        currentUser.uid
+      );
+      resolve();
+      return;
+    }
+
+    console.log('⏳ [waitForAuth] Waiting for auth state...');
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (user) => {
+        unsubscribe();
+        if (user) {
+          console.log('✅ [waitForAuth] Auth state ready, user:', user.uid);
+          resolve();
+        } else {
+          console.warn('⚠️ [waitForAuth] Auth state ready but no user');
+          // Still resolve - let Firestore rules handle it
+          resolve();
+        }
+      },
+      (error) => {
+        unsubscribe();
+        console.error('❌ [waitForAuth] Auth state error:', error);
+        reject(error);
+      }
+    );
+
+    // Timeout after 5 seconds
+    setTimeout(() => {
+      unsubscribe();
+      console.warn('⚠️ [waitForAuth] Auth state timeout, proceeding anyway');
+      resolve();
+    }, 5000);
   });
+}
+
+export async function getUserFinancialAccounts(): Promise<FinancialAccount[]> {
+  console.log('🔵 [getUserFinancialAccounts] Starting accounts retrieval...');
+
+  try {
+    // Wait for Firebase Auth to be ready before querying
+    // This ensures request.auth.uid is available for Firestore security rules
+    await waitForAuth();
+
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    console.log('🔵 [getUserFinancialAccounts] Firebase Auth state:', {
+      isAuthenticated: !!currentUser,
+      uid: currentUser?.uid ?? 'null',
+    });
+
+    const firestore: Firestore = getFirestore();
+    console.log('🔵 [getUserFinancialAccounts] Firestore instance retrieved');
+    console.log(
+      '🔵 [getUserFinancialAccounts] Firestore database:',
+      firestore.app.options.projectId
+    );
+    console.log(
+      '🔵 [getUserFinancialAccounts] Connection: Firebase SDK → GCP Firestore'
+    );
+    console.log(
+      '🔵 [getUserFinancialAccounts] Full database path: projects/' +
+        firestore.app.options.projectId +
+        '/databases/(default)'
+    );
+
+    const userId = getCurrentUserId();
+    console.log('🔵 [getUserFinancialAccounts] User ID from token:', userId);
+    console.log(
+      '🔵 [getUserFinancialAccounts] User ID from Firebase Auth:',
+      currentUser?.uid ?? 'null'
+    );
+
+    // Use Firebase Auth UID if available, otherwise fall back to token UID
+    const effectiveUserId = currentUser?.uid ?? userId;
+    if (currentUser && currentUser.uid !== userId) {
+      console.warn('⚠️ [getUserFinancialAccounts] UID mismatch:', {
+        tokenUid: userId,
+        authUid: currentUser.uid,
+      });
+    }
+
+    const accountsRef = collection(firestore, FINANCIAL_ACCOUNTS_COLLECTION);
+    console.log('🔵 [getUserFinancialAccounts] Collection reference created');
+    console.log(
+      '🔵 [getUserFinancialAccounts] Collection path:',
+      accountsRef.path
+    );
+    console.log(
+      '🔵 [getUserFinancialAccounts] Full Firestore path: projects/' +
+        firestore.app.options.projectId +
+        '/databases/(default)/documents/' +
+        accountsRef.path
+    );
+
+    const q = query(accountsRef, where('userId', '==', effectiveUserId));
+    console.log(
+      '🔵 [getUserFinancialAccounts] Query created: userId ==',
+      effectiveUserId
+    );
+    console.log('🔵 [getUserFinancialAccounts] Query details:', {
+      collection: FINANCIAL_ACCOUNTS_COLLECTION,
+      filter: `userId == ${effectiveUserId}`,
+      projectId: firestore.app.options.projectId,
+      database: '(default)', // Firestore database ID (default database)
+      fullPath: `projects/${firestore.app.options.projectId}/databases/(default)/documents/${accountsRef.path}`,
+      firebaseAuthUid: currentUser?.uid ?? 'null',
+      tokenUid: userId,
+    });
+    console.log('🔵 [getUserFinancialAccounts] Executing query...');
+
+    const querySnapshot: QuerySnapshot<FinancialAccount> = (await getDocs(
+      q
+    )) as QuerySnapshot<FinancialAccount>;
+
+    console.log('🔵 [getUserFinancialAccounts] Query snapshot received');
+    console.log(
+      '🔵 [getUserFinancialAccounts] Documents found:',
+      querySnapshot.size
+    );
+    console.log('🔵 [getUserFinancialAccounts] Empty:', querySnapshot.empty);
+    console.log(
+      '🔵 [getUserFinancialAccounts] Database:',
+      firestore.app.options.projectId
+    );
+    console.log('🔵 [getUserFinancialAccounts] Query metadata:', {
+      fromCache: querySnapshot.metadata.fromCache,
+      hasPendingWrites: querySnapshot.metadata.hasPendingWrites,
+      isFromCache: querySnapshot.metadata.fromCache,
+    });
+
+    const accounts = querySnapshot.docs.map(
+      (docSnapshot: { data: () => unknown }) => {
+        const data = docSnapshot.data();
+        return data as FinancialAccount;
+      }
+    );
+
+    console.log(
+      '✅ [getUserFinancialAccounts] Accounts retrieved:',
+      accounts.length
+    );
+    console.log(
+      '✅ [getUserFinancialAccounts] Account IDs:',
+      accounts.map((a) => a.accountNumber)
+    );
+
+    return accounts;
+  } catch (error) {
+    console.error('🔴 [getUserFinancialAccounts] Error occurred:', error);
+    console.error(
+      '🔴 [getUserFinancialAccounts] Error name:',
+      error instanceof Error ? error.name : 'Unknown'
+    );
+    console.error(
+      '🔴 [getUserFinancialAccounts] Error message:',
+      error instanceof Error ? error.message : String(error)
+    );
+    if (error && typeof error === 'object' && 'code' in error) {
+      console.error('🔴 [getUserFinancialAccounts] Error code:', error.code);
+    }
+    throw error;
+  }
 }
 
 /**

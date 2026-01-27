@@ -1,4 +1,5 @@
 import { type PropsWithChildren } from 'react';
+import { DebugIndicator } from './DebugIndicator';
 
 export function PublicLayout({ children }: PropsWithChildren) {
   return (
@@ -6,6 +7,7 @@ export function PublicLayout({ children }: PropsWithChildren) {
       <div className="w-full max-w-[400px] rounded-xl bg-white p-10 shadow-[0_10px_40px_rgba(0,0,0,0.1)]">
         {children}
       </div>
+      <DebugIndicator position="fixed-left" />
     </div>
   );
 }

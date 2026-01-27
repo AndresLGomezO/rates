@@ -1,5 +1,6 @@
 // Cloud Build trigger entry point
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { DebugIndicator } from './components/DebugIndicator';
 import './index.css';
 
 function Header() {
@@ -46,6 +47,7 @@ export default function App() {
         <Header />
         <Outlet />
       </div>
+      <DebugIndicator />
     </div>
   );
 }

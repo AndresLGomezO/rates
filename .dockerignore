@@ -56,6 +56,8 @@ docker-compose.override.yml
 
 # Apps - exclude other apps and build artifacts
 apps/app/
+# Exception: include dist directory for app Docker build
+!apps/app/dist
 apps/auth-app/node_modules
 apps/auth-app/dist
 apps/auth-app/.vite

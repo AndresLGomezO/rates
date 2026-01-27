@@ -16,10 +16,25 @@ service cloud.firestore {
       allow read, write, create, update, delete: if isEmulatorMode();
       
       // Production rules: Users can only read/write their own accounts
-      allow read, write: if request.auth != null && 
-                           request.auth.uid == resource.data.userId;
+      // For queries: Firestore evaluates this rule for each document
+      // Only documents where userId matches request.auth.uid will be returned
+      allow read: if request.auth != null && 
+                    request.auth.uid == resource.data.userId;
+      allow write, update, delete: if request.auth != null && 
+                                      request.auth.uid == resource.data.userId;
       allow create: if request.auth != null && 
                       request.auth.uid == request.resource.data.userId;
+      
+      // Payment Periods subcollection: financialAccounts/{accountId}/paymentPeriods/{periodId}
+      // Only the owner of the parent account can read/write periods
+      match /paymentPeriods/{periodId} {
+        // Allow all operations in emulator mode
+        allow read, write, create, update, delete: if isEmulatorMode();
+        
+        // Production rules: Check parent account's userId matches auth.uid
+        allow read, write, create, update, delete: if request.auth != null &&
+          request.auth.uid == get(/databases/$(database)/documents/financialAccounts/$(accountId)).data.userId;
+      }
     }
     
     // Default rule: deny all access

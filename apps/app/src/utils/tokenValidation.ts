@@ -7,6 +7,8 @@
  */
 
 import { getAuthToken, clearAuthToken, setAuthToken } from './auth';
+import { getAuth } from '@rates/firebase-client';
+import { signInWithCustomToken } from 'firebase/auth';
 
 const AUTH_APP_URL =
   (import.meta.env as Record<string, string | undefined>).VITE_AUTH_APP_URL ??
@@ -26,7 +28,47 @@ type ValidationApiResponse = {
   expiresAt?: number;
   refreshedToken?: string;
   needsRefresh?: boolean;
+  customToken?: string; // Custom token for Firebase Auth sign-in
 };
+
+/**
+ * Sign in with Firebase Auth using a custom token
+ * This is required for Firestore security rules to work (request.auth.uid)
+ */
+async function signInWithFirebaseAuth(customToken: string): Promise<void> {
+  try {
+    const auth = getAuth();
+
+    // Check if user is already signed in
+    // If already signed in with the same user, don't sign in again
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      // Decode custom token to get UID
+      try {
+        const parts = customToken.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1])) as { uid?: string };
+          if (payload.uid === currentUser.uid) {
+            console.log(
+              '✅ [signInWithFirebaseAuth] Already signed in with same user, skipping'
+            );
+            return;
+          }
+        }
+      } catch {
+        // If we can't decode, proceed with sign-in
+      }
+    }
+
+    await signInWithCustomToken(auth, customToken);
+    console.log(
+      '✅ [signInWithFirebaseAuth] Successfully signed in with Firebase Auth'
+    );
+  } catch (error) {
+    console.error('❌ [signInWithFirebaseAuth] Failed to sign in:', error);
+    throw error;
+  }
+}
 
 /**
  * Decode JWT token to check expiration (client-side check only)
@@ -125,6 +167,23 @@ export async function validateToken(
     // Token is valid - check if it needs refresh based on expiration
     const expiresAt = data.expiresAt ?? getTokenExpiration(token);
     const needsRefresh = data.needsRefresh ?? isTokenExpiringSoon(expiresAt);
+
+    // If we have a custom token, sign in with Firebase Auth
+    // This is required for Firestore security rules to work (request.auth.uid)
+    if (data.customToken) {
+      try {
+        await signInWithFirebaseAuth(data.customToken);
+        console.log(
+          '✅ [validateToken] Signed in with Firebase Auth using custom token'
+        );
+      } catch (authError) {
+        console.error(
+          '❌ [validateToken] Failed to sign in with Firebase Auth:',
+          authError
+        );
+        // Continue anyway - token is still valid for validation purposes
+      }
+    }
 
     // Use refreshed token if provided, otherwise use original
     const finalToken = data.refreshedToken ?? token;

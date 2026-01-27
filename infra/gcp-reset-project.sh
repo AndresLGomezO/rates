@@ -13,7 +13,9 @@ set -o pipefail
 # CONFIGURATION
 #-------------------------------------------------------------------------------
 readonly SCRIPT_VERSION="2.0.0"
-readonly LOG_DIR="${HOME}/.gcp-reset-logs"
+# Log directory relative to script location (project directory)
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly LOG_DIR="${SCRIPT_DIR}/.logs"
 readonly PROTECTED_SERVICES=(
     "cloudresourcemanager.googleapis.com"
     "iam.googleapis.com"
@@ -132,6 +134,74 @@ execute() {
     eval "$cmd"
 }
 
+# Safe list execution for cleanup functions - prevents hanging and logs errors
+safe_list() {
+    local cmd="$1"
+    local resource_name="${2:-unknown}"
+    local output
+    local log_target="/dev/null"
+    
+    # Use log file if available
+    if [[ -n "$LOG_FILE" ]] && [[ -w "$(dirname "$LOG_FILE")" ]] 2>/dev/null; then
+        log_target="$LOG_FILE"
+    fi
+    
+    # Execute command with stdin redirected to prevent hanging
+    output=$(eval "$cmd" < /dev/null 2>>"$log_target")
+    local exit_code=$?
+    
+    if [[ $exit_code -eq 0 ]]; then
+        echo "$output"
+        return 0
+    else
+        # Log error if meaningful
+        local error_output=$(eval "$cmd" < /dev/null 2>&1)
+        if [[ -n "$error_output" ]] && [[ "$error_output" != *"API not enabled"* ]] && \
+           [[ "$error_output" != *"not found"* ]] && [[ "$error_output" != *"does not exist"* ]] && \
+           [[ -n "$LOG_FILE" ]] && [[ -w "$(dirname "$LOG_FILE")" ]] 2>/dev/null; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [WARNING] Failed to list $resource_name: ${error_output:0:200}" >> "$LOG_FILE" 2>/dev/null || true
+        fi
+        echo ""
+        return 1
+    fi
+}
+
+# Safe command execution for inventory - captures errors to log and returns count
+safe_count() {
+    local cmd="$1"
+    local resource_name="${2:-unknown}"
+    local output
+    local error_output
+    local count="0"
+    local log_target="/dev/null"
+    
+    # Use log file if available, otherwise discard
+    if [[ -n "$LOG_FILE" ]] && [[ -w "$(dirname "$LOG_FILE")" ]] 2>/dev/null; then
+        log_target="$LOG_FILE"
+    fi
+    
+    # Execute command: capture stdout, send stderr to log
+    output=$(eval "$cmd" < /dev/null 2>>"$log_target")
+    local exit_code=$?
+    
+    if [[ $exit_code -eq 0 ]] && [[ -n "$output" ]]; then
+        # Command succeeded, count non-empty lines
+        count=$(echo "$output" | grep -v '^[[:space:]]*$' | wc -l | tr -d ' ')
+        count="${count:-0}"
+    else
+        # Command failed - capture error for logging if meaningful
+        error_output=$(eval "$cmd" < /dev/null 2>&1)
+        if [[ -n "$error_output" ]] && [[ "$error_output" != *"API not enabled"* ]] && \
+           [[ "$error_output" != *"not found"* ]] && [[ "$error_output" != *"does not exist"* ]] && \
+           [[ "$error_output" != *"Permission denied"* ]] && \
+           [[ -n "$LOG_FILE" ]] && [[ -w "$(dirname "$LOG_FILE")" ]] 2>/dev/null; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [WARNING] Failed to count $resource_name: ${error_output:0:200}" >> "$LOG_FILE" 2>/dev/null || true
+        fi
+    fi
+    
+    echo "$count"
+}
+
 #-------------------------------------------------------------------------------
 # PREREQUISITE CHECKS
 #-------------------------------------------------------------------------------
@@ -233,11 +303,11 @@ show_inventory() {
     echo -e "  ${CYAN}Enabled APIs:${NC} $service_count"
     
     # Compute resources
-    local vm_count=$(gcloud compute instances list --format="value(name)" 2>/dev/null | wc -l | tr -d ' ')
-    local disk_count=$(gcloud compute disks list --format="value(name)" 2>/dev/null | wc -l | tr -d ' ')
-    local network_count=$(gcloud compute networks list --format="value(name)" 2>/dev/null | wc -l | tr -d ' ')
-    local firewall_count=$(gcloud compute firewall-rules list --format="value(name)" 2>/dev/null | wc -l | tr -d ' ')
-    local address_count=$(gcloud compute addresses list --format="value(name)" 2>/dev/null | wc -l | tr -d ' ')
+    local vm_count=$(safe_count "gcloud compute instances list --format='value(name)' 2>/dev/null" "Compute Instances")
+    local disk_count=$(safe_count "gcloud compute disks list --format='value(name)' 2>/dev/null" "Disks")
+    local network_count=$(safe_count "gcloud compute networks list --format='value(name)' 2>/dev/null" "Networks")
+    local firewall_count=$(safe_count "gcloud compute firewall-rules list --format='value(name)' 2>/dev/null" "Firewall Rules")
+    local address_count=$(safe_count "gcloud compute addresses list --format='value(name)' 2>/dev/null" "Static IPs")
     
     echo -e "  ${CYAN}Compute Instances:${NC} $vm_count"
     echo -e "  ${CYAN}Disks:${NC} $disk_count"
@@ -246,45 +316,49 @@ show_inventory() {
     echo -e "  ${CYAN}Static IPs:${NC} $address_count"
     
     # Storage
-    local bucket_count=$(gsutil ls -p "$PROJECT_ID" 2>/dev/null | wc -l | tr -d ' ')
+    local bucket_count=$(safe_count "gsutil ls -p '$PROJECT_ID' 2>/dev/null" "Storage Buckets")
     echo -e "  ${CYAN}Storage Buckets:${NC} $bucket_count"
     
     # GKE
-    local gke_count=$(gcloud container clusters list --format="value(name)" 2>/dev/null | wc -l | tr -d ' ')
+    local gke_count=$(safe_count "gcloud container clusters list --format='value(name)' 2>/dev/null" "GKE Clusters")
     echo -e "  ${CYAN}GKE Clusters:${NC} $gke_count"
     
     # Cloud SQL
-    local sql_count=$(gcloud sql instances list --format="value(name)" 2>/dev/null | wc -l | tr -d ' ')
+    local sql_count=$(safe_count "gcloud sql instances list --format='value(name)' 2>/dev/null" "Cloud SQL Instances")
     echo -e "  ${CYAN}Cloud SQL Instances:${NC} $sql_count"
     
     # Pub/Sub
-    local topic_count=$(gcloud pubsub topics list --format="value(name)" 2>/dev/null | wc -l | tr -d ' ')
-    local sub_count=$(gcloud pubsub subscriptions list --format="value(name)" 2>/dev/null | wc -l | tr -d ' ')
+    local topic_count=$(safe_count "gcloud pubsub topics list --format='value(name)' 2>/dev/null" "Pub/Sub Topics")
+    local sub_count=$(safe_count "gcloud pubsub subscriptions list --format='value(name)' 2>/dev/null" "Pub/Sub Subscriptions")
     echo -e "  ${CYAN}Pub/Sub Topics:${NC} $topic_count"
     echo -e "  ${CYAN}Pub/Sub Subscriptions:${NC} $sub_count"
     
     # Cloud Functions
-    local func_count=$(gcloud functions list --format="value(name)" 2>/dev/null | wc -l | tr -d ' ')
+    local func_count=$(safe_count "gcloud functions list --format='value(name)' 2>/dev/null" "Cloud Functions")
     echo -e "  ${CYAN}Cloud Functions:${NC} $func_count"
     
     # Cloud Run
-    local run_count=$(gcloud run services list --platform=managed --format="value(metadata.name)" 2>/dev/null | wc -l | tr -d ' ')
+    local run_count=$(safe_count "gcloud run services list --platform=managed --format='value(metadata.name)' 2>/dev/null" "Cloud Run Services")
     echo -e "  ${CYAN}Cloud Run Services:${NC} $run_count"
     
     # Service Accounts
-    local sa_count=$(gcloud iam service-accounts list --format="value(email)" 2>/dev/null | wc -l | tr -d ' ')
+    local sa_count=$(safe_count "gcloud iam service-accounts list --format='value(email)' 2>/dev/null" "Service Accounts")
     echo -e "  ${CYAN}Service Accounts:${NC} $sa_count"
     
     # IAM Bindings
-    local iam_count=$(gcloud projects get-iam-policy "$PROJECT_ID" --format=json 2>/dev/null | jq '.bindings | length')
+    local iam_output=$(gcloud projects get-iam-policy "$PROJECT_ID" --format=json < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local iam_count="0"
+    if [[ $? -eq 0 ]] && [[ -n "$iam_output" ]]; then
+        iam_count=$(echo "$iam_output" | jq -r '.bindings | length' 2>/dev/null || echo "0")
+    fi
     echo -e "  ${CYAN}IAM Bindings:${NC} $iam_count"
     
     # BigQuery
-    local bq_count=$(bq ls --project_id="$PROJECT_ID" 2>/dev/null | tail -n +3 | wc -l | tr -d ' ')
+    local bq_count=$(safe_count "bq ls --project_id='$PROJECT_ID' 2>/dev/null | tail -n +3" "BigQuery Datasets")
     echo -e "  ${CYAN}BigQuery Datasets:${NC} $bq_count"
     
     # Secrets
-    local secret_count=$(gcloud secrets list --format="value(name)" 2>/dev/null | wc -l | tr -d ' ')
+    local secret_count=$(safe_count "gcloud secrets list --format='value(name)' 2>/dev/null" "Secrets")
     echo -e "  ${CYAN}Secrets:${NC} $secret_count"
     
     echo "==========================================="
@@ -428,10 +502,16 @@ EOF
 cleanup_compute_instances() {
     log INFO "Deleting Compute Engine instances..."
     
-    local instances=$(gcloud compute instances list \
-        --format="csv[no-heading](name,zone)" 2>/dev/null)
+    local instances
+    instances=$(gcloud compute instances list \
+        --format="csv[no-heading](name,zone)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$instances" ]]; then
+    # If command failed or returned empty, log and return
+    if [[ $exit_code -ne 0 ]] || [[ -z "$instances" ]] || [[ "$instances" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Compute Engine API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No compute instances found"
         return 0
     fi
@@ -440,7 +520,7 @@ cleanup_compute_instances() {
         [[ -z "$name" ]] && continue
         echo -ne "  Deleting instance ${name}... "
         if check_dry_run "gcloud compute instances delete $name"; then
-            if gcloud compute instances delete "$name" --zone="$zone" --quiet 2>/dev/null; then
+            if gcloud compute instances delete "$name" --zone="$zone" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -452,10 +532,16 @@ cleanup_compute_instances() {
 cleanup_compute_disks() {
     log INFO "Deleting Compute Engine disks..."
     
-    local disks=$(gcloud compute disks list \
-        --format="csv[no-heading](name,zone)" 2>/dev/null)
+    local disks
+    disks=$(gcloud compute disks list \
+        --format="csv[no-heading](name,zone)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$disks" ]]; then
+    # If command failed or returned empty, log and return
+    if [[ $exit_code -ne 0 ]] || [[ -z "$disks" ]] || [[ "$disks" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Compute Engine API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No disks found"
         return 0
     fi
@@ -464,7 +550,7 @@ cleanup_compute_disks() {
         [[ -z "$name" ]] && continue
         echo -ne "  Deleting disk ${name}... "
         if check_dry_run "gcloud compute disks delete $name"; then
-            if gcloud compute disks delete "$name" --zone="$zone" --quiet 2>/dev/null; then
+            if gcloud compute disks delete "$name" --zone="$zone" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -476,10 +562,16 @@ cleanup_compute_disks() {
 cleanup_compute_snapshots() {
     log INFO "Deleting disk snapshots..."
     
-    local snapshots=$(gcloud compute snapshots list \
-        --format="value(name)" 2>/dev/null)
+    local snapshots
+    snapshots=$(gcloud compute snapshots list \
+        --format="value(name)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$snapshots" ]]; then
+    # If command failed or returned empty, log and return
+    if [[ $exit_code -ne 0 ]] || [[ -z "$snapshots" ]] || [[ "$snapshots" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Compute Engine API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No snapshots found"
         return 0
     fi
@@ -488,7 +580,7 @@ cleanup_compute_snapshots() {
         [[ -z "$name" ]] && continue
         echo -ne "  Deleting snapshot ${name}... "
         if check_dry_run "gcloud compute snapshots delete $name"; then
-            if gcloud compute snapshots delete "$name" --quiet 2>/dev/null; then
+            if gcloud compute snapshots delete "$name" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -500,11 +592,17 @@ cleanup_compute_snapshots() {
 cleanup_compute_images() {
     log INFO "Deleting custom images..."
     
-    local images=$(gcloud compute images list \
+    local images
+    images=$(gcloud compute images list \
         --no-standard-images \
-        --format="value(name)" 2>/dev/null)
+        --format="value(name)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$images" ]]; then
+    # If command failed or returned empty, log and return
+    if [[ $exit_code -ne 0 ]] || [[ -z "$images" ]] || [[ "$images" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Compute Engine API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No custom images found"
         return 0
     fi
@@ -513,7 +611,7 @@ cleanup_compute_images() {
         [[ -z "$name" ]] && continue
         echo -ne "  Deleting image ${name}... "
         if check_dry_run "gcloud compute images delete $name"; then
-            if gcloud compute images delete "$name" --quiet 2>/dev/null; then
+            if gcloud compute images delete "$name" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -525,10 +623,16 @@ cleanup_compute_images() {
 cleanup_firewall_rules() {
     log INFO "Deleting firewall rules..."
     
-    local rules=$(gcloud compute firewall-rules list \
-        --format="value(name)" 2>/dev/null)
+    local rules
+    rules=$(gcloud compute firewall-rules list \
+        --format="value(name)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$rules" ]]; then
+    # If command failed or returned empty, log and return
+    if [[ $exit_code -ne 0 ]] || [[ -z "$rules" ]] || [[ "$rules" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Compute Engine API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No firewall rules found"
         return 0
     fi
@@ -542,7 +646,7 @@ cleanup_firewall_rules() {
         fi
         echo -ne "  Deleting firewall rule ${name}... "
         if check_dry_run "gcloud compute firewall-rules delete $name"; then
-            if gcloud compute firewall-rules delete "$name" --quiet 2>/dev/null; then
+            if gcloud compute firewall-rules delete "$name" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -554,10 +658,15 @@ cleanup_firewall_rules() {
 cleanup_static_ips() {
     log INFO "Releasing static IP addresses..."
     
-    local addresses=$(gcloud compute addresses list \
-        --format="csv[no-heading](name,region)" 2>/dev/null)
+    local addresses
+    addresses=$(gcloud compute addresses list \
+        --format="csv[no-heading](name,region)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$addresses" ]]; then
+    if [[ $exit_code -ne 0 ]] || [[ -z "$addresses" ]] || [[ "$addresses" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Compute Engine API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No static IPs found"
         return 0
     fi
@@ -572,7 +681,7 @@ cleanup_static_ips() {
             region_flag="--global"
         fi
         if check_dry_run "gcloud compute addresses delete $name $region_flag"; then
-            if gcloud compute addresses delete "$name" $region_flag --quiet 2>/dev/null; then
+            if gcloud compute addresses delete "$name" $region_flag --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -584,10 +693,15 @@ cleanup_static_ips() {
 cleanup_vpn_tunnels() {
     log INFO "Deleting VPN tunnels..."
     
-    local tunnels=$(gcloud compute vpn-tunnels list \
-        --format="csv[no-heading](name,region)" 2>/dev/null)
+    local tunnels
+    tunnels=$(gcloud compute vpn-tunnels list \
+        --format="csv[no-heading](name,region)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$tunnels" ]]; then
+    if [[ $exit_code -ne 0 ]] || [[ -z "$tunnels" ]] || [[ "$tunnels" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Compute Engine API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No VPN tunnels found"
         return 0
     fi
@@ -596,7 +710,7 @@ cleanup_vpn_tunnels() {
         [[ -z "$name" ]] && continue
         echo -ne "  Deleting VPN tunnel ${name}... "
         if check_dry_run "gcloud compute vpn-tunnels delete $name"; then
-            if gcloud compute vpn-tunnels delete "$name" --region="$region" --quiet 2>/dev/null; then
+            if gcloud compute vpn-tunnels delete "$name" --region="$region" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -608,10 +722,15 @@ cleanup_vpn_tunnels() {
 cleanup_routers() {
     log INFO "Deleting Cloud Routers..."
     
-    local routers=$(gcloud compute routers list \
-        --format="csv[no-heading](name,region)" 2>/dev/null)
+    local routers
+    routers=$(gcloud compute routers list \
+        --format="csv[no-heading](name,region)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$routers" ]]; then
+    if [[ $exit_code -ne 0 ]] || [[ -z "$routers" ]] || [[ "$routers" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Compute Engine API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No Cloud Routers found"
         return 0
     fi
@@ -620,7 +739,7 @@ cleanup_routers() {
         [[ -z "$name" ]] && continue
         echo -ne "  Deleting router ${name}... "
         if check_dry_run "gcloud compute routers delete $name"; then
-            if gcloud compute routers delete "$name" --region="$region" --quiet 2>/dev/null; then
+            if gcloud compute routers delete "$name" --region="$region" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -632,10 +751,15 @@ cleanup_routers() {
 cleanup_subnets() {
     log INFO "Deleting subnets..."
     
-    local subnets=$(gcloud compute networks subnets list \
-        --format="csv[no-heading](name,region)" 2>/dev/null)
+    local subnets
+    subnets=$(gcloud compute networks subnets list \
+        --format="csv[no-heading](name,region)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$subnets" ]]; then
+    if [[ $exit_code -ne 0 ]] || [[ -z "$subnets" ]] || [[ "$subnets" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Compute Engine API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No subnets found"
         return 0
     fi
@@ -649,7 +773,7 @@ cleanup_subnets() {
         fi
         echo -ne "  Deleting subnet ${name}... "
         if check_dry_run "gcloud compute networks subnets delete $name"; then
-            if gcloud compute networks subnets delete "$name" --region="$region" --quiet 2>/dev/null; then
+            if gcloud compute networks subnets delete "$name" --region="$region" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -661,11 +785,16 @@ cleanup_subnets() {
 cleanup_networks() {
     log INFO "Deleting VPC networks..."
     
-    local networks=$(gcloud compute networks list \
+    local networks
+    networks=$(gcloud compute networks list \
         --filter="name!=default" \
-        --format="value(name)" 2>/dev/null)
+        --format="value(name)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$networks" ]]; then
+    if [[ $exit_code -ne 0 ]] || [[ -z "$networks" ]] || [[ "$networks" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Compute Engine API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No custom networks found"
         return 0
     fi
@@ -674,7 +803,7 @@ cleanup_networks() {
         [[ -z "$name" ]] && continue
         echo -ne "  Deleting network ${name}... "
         if check_dry_run "gcloud compute networks delete $name"; then
-            if gcloud compute networks delete "$name" --quiet 2>/dev/null; then
+            if gcloud compute networks delete "$name" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -686,10 +815,15 @@ cleanup_networks() {
 cleanup_gke_clusters() {
     log INFO "Deleting GKE clusters..."
     
-    local clusters=$(gcloud container clusters list \
-        --format="csv[no-heading](name,location)" 2>/dev/null)
+    local clusters
+    clusters=$(gcloud container clusters list \
+        --format="csv[no-heading](name,location)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$clusters" ]]; then
+    if [[ $exit_code -ne 0 ]] || [[ -z "$clusters" ]] || [[ "$clusters" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] GKE API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No GKE clusters found"
         return 0
     fi
@@ -704,7 +838,7 @@ cleanup_gke_clusters() {
             else
                 location_flag="--zone=$location"
             fi
-            if gcloud container clusters delete "$name" $location_flag --quiet 2>/dev/null; then
+            if gcloud container clusters delete "$name" $location_flag --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -716,10 +850,15 @@ cleanup_gke_clusters() {
 cleanup_cloud_sql() {
     log INFO "Deleting Cloud SQL instances..."
     
-    local instances=$(gcloud sql instances list \
-        --format="value(name)" 2>/dev/null)
+    local instances
+    instances=$(gcloud sql instances list \
+        --format="value(name)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$instances" ]]; then
+    if [[ $exit_code -ne 0 ]] || [[ -z "$instances" ]] || [[ "$instances" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Cloud SQL API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No Cloud SQL instances found"
         return 0
     fi
@@ -728,7 +867,7 @@ cleanup_cloud_sql() {
         [[ -z "$name" ]] && continue
         echo -ne "  Deleting SQL instance ${name}... "
         if check_dry_run "gcloud sql instances delete $name"; then
-            if gcloud sql instances delete "$name" --quiet 2>/dev/null; then
+            if gcloud sql instances delete "$name" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -740,9 +879,14 @@ cleanup_cloud_sql() {
 cleanup_storage_buckets() {
     log INFO "Deleting Cloud Storage buckets..."
     
-    local buckets=$(gsutil ls -p "$PROJECT_ID" 2>/dev/null)
+    local buckets
+    buckets=$(gsutil ls -p "$PROJECT_ID" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$buckets" ]]; then
+    if [[ $exit_code -ne 0 ]] || [[ -z "$buckets" ]] || [[ "$buckets" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Storage API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No storage buckets found"
         return 0
     fi
@@ -751,7 +895,7 @@ cleanup_storage_buckets() {
         [[ -z "$bucket" ]] && continue
         echo -ne "  Deleting bucket ${bucket}... "
         if check_dry_run "gsutil -m rm -r $bucket"; then
-            if gsutil -m rm -r "$bucket" 2>/dev/null; then
+            if gsutil -m rm -r "$bucket" < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -764,15 +908,17 @@ cleanup_pubsub() {
     log INFO "Deleting Pub/Sub resources..."
     
     # Subscriptions first
-    local subscriptions=$(gcloud pubsub subscriptions list \
-        --format="value(name)" 2>/dev/null)
+    local subscriptions
+    subscriptions=$(gcloud pubsub subscriptions list \
+        --format="value(name)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local sub_exit_code=$?
     
-    if [[ -n "$subscriptions" ]]; then
+    if [[ $sub_exit_code -eq 0 ]] && [[ -n "$subscriptions" ]] && [[ ! "$subscriptions" =~ ^[[:space:]]*$ ]]; then
         while read -r name; do
             [[ -z "$name" ]] && continue
             echo -ne "  Deleting subscription ${name##*/}... "
             if check_dry_run "gcloud pubsub subscriptions delete $name"; then
-                if gcloud pubsub subscriptions delete "$name" --quiet 2>/dev/null; then
+                if gcloud pubsub subscriptions delete "$name" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                     echo -e "${GREEN}done${NC}"
                 else
                     echo -e "${RED}failed${NC}"
@@ -782,15 +928,17 @@ cleanup_pubsub() {
     fi
     
     # Then topics
-    local topics=$(gcloud pubsub topics list \
-        --format="value(name)" 2>/dev/null)
+    local topics
+    topics=$(gcloud pubsub topics list \
+        --format="value(name)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local topic_exit_code=$?
     
-    if [[ -n "$topics" ]]; then
+    if [[ $topic_exit_code -eq 0 ]] && [[ -n "$topics" ]] && [[ ! "$topics" =~ ^[[:space:]]*$ ]]; then
         while read -r name; do
             [[ -z "$name" ]] && continue
             echo -ne "  Deleting topic ${name##*/}... "
             if check_dry_run "gcloud pubsub topics delete $name"; then
-                if gcloud pubsub topics delete "$name" --quiet 2>/dev/null; then
+                if gcloud pubsub topics delete "$name" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                     echo -e "${GREEN}done${NC}"
                 else
                     echo -e "${RED}failed${NC}"
@@ -799,7 +947,11 @@ cleanup_pubsub() {
         done <<< "$topics"
     fi
     
-    if [[ -z "$subscriptions" ]] && [[ -z "$topics" ]]; then
+    if [[ ($sub_exit_code -ne 0 || -z "$subscriptions" || "$subscriptions" =~ ^[[:space:]]*$) ]] && \
+       [[ ($topic_exit_code -ne 0 || -z "$topics" || "$topics" =~ ^[[:space:]]*$) ]]; then
+        if [[ ($sub_exit_code -ne 0 || $topic_exit_code -ne 0) ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Pub/Sub API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No Pub/Sub resources found"
     fi
 }
@@ -808,34 +960,45 @@ cleanup_cloud_functions() {
     log INFO "Deleting Cloud Functions..."
     
     # Gen 1 functions
-    local functions_v1=$(gcloud functions list \
-        --format="csv[no-heading](name,region)" 2>/dev/null)
+    local functions_v1
+    functions_v1=$(gcloud functions list \
+        --format="csv[no-heading](name,region)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -n "$functions_v1" ]]; then
-        while IFS=',' read -r name region; do
-            [[ -z "$name" ]] && continue
-            echo -ne "  Deleting function ${name}... "
-            if check_dry_run "gcloud functions delete $name"; then
-                if gcloud functions delete "$name" --region="$region" --quiet 2>/dev/null; then
-                    echo -e "${GREEN}done${NC}"
-                else
-                    echo -e "${RED}failed${NC}"
-                fi
-            fi
-        done <<< "$functions_v1"
-    else
+    if [[ $exit_code -ne 0 ]] || [[ -z "$functions_v1" ]] || [[ "$functions_v1" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Cloud Functions API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No Cloud Functions found"
+        return 0
     fi
+    
+    while IFS=',' read -r name region; do
+        [[ -z "$name" ]] && continue
+        echo -ne "  Deleting function ${name}... "
+        if check_dry_run "gcloud functions delete $name"; then
+            if gcloud functions delete "$name" --region="$region" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
+                echo -e "${GREEN}done${NC}"
+            else
+                echo -e "${RED}failed${NC}"
+            fi
+        fi
+    done <<< "$functions_v1"
 }
 
 cleanup_cloud_run() {
     log INFO "Deleting Cloud Run services..."
     
-    local services=$(gcloud run services list \
+    local services
+    services=$(gcloud run services list \
         --platform=managed \
-        --format="csv[no-heading](metadata.name,region)" 2>/dev/null)
+        --format="csv[no-heading](metadata.name,region)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$services" ]]; then
+    if [[ $exit_code -ne 0 ]] || [[ -z "$services" ]] || [[ "$services" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Cloud Run API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No Cloud Run services found"
         return 0
     fi
@@ -844,7 +1007,7 @@ cleanup_cloud_run() {
         [[ -z "$name" ]] && continue
         echo -ne "  Deleting Cloud Run service ${name}... "
         if check_dry_run "gcloud run services delete $name"; then
-            if gcloud run services delete "$name" --region="$region" --platform=managed --quiet 2>/dev/null; then
+            if gcloud run services delete "$name" --region="$region" --platform=managed --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -856,10 +1019,15 @@ cleanup_cloud_run() {
 cleanup_artifact_registry() {
     log INFO "Deleting Artifact Registry repositories..."
     
-    local repos=$(gcloud artifacts repositories list \
-        --format="csv[no-heading](name,location)" 2>/dev/null)
+    local repos
+    repos=$(gcloud artifacts repositories list \
+        --format="csv[no-heading](name,location)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$repos" ]]; then
+    if [[ $exit_code -ne 0 ]] || [[ -z "$repos" ]] || [[ "$repos" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Artifact Registry API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No Artifact Registry repos found"
         return 0
     fi
@@ -868,7 +1036,7 @@ cleanup_artifact_registry() {
         [[ -z "$name" ]] && continue
         echo -ne "  Deleting repo ${name}... "
         if check_dry_run "gcloud artifacts repositories delete $name"; then
-            if gcloud artifacts repositories delete "$name" --location="$location" --quiet 2>/dev/null; then
+            if gcloud artifacts repositories delete "$name" --location="$location" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -880,18 +1048,44 @@ cleanup_artifact_registry() {
 cleanup_bigquery() {
     log INFO "Deleting BigQuery datasets..."
     
-    local datasets=$(bq ls --project_id="$PROJECT_ID" --format=csv 2>/dev/null | tail -n +2 | cut -d',' -f1)
+    local datasets
+    local bq_output
+    local exit_code
     
-    if [[ -z "$datasets" ]]; then
+    # Execute bq ls and capture both stdout and stderr
+    bq_output=$(bq ls --project_id="$PROJECT_ID" --format=csv < /dev/null 2>&1)
+    exit_code=$?
+    
+    # Check if command failed or if output contains error messages
+    if [[ $exit_code -ne 0 ]] || [[ "$bq_output" == *"API not enabled"* ]] || \
+       [[ "$bq_output" == *"does not have BigQuery enabled"* ]] || \
+       [[ "$bq_output" == *"Enable it by visiting"* ]] || \
+       [[ "$bq_output" == *"Error"* ]]; then
+        if [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] BigQuery API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
+        log INFO "No BigQuery datasets found (API may not be enabled)"
+        return 0
+    fi
+    
+    # Extract dataset names from CSV output (skip header, get first column)
+    datasets=$(echo "$bq_output" | tail -n +2 | cut -d',' -f1 | grep -E '^[a-zA-Z0-9_]+$' || true)
+    
+    if [[ -z "$datasets" ]] || [[ "$datasets" =~ ^[[:space:]]*$ ]]; then
         log INFO "No BigQuery datasets found"
         return 0
     fi
     
     while read -r dataset; do
         [[ -z "$dataset" ]] && continue
+        # Validate dataset name format (alphanumeric and underscores only)
+        if [[ ! "$dataset" =~ ^[a-zA-Z0-9_]+$ ]]; then
+            log WARNING "Skipping invalid dataset name: $dataset"
+            continue
+        fi
         echo -ne "  Deleting dataset ${dataset}... "
         if check_dry_run "bq rm -r -f -d ${PROJECT_ID}:${dataset}"; then
-            if bq rm -r -f -d "${PROJECT_ID}:${dataset}" 2>/dev/null; then
+            if bq rm -r -f -d "${PROJECT_ID}:${dataset}" < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -903,10 +1097,15 @@ cleanup_bigquery() {
 cleanup_secrets() {
     log INFO "Deleting Secret Manager secrets..."
     
-    local secrets=$(gcloud secrets list \
-        --format="value(name)" 2>/dev/null)
+    local secrets
+    secrets=$(gcloud secrets list \
+        --format="value(name)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$secrets" ]]; then
+    if [[ $exit_code -ne 0 ]] || [[ -z "$secrets" ]] || [[ "$secrets" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Secret Manager API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No secrets found"
         return 0
     fi
@@ -915,7 +1114,7 @@ cleanup_secrets() {
         [[ -z "$name" ]] && continue
         echo -ne "  Deleting secret ${name##*/}... "
         if check_dry_run "gcloud secrets delete $name"; then
-            if gcloud secrets delete "$name" --quiet 2>/dev/null; then
+            if gcloud secrets delete "$name" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -927,11 +1126,17 @@ cleanup_secrets() {
 cleanup_service_accounts() {
     log INFO "Deleting custom service accounts..."
     
-    local project_number=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
-    local service_accounts=$(gcloud iam service-accounts list \
-        --format="value(email)" 2>/dev/null)
+    local project_number
+    project_number=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local service_accounts
+    service_accounts=$(gcloud iam service-accounts list \
+        --format="value(email)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$service_accounts" ]]; then
+    if [[ $exit_code -ne 0 ]] || [[ -z "$service_accounts" ]] || [[ "$service_accounts" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] IAM API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No service accounts found"
         return 0
     fi
@@ -952,7 +1157,7 @@ cleanup_service_accounts() {
         
         echo -ne "  Deleting SA ${email}... "
         if check_dry_run "gcloud iam service-accounts delete $email"; then
-            if gcloud iam service-accounts delete "$email" --quiet 2>/dev/null; then
+            if gcloud iam service-accounts delete "$email" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -964,10 +1169,15 @@ cleanup_service_accounts() {
 cleanup_scheduler_jobs() {
     log INFO "Deleting Cloud Scheduler jobs..."
     
-    local jobs=$(gcloud scheduler jobs list \
-        --format="csv[no-heading](ID,LOCATION)" 2>/dev/null)
+    local jobs
+    jobs=$(gcloud scheduler jobs list \
+        --format="csv[no-heading](ID,LOCATION)" < /dev/null 2>>"$LOG_FILE" 2>&1)
+    local exit_code=$?
     
-    if [[ -z "$jobs" ]]; then
+    if [[ $exit_code -ne 0 ]] || [[ -z "$jobs" ]] || [[ "$jobs" =~ ^[[:space:]]*$ ]]; then
+        if [[ $exit_code -ne 0 ]] && [[ -n "$LOG_FILE" ]]; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Cloud Scheduler API may not be enabled or accessible" >> "$LOG_FILE" 2>/dev/null || true
+        fi
         log INFO "No Cloud Scheduler jobs found"
         return 0
     fi
@@ -976,7 +1186,7 @@ cleanup_scheduler_jobs() {
         [[ -z "$name" ]] && continue
         echo -ne "  Deleting scheduler job ${name}... "
         if check_dry_run "gcloud scheduler jobs delete $name"; then
-            if gcloud scheduler jobs delete "$name" --location="$location" --quiet 2>/dev/null; then
+            if gcloud scheduler jobs delete "$name" --location="$location" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                 echo -e "${GREEN}done${NC}"
             else
                 echo -e "${RED}failed${NC}"
@@ -1008,7 +1218,7 @@ cleanup_app_engine() {
             
             echo -ne "  Deleting App Engine service ${service}... "
             if check_dry_run "gcloud app services delete $service"; then
-                if gcloud app services delete "$service" --quiet 2>/dev/null; then
+                if gcloud app services delete "$service" --quiet < /dev/null 2>>"$LOG_FILE" 2>&1; then
                     echo -e "${GREEN}done${NC}"
                 else
                     echo -e "${RED}failed${NC}"
@@ -1158,23 +1368,23 @@ verify_cleanup() {
     
     echo ""
     echo -e "${CYAN}Remaining Enabled Services:${NC}"
-    gcloud services list --enabled --format="table(config.name)" 2>/dev/null || echo "  Unable to list services"
+    gcloud services list --enabled --format="table(config.name)" < /dev/null 2>/dev/null || echo "  Unable to list services"
     
     echo ""
     echo -e "${CYAN}Remaining IAM Bindings:${NC}"
     gcloud projects get-iam-policy "$PROJECT_ID" \
-        --format="table(bindings.role,bindings.members)" 2>/dev/null || echo "  Unable to list IAM"
+        --format="table(bindings.role,bindings.members)" < /dev/null 2>/dev/null || echo "  Unable to list IAM"
     
     echo ""
     echo -e "${CYAN}Remaining Compute Resources:${NC}"
-    local vm_count=$(gcloud compute instances list --format="value(name)" 2>/dev/null | wc -l | tr -d ' ')
-    local disk_count=$(gcloud compute disks list --format="value(name)" 2>/dev/null | wc -l | tr -d ' ')
+    local vm_count=$(gcloud compute instances list --format="value(name)" < /dev/null 2>/dev/null | wc -l | tr -d ' ' || echo "0")
+    local disk_count=$(gcloud compute disks list --format="value(name)" < /dev/null 2>/dev/null | wc -l | tr -d ' ' || echo "0")
     echo "  Instances: $vm_count"
     echo "  Disks: $disk_count"
     
     echo ""
     echo -e "${CYAN}Remaining Storage Buckets:${NC}"
-    gsutil ls -p "$PROJECT_ID" 2>/dev/null || echo "  None"
+    gsutil ls -p "$PROJECT_ID" < /dev/null 2>/dev/null || echo "  None"
     
     echo "==========================================="
 }

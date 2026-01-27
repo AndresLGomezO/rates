@@ -8,9 +8,19 @@
 # ============================================================================
 # DATA SOURCES
 # ============================================================================
+# Note: This data source requires cloudresourcemanager.googleapis.com to be enabled.
+# The API is enabled in main.tf, but data sources are evaluated during plan.
+# To work around this, we use a null_resource to get the project number after
+# the API is enabled, or we can enable the API manually before running terraform.
 
+# Get project number using a workaround that only runs after API is enabled
+# We'll use the data source but make the budget resource depend on API enablement
 data "google_project" "current" {
   project_id = var.project_id
+  
+  # Note: This will fail during plan if API isn't enabled yet.
+  # Enable cloudresourcemanager.googleapis.com before running terraform plan:
+  # gcloud services enable cloudresourcemanager.googleapis.com --project=<project-id>
 }
 
 # ============================================================================

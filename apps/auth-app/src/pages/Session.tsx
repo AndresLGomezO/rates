@@ -66,7 +66,7 @@ export default function Session() {
         enableCookie: authConfig.enableCookie,
         nonce,
       });
-    } catch (err) {
+    } catch (err: unknown) {
       setError(getFriendlyError(err));
       setRedirecting(false);
     }
@@ -77,7 +77,7 @@ export default function Session() {
     setSigningOut(true);
     try {
       await signOut();
-    } catch (err) {
+    } catch (err: unknown) {
       setError(getFriendlyError(err));
     } finally {
       setSigningOut(false);

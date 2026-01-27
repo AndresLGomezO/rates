@@ -45,7 +45,60 @@ export function getFirestore(databaseId?: string): Firestore {
     firestoreInstance = databaseId
       ? getFirebaseFirestore(app, databaseId)
       : getFirebaseFirestore(app);
+
+    // Debug logging for Firestore connection
+    console.log('🔥 [getFirestore] Firestore instance created');
+    console.log(
+      '🔥 [getFirestore] Firebase app name:',
+      app.name,
+      '(this is [DEFAULT] for the default app - correct)'
+    );
+    console.log('🔥 [getFirestore] Project ID:', app.options.projectId);
+    console.log(
+      '🔥 [getFirestore] API Key:',
+      app.options.apiKey ? 'SET' : 'NOT SET'
+    );
+    console.log('🔥 [getFirestore] Auth Domain:', app.options.authDomain);
+    console.log('🔥 [getFirestore] Storage Bucket:', app.options.storageBucket);
+    console.log(
+      '🔥 [getFirestore] Database ID:',
+      databaseId ?? '(default)',
+      '- This is correct for the default Firestore database'
+    );
+    console.log('🔥 [getFirestore] Firestore type:', firestoreInstance.type);
+    console.log(
+      '🔥 [getFirestore] Firestore app name:',
+      firestoreInstance.app.name
+    );
+    console.log('🔥 [getFirestore] Firestore app options:', {
+      projectId: firestoreInstance.app.options.projectId,
+      apiKey: firestoreInstance.app.options.apiKey ? 'SET' : 'NOT SET',
+      authDomain: firestoreInstance.app.options.authDomain,
+      storageBucket: firestoreInstance.app.options.storageBucket,
+    });
+    console.log('🔥 [getFirestore] Connection Info:');
+    console.log(
+      '🔥 [getFirestore]   - Using Firebase SDK (which connects to GCP Firestore)'
+    );
+    console.log(
+      '🔥 [getFirestore]   - Project:',
+      firestoreInstance.app.options.projectId
+    );
+    console.log('🔥 [getFirestore]   - Database:', databaseId ?? '(default)');
+    console.log(
+      '🔥 [getFirestore]   - Full path: projects/' +
+        firestoreInstance.app.options.projectId +
+        '/databases/(default)/documents'
+    );
+  } else {
+    // Log when returning cached instance
+    console.log('🔥 [getFirestore] Returning cached Firestore instance');
+    console.log(
+      '🔥 [getFirestore] Project ID:',
+      firestoreInstance.app.options.projectId
+    );
   }
+
   return firestoreInstance;
 }
 

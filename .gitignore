@@ -67,3 +67,4 @@ terraform.rc
 # Infrastructure setup scripts
 infra/.setup.config
 infra/.setup.log
+infra/.logs/

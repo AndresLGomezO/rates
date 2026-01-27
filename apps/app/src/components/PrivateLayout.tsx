@@ -1,6 +1,7 @@
 import { useState, useEffect, type PropsWithChildren } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { DebugIndicator } from './DebugIndicator';
 import { SearchBar } from './SearchBar';
 
 const ACCOUNT_TYPES = [
@@ -208,16 +209,19 @@ export function PrivateLayout({ children }: PropsWithChildren) {
         </nav>
         <div className="relative border-t border-neutral-700/30 p-6 before:absolute before:left-6 before:right-6 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-neutral-600/40 before:to-transparent before:content-['']">
           {(sidebarExpanded || isMobileMenuOpen) && (
-            <button
-              className="before:duration-600 relative w-full cursor-pointer overflow-hidden rounded-lg border border-neutral-600/40 bg-white/15 px-5 py-3.5 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(10,14,26,0.3)] backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:left-1/2 before:top-1/2 before:h-0 before:w-0 before:-translate-x-1/2 before:-translate-y-1/2 before:rounded-full before:bg-white/20 before:transition-[width,height] before:content-[''] hover:-translate-y-0.5 hover:border-neutral-500/50 hover:bg-white/25 hover:shadow-[0_6px_20px_rgba(10,14,26,0.4)] hover:before:h-[300px] hover:before:w-[300px] active:translate-y-0"
-              onClick={() => {
-                void signOut();
-                closeMobileMenu();
-              }}
-            >
-              <span className="mr-2 text-lg">🚪</span>
-              Sign Out
-            </button>
+            <>
+              <DebugIndicator position="inline" />
+              <button
+                className="before:duration-600 relative w-full cursor-pointer overflow-hidden rounded-lg border border-neutral-600/40 bg-white/15 px-5 py-3.5 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(10,14,26,0.3)] backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:left-1/2 before:top-1/2 before:h-0 before:w-0 before:-translate-x-1/2 before:-translate-y-1/2 before:rounded-full before:bg-white/20 before:transition-[width,height] before:content-[''] hover:-translate-y-0.5 hover:border-neutral-500/50 hover:bg-white/25 hover:shadow-[0_6px_20px_rgba(10,14,26,0.4)] hover:before:h-[300px] hover:before:w-[300px] active:translate-y-0"
+                onClick={() => {
+                  void signOut();
+                  closeMobileMenu();
+                }}
+              >
+                <span className="mr-2 text-lg">🚪</span>
+                Sign Out
+              </button>
+            </>
           )}
           {!(sidebarExpanded || isMobileMenuOpen) && (
             <button

@@ -89,7 +89,7 @@ export default function Logout() {
 
       // Redirect back to main app
       window.location.replace(target);
-    } catch (err) {
+    } catch (err: unknown) {
       setError(getFriendlyError(err));
       setLoggingOut(false);
     }
