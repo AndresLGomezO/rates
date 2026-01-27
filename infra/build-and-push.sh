@@ -73,27 +73,53 @@ print_step() {
     echo -e "${BOLD}→${NC} $1"
 }
 
+confirm() {
+    local prompt="${1:-Continue?}"
+    local default="${2:-y}"
+    
+    if [[ "${default}" == "y" ]]; then
+        prompt="${prompt} [Y/n]: "
+    else
+        prompt="${prompt} [y/N]: "
+    fi
+    
+    while true; do
+        read -rp "$(echo -e "${YELLOW}${prompt}${NC}")" response
+        response="${response:-$default}"
+        # Convert to lowercase portably (works in both bash and zsh)
+        response_lower=$(echo "$response" | tr '[:upper:]' '[:lower:]')
+        case "$response_lower" in
+            y|yes) return 0 ;;
+            n|no) return 1 ;;
+            *) echo "Please answer yes or no." ;;
+        esac
+    done
+}
+
 show_help() {
     cat << EOF
 ${BOLD}Build and Push Script${NC}
 
 ${BOLD}Usage:${NC}
-  ./build-and-push.sh <environment> [tag]
+  ./build-and-push.sh <environment> [tag] [--deploy]
 
 ${BOLD}Arguments:${NC}
   environment    Environment to build for: dev or prod (required)
   tag            Docker image tag (default: latest)
+  --deploy       Also deploy to Cloud Run after building/pushing
 
 ${BOLD}Examples:${NC}
-  ./build-and-push.sh dev              # Build and push dev with 'latest' tag
-  ./build-and-push.sh dev v1.2.3       # Build and push dev with 'v1.2.3' tag
-  ./build-and-push.sh prod v1.0.0      # Build and push prod with 'v1.0.0' tag
+  ./build-and-push.sh dev                    # Build and push dev with 'latest' tag
+  ./build-and-push.sh dev v1.2.3             # Build and push dev with 'v1.2.3' tag
+  ./build-and-push.sh dev latest --deploy    # Build, push, and deploy to dev
+  ./build-and-push.sh prod v1.0.0 --deploy  # Build, push, and deploy to prod
 
 ${BOLD}What this script does:${NC}
   1. Builds auth-app API container image
   2. Builds app static files container image
   3. Pushes both images to Artifact Registry
   4. Uses secrets from Secret Manager for build configuration
+  5. (Optional) Deploys images to Cloud Run via Terraform
 
 ${BOLD}Prerequisites:${NC}
   - Docker installed and running
@@ -102,8 +128,8 @@ ${BOLD}Prerequisites:${NC}
   - Secrets exist in Secret Manager (created by infra/setup.sh)
 
 ${BOLD}Note:${NC}
-  This script only builds and pushes images. It does NOT deploy to Cloud Run.
-  To deploy after building, update Cloud Run services manually or use Terraform.
+  By default, this script only builds and pushes images.
+  Use --deploy flag to also deploy to Cloud Run via Terraform.
 EOF
 }
 
@@ -463,6 +489,138 @@ EOF
 }
 
 # ============================================================================
+# DEPLOYMENT FUNCTION (reused from setup.sh)
+# ============================================================================
+
+update_cloud_run_with_secrets() {
+    local env="$1"
+    local image_tag="${2:-latest}"
+    local app_dir="${SCRIPT_DIR}/environments/application/${env}"
+    
+    print_section "Updating Cloud Run Services (${env})"
+    
+    if [[ ! -d "${app_dir}" ]]; then
+        print_error "Application directory not found: ${app_dir}"
+        return 1
+    fi
+    
+    # Check if Terraform is available
+    if ! command -v terraform &> /dev/null; then
+        print_error "Terraform is not installed or not in PATH"
+        print_info "Install Terraform: https://www.terraform.io/downloads"
+        return 1
+    fi
+    
+    cd "${app_dir}"
+    
+    # Update terraform.tfvars
+    print_step "Updating terraform.tfvars..."
+    
+    # Update use_fallback_image
+    if sed -i.bak "s/use_fallback_image[[:space:]]*=[[:space:]]*true/use_fallback_image = false/" terraform.tfvars 2>/dev/null; then
+        print_success "Updated use_fallback_image = false"
+        rm -f terraform.tfvars.bak
+    else
+        print_warning "Could not update use_fallback_image (may already be false)"
+    fi
+    
+    # Update include_secrets
+    if sed -i.bak "s/include_secrets[[:space:]]*=[[:space:]]*false/include_secrets = true/" terraform.tfvars 2>/dev/null; then
+        print_success "Updated include_secrets = true"
+        rm -f terraform.tfvars.bak
+    else
+        print_warning "Could not update include_secrets (may already be true)"
+    fi
+    
+    # Update container_image_tag if provided and different
+    if [[ -n "${image_tag}" ]] && [[ "${image_tag}" != "latest" ]]; then
+        if sed -i.bak "s/container_image_tag[[:space:]]*=[[:space:]]*\"[^\"]*\"/container_image_tag = \"${image_tag}\"/" terraform.tfvars 2>/dev/null; then
+            print_success "Updated container_image_tag = ${image_tag}"
+            rm -f terraform.tfvars.bak
+        fi
+    fi
+    
+    # Initialize Terraform if needed
+    if [[ ! -d ".terraform" ]]; then
+        print_step "Initializing Terraform..."
+        if ! terraform init -input=false >> "${LOG_FILE}" 2>&1; then
+            print_error "Terraform init failed"
+            print_info "Check ${LOG_FILE} for details"
+            cd "${SCRIPT_DIR}"
+            return 1
+        fi
+    fi
+    
+    # Run terraform plan
+    print_step "Running terraform plan..."
+    if terraform plan -input=false -out=tfplan >> "${LOG_FILE}" 2>&1; then
+        print_success "Terraform plan complete"
+        
+        echo ""
+        terraform show -no-color tfplan | grep -E "^(Plan:|  #|  \+|  -|  ~)" | head -30
+        echo ""
+    else
+        print_error "Terraform plan failed"
+        print_info "Check ${LOG_FILE} for details"
+        cd "${SCRIPT_DIR}"
+        return 1
+    fi
+    
+    # Apply changes
+    if [[ "${env}" == "prod" ]]; then
+        print_warning "⚠️  PRODUCTION UPDATE"
+        if ! confirm "Apply these changes to PRODUCTION?" "n"; then
+            print_warning "Update cancelled"
+            rm -f tfplan
+            cd "${SCRIPT_DIR}"
+            return 1
+        fi
+        
+        # Double confirmation for production
+        if ! confirm "Are you sure you want to update PRODUCTION?" "n"; then
+            print_warning "Update cancelled"
+            rm -f tfplan
+            cd "${SCRIPT_DIR}"
+            return 1
+        fi
+        
+        print_step "Running terraform apply (production)..."
+        if terraform apply -input=false -var="deployment_approved=true" tfplan >> "${LOG_FILE}" 2>&1; then
+            print_success "Cloud Run services updated successfully!"
+            rm -f tfplan
+        else
+            print_error "Terraform apply failed"
+            print_info "Check ${LOG_FILE} for details"
+            rm -f tfplan
+            cd "${SCRIPT_DIR}"
+            return 1
+        fi
+    else
+        if ! confirm "Apply these changes?"; then
+            print_warning "Update cancelled"
+            rm -f tfplan
+            cd "${SCRIPT_DIR}"
+            return 1
+        fi
+        
+        print_step "Running terraform apply..."
+        if terraform apply -input=false tfplan >> "${LOG_FILE}" 2>&1; then
+            print_success "Cloud Run services updated successfully!"
+            rm -f tfplan
+        else
+            print_error "Terraform apply failed"
+            print_info "Check ${LOG_FILE} for details"
+            rm -f tfplan
+            cd "${SCRIPT_DIR}"
+            return 1
+        fi
+    fi
+    
+    cd "${SCRIPT_DIR}"
+    return 0
+}
+
+# ============================================================================
 # MAIN
 # ============================================================================
 
@@ -473,8 +631,50 @@ main() {
         exit 0
     fi
     
-    local environment="$1"
-    local image_tag="${2:-latest}"
+    local environment=""
+    local image_tag="latest"
+    local deploy=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --deploy)
+                deploy=true
+                shift
+                ;;
+            --help|-h)
+                show_help
+                exit 0
+                ;;
+            dev|prod)
+                if [[ -z "${environment}" ]]; then
+                    environment="$1"
+                else
+                    print_error "Environment specified multiple times"
+                    exit 1
+                fi
+                shift
+                ;;
+            *)
+                # Assume it's a tag if it doesn't start with --
+                if [[ "$1" =~ ^v?[0-9] ]] || [[ "$1" == "latest" ]]; then
+                    image_tag="$1"
+                else
+                    print_error "Unknown argument: $1"
+                    print_info "Use --help for usage information"
+                    exit 1
+                fi
+                shift
+                ;;
+        esac
+    done
+    
+    # Validate environment was provided
+    if [[ -z "${environment}" ]]; then
+        print_error "Environment is required (dev or prod)"
+        print_info "Use --help for usage information"
+        exit 1
+    fi
     
     # Validate environment
     if ! validate_environment "${environment}"; then
@@ -487,6 +687,16 @@ main() {
         print_error "Prerequisites check failed"
         exit 1
     fi
+    
+    # Check Terraform if deploying
+    if [[ "${deploy}" == "true" ]]; then
+        if ! command -v terraform &> /dev/null; then
+            print_error "Terraform is required for deployment"
+            print_info "Install Terraform: https://www.terraform.io/downloads"
+            exit 1
+        fi
+    fi
+    
     print_success "All prerequisites met"
     
     # Build and push
@@ -495,7 +705,20 @@ main() {
         exit 1
     fi
     
-    print_success "Build and push completed successfully!"
+    # Deploy if requested
+    if [[ "${deploy}" == "true" ]]; then
+        print_header "Deploying to Cloud Run"
+        if ! update_cloud_run_with_secrets "${environment}" "${image_tag}"; then
+            print_error "Deployment failed"
+            exit 1
+        fi
+        print_success "Build, push, and deployment completed successfully!"
+    else
+        print_success "Build and push completed successfully!"
+        print_info ""
+        print_info "To deploy these images, run:"
+        print_info "  ./infra/build-and-push.sh ${environment} ${image_tag} --deploy"
+    fi
 }
 
 main "$@"

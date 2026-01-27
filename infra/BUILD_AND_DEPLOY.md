@@ -12,6 +12,12 @@ For simple app changes (no infrastructure changes):
 
 # Build and push for prod environment (with version tag)
 ./infra/build-and-push.sh prod v1.0.0
+
+# Build, push, and deploy to dev in one command
+./infra/build-and-push.sh dev latest --deploy
+
+# Build, push, and deploy to prod (with version tag)
+./infra/build-and-push.sh prod v1.0.0 --deploy
 ```
 
 ## Infrastructure Setup Phases
@@ -113,7 +119,7 @@ Before running `build-and-push.sh`, ensure:
 ### Usage
 
 ```bash
-# Basic usage (dev environment, latest tag)
+# Basic usage (dev environment, latest tag) - build and push only
 ./infra/build-and-push.sh dev
 
 # With custom tag
@@ -122,19 +128,26 @@ Before running `build-and-push.sh`, ensure:
 # Production with version tag
 ./infra/build-and-push.sh prod v1.0.0
 
+# Build, push, AND deploy to Cloud Run (dev)
+./infra/build-and-push.sh dev latest --deploy
+
+# Build, push, AND deploy to Cloud Run (prod with version tag)
+./infra/build-and-push.sh prod v1.0.0 --deploy
+
 # Show help
 ./infra/build-and-push.sh --help
 ```
 
 ### What the Script Does
 
-1. **Validates prerequisites** (Docker, gcloud, project access)
+1. **Validates prerequisites** (Docker, gcloud, project access, Terraform if deploying)
 2. **Configures Docker** for Artifact Registry authentication
 3. **Retrieves secrets** from Secret Manager (Firebase config, nonce secret)
 4. **Builds API image** (auth-app) with all required build args
 5. **Builds app static files** with Firebase configuration embedded
 6. **Builds app image** (nginx serving static files)
 7. **Pushes both images** to Artifact Registry
+8. **(Optional with --deploy)** Updates Cloud Run services via Terraform
 
 ### Image Locations
 
@@ -150,9 +163,14 @@ After building, images are pushed to:
 
 ### After Building
 
-After building and pushing images, you need to deploy them to Cloud Run:
+**Option 1: Use --deploy flag** (recommended - easiest)
 
-**Option 1: Update Cloud Run directly**
+```bash
+# Build, push, and deploy in one command
+./infra/build-and-push.sh dev latest --deploy
+```
+
+**Option 2: Update Cloud Run directly**
 
 ```bash
 # For dev
@@ -167,7 +185,7 @@ gcloud run services update rates-dev-app-us-central1 \
   --project rates-production
 ```
 
-**Option 2: Update via Terraform** (recommended)
+**Option 3: Update via Terraform manually**
 
 ```bash
 cd infra/environments/application/dev
@@ -212,15 +230,15 @@ terraform apply -var="container_image_tag=latest"
 
 ## Comparison: Full Setup vs Build-Only
 
-| Task                   | Full Setup (`setup.sh`) | Build Only (`build-and-push.sh`) |
-| ---------------------- | ----------------------- | -------------------------------- |
-| Infrastructure changes | ✅ Yes                  | ❌ No                            |
-| Create/update secrets  | ✅ Yes                  | ❌ No                            |
-| Build images           | ✅ Yes                  | ✅ Yes                           |
-| Push images            | ✅ Yes                  | ✅ Yes                           |
-| Deploy to Cloud Run    | ✅ Yes                  | ❌ No (manual or Terraform)      |
-| Firebase setup         | ✅ Yes                  | ❌ No                            |
-| CI/CD setup            | ✅ Yes                  | ❌ No                            |
+| Task                   | Full Setup (`setup.sh`) | Build Only (`build-and-push.sh`) | Build + Deploy (`build-and-push.sh --deploy`) |
+| ---------------------- | ----------------------- | -------------------------------- | --------------------------------------------- |
+| Infrastructure changes | ✅ Yes                  | ❌ No                            | ❌ No                                         |
+| Create/update secrets  | ✅ Yes                  | ❌ No                            | ❌ No                                         |
+| Build images           | ✅ Yes                  | ✅ Yes                           | ✅ Yes                                        |
+| Push images            | ✅ Yes                  | ✅ Yes                           | ✅ Yes                                        |
+| Deploy to Cloud Run    | ✅ Yes                  | ❌ No                            | ✅ Yes                                        |
+| Firebase setup         | ✅ Yes                  | ❌ No                            | ❌ No                                         |
+| CI/CD setup            | ✅ Yes                  | ❌ No                            | ❌ No                                         |
 
 ## Workflow Examples
 
@@ -228,24 +246,26 @@ terraform apply -var="container_image_tag=latest"
 
 ```bash
 # 1. Make code changes
-# 2. Build and push
-./infra/build-and-push.sh dev
-
-# 3. Deploy (if needed)
-cd infra/environments/application/dev
-terraform apply -var="container_image_tag=latest"
+# 2. Build, push, and deploy in one command
+./infra/build-and-push.sh dev latest --deploy
 ```
 
 ### Production Release Workflow
 
 ```bash
 # 1. Make code changes and test
-# 2. Build and push with version tag
-./infra/build-and-push.sh prod v1.2.0
+# 2. Build, push, and deploy with version tag (one command)
+./infra/build-and-push.sh prod v1.2.0 --deploy
+```
 
-# 3. Update Terraform with new tag
-cd infra/environments/application/prod
-terraform apply -var="container_image_tag=v1.2.0"
+### Build-Only Workflow (if you want to review before deploying)
+
+```bash
+# 1. Build and push without deploying
+./infra/build-and-push.sh dev v1.2.3
+
+# 2. Review images, then deploy when ready
+./infra/build-and-push.sh dev v1.2.3 --deploy
 ```
 
 ### Infrastructure Changes Workflow
