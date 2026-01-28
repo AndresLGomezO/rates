@@ -606,7 +606,7 @@ export default function Dashboard() {
       />
 
       {/* Key Metrics - horizontally scrollable on small/medium (< md), grid on md+; ~3/4 vertical size */}
-      <div className="mb-8 flex w-full snap-x snap-mandatory flex-nowrap gap-2 overflow-x-auto pb-2 md:grid md:snap-none md:grid-cols-2 md:justify-items-center md:gap-4 [&::-webkit-scrollbar-thumb:hover]:bg-white/30 [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-track]:rounded [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar]:h-1.5">
+      <div className="no-scrollbar mb-8 flex w-full snap-x snap-mandatory flex-nowrap gap-2 overflow-x-auto py-8 md:grid md:snap-none md:grid-cols-2 md:justify-items-center md:gap-4">
         <div className="relative min-w-[210px] flex-shrink-0 snap-center overflow-visible rounded-lg border border-neutral-700/30 bg-gradient-to-br from-danger-500/20 to-danger-500/10 p-4 backdrop-blur-[20px] backdrop-saturate-[180%] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:left-0 before:right-0 before:top-0 before:h-[3px] before:bg-gradient-to-r before:from-[#1e40af] before:via-[#1e3a8a] before:via-[#334155] before:via-[#475569] before:to-[#2563eb] before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:-translate-y-1 hover:border-neutral-600/40 hover:shadow-[0_12px_40px_0_rgba(10,14,26,0.6)] hover:before:opacity-100 xs:p-3 md:min-w-0 md:max-w-[75%]">
           <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-white/70">
             Total Due
