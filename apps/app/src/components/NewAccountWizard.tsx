@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type {
   AccountStatus,
@@ -10,7 +10,13 @@ import { Modal } from './Modal';
 import { Select } from './Select';
 import { formatCurrency } from '../utils/formatters';
 
-type WizardStep = 'type' | 'details' | 'review' | 'success';
+type WizardStep =
+  | 'type'
+  | 'details'
+  | 'account'
+  | 'financial'
+  | 'review'
+  | 'success';
 
 interface NewAccountWizardProps {
   isOpen: boolean;
@@ -38,19 +44,39 @@ const ACCOUNT_TYPE_HELP: Record<AccountType, string> = {
   other: 'Anything that doesn’t fit the categories above.',
 };
 
-const ACCOUNT_STATUSES: AccountStatus[] = [
-  'active',
-  'paid_off',
-  'closed',
-  'defaulted',
-  'on_hold',
-];
+const WIZARD_STEPS = [
+  'Type',
+  'Details',
+  'Account',
+  'Financial',
+  'Review',
+] as const;
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M5 12l5 5L20 7" />
+    </svg>
+  );
+}
 
 function buildTitle(step: WizardStep, type: AccountType | null) {
   if (step === 'success') return 'Account created';
   if (step === 'type') return 'Create a new account';
   const typeLabel = type ? ACCOUNT_TYPE_LABELS[type] : 'Account';
   if (step === 'details') return `Details for your ${typeLabel}`;
+  if (step === 'account') return `Account & currency`;
+  if (step === 'financial') return `Financial data`;
   return `Review your ${typeLabel}`;
 }
 
@@ -65,6 +91,15 @@ export function NewAccountWizard({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdAccountId, setCreatedAccountId] = useState<string | null>(null);
+  const [tipOpen, setTipOpen] = useState(false);
+  const [totalRemainingTipOpen, setTotalRemainingTipOpen] = useState(false);
+  const [numPaymentsTipOpen, setNumPaymentsTipOpen] = useState(false);
+  const [detailsAttempted, setDetailsAttempted] = useState(false);
+  const [accountAttempted, setAccountAttempted] = useState(false);
+  const [financialAttempted, setFinancialAttempted] = useState(false);
+  const tipRef = useRef<HTMLDivElement>(null);
+  const totalRemainingTipRef = useRef<HTMLDivElement>(null);
+  const numPaymentsTipRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState({
     accountNumber: '',
@@ -89,6 +124,12 @@ export function NewAccountWizard({
     setSaving(false);
     setError(null);
     setCreatedAccountId(null);
+    setTipOpen(false);
+    setTotalRemainingTipOpen(false);
+    setNumPaymentsTipOpen(false);
+    setDetailsAttempted(false);
+    setAccountAttempted(false);
+    setFinancialAttempted(false);
     setFormData({
       accountNumber: '',
       accountName: '',
@@ -105,6 +146,32 @@ export function NewAccountWizard({
     });
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!tipOpen && !totalRemainingTipOpen && !numPaymentsTipOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (tipOpen && tipRef.current && !tipRef.current.contains(target)) {
+        setTipOpen(false);
+      }
+      if (
+        totalRemainingTipOpen &&
+        totalRemainingTipRef.current &&
+        !totalRemainingTipRef.current.contains(target)
+      ) {
+        setTotalRemainingTipOpen(false);
+      }
+      if (
+        numPaymentsTipOpen &&
+        numPaymentsTipRef.current &&
+        !numPaymentsTipRef.current.contains(target)
+      ) {
+        setNumPaymentsTipOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [tipOpen, totalRemainingTipOpen, numPaymentsTipOpen]);
+
   const getDefaultDueDate = () => {
     const date = new Date();
     date.setDate(date.getDate() + 30);
@@ -113,20 +180,29 @@ export function NewAccountWizard({
 
   const detailsErrors = useMemo(() => {
     const errs: Record<string, string> = {};
-    if (!selectedType) return errs;
-
-    if (!formData.accountNumber.trim())
-      errs.accountNumber = 'Account number is required';
     if (!formData.accountName.trim())
       errs.accountName = 'Account name is required';
     if (!formData.accountDescription.trim())
       errs.accountDescription = 'Account description is required';
+    return errs;
+  }, [formData.accountName, formData.accountDescription]);
+
+  const accountErrors = useMemo(() => {
+    const errs: Record<string, string> = {};
+    if (!formData.accountNumber.trim())
+      errs.accountNumber = 'Account number is required';
+    return errs;
+  }, [formData.accountNumber]);
+
+  const financialErrors = useMemo(() => {
+    const errs: Record<string, string> = {};
+    if (!selectedType) return errs;
 
     if (
       !formData.totalAmountRemaining ||
       parseFloat(formData.totalAmountRemaining) <= 0
     ) {
-      errs.totalAmountRemaining = 'Valid total amount remaining is required';
+      errs.totalAmountRemaining = 'Valid total remaining is required';
     }
 
     if (!formData.monthlyPayment || parseFloat(formData.monthlyPayment) <= 0) {
@@ -163,8 +239,10 @@ export function NewAccountWizard({
   }, [formData, selectedType]);
 
   const canContinueFromType = !!selectedType;
-  const canContinueFromDetails = selectedType
-    ? Object.keys(detailsErrors).length === 0
+  const canContinueFromDetails = Object.keys(detailsErrors).length === 0;
+  const canContinueFromAccount = Object.keys(accountErrors).length === 0;
+  const canContinueFromFinancial = selectedType
+    ? Object.keys(financialErrors).length === 0
     : false;
 
   const handleClose = () => {
@@ -175,12 +253,23 @@ export function NewAccountWizard({
   const handleNext = () => {
     setError(null);
     if (step === 'type' && canContinueFromType) setStep('details');
-    else if (step === 'details' && canContinueFromDetails) setStep('review');
+    else if (step === 'details') {
+      setDetailsAttempted(true);
+      if (canContinueFromDetails) setStep('account');
+    } else if (step === 'account') {
+      setAccountAttempted(true);
+      if (canContinueFromAccount) setStep('financial');
+    } else if (step === 'financial') {
+      setFinancialAttempted(true);
+      if (canContinueFromFinancial) setStep('review');
+    }
   };
 
   const handleBack = () => {
     setError(null);
-    if (step === 'review') setStep('details');
+    if (step === 'review') setStep('financial');
+    else if (step === 'financial') setStep('account');
+    else if (step === 'account') setStep('details');
     else if (step === 'details') setStep('type');
   };
 
@@ -226,7 +315,7 @@ export function NewAccountWizard({
   };
 
   const handleCreate = async () => {
-    if (!canContinueFromDetails || !selectedType || saving) return;
+    if (!canContinueFromFinancial || !selectedType || saving) return;
 
     try {
       setSaving(true);
@@ -244,52 +333,98 @@ export function NewAccountWizard({
   };
 
   const progressIndex =
-    step === 'type' ? 0 : step === 'details' ? 1 : step === 'review' ? 2 : 3;
+    step === 'type'
+      ? 0
+      : step === 'details'
+        ? 1
+        : step === 'account'
+          ? 2
+          : step === 'financial'
+            ? 3
+            : 4; // review | success
 
-  const primaryCurrencyPreview = formData.currency;
-
-  const renderProgressIndicator = () => (
-    <div
-      className="bg-white/8 rounded-lg border border-neutral-700/30 px-4 pb-2.5 pt-2 backdrop-blur-[14px]"
-      aria-label="Wizard progress"
-    >
-      <div className="flex items-center justify-between gap-2 sm:gap-3">
-        {['Type', 'Details', 'Review', 'Done'].map((label, idx) => (
-          <div
-            key={label}
-            className={`flex flex-1 items-center gap-2 transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] sm:gap-2.5 ${
-              idx < progressIndex || idx === progressIndex
-                ? 'opacity-100'
-                : 'opacity-65'
-            }`}
-          >
-            <div
-              className={`h-2.5 w-2.5 flex-shrink-0 rounded-full border transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                idx === progressIndex
-                  ? 'border-neutral-500/50 bg-gradient-to-br from-[#1e40af] to-[#334155] shadow-[0_0_0_6px_rgba(30,64,175,0.18)]'
-                  : idx < progressIndex
-                    ? 'border-[rgba(46,204,113,0.95)] bg-[rgba(46,204,113,0.9)]'
-                    : 'border-neutral-600/40 bg-white/25'
-              }`}
-              aria-hidden="true"
-            />
-            <div className="whitespace-nowrap text-xs font-[650] -tracking-[0.2px] sm:text-sm">
-              {label}
-            </div>
-          </div>
-        ))}
-      </div>
+  const renderProgressIndicator = () => {
+    // Fill to the divider to the right of the active step: step 0→20%, 1→40%, 2→60%, 3→80%, 4→100%
+    const percent = ((progressIndex + 1) / 5) * 100;
+    return (
       <div
-        className="bg-white/8 mt-2 h-1.5 overflow-hidden rounded-full border border-neutral-700/25"
-        aria-hidden="true"
+        className="rounded-md border border-white/[0.08] bg-white/[0.04] px-3 pb-2 pt-4 sm:px-4 sm:py-2.5"
+        aria-label="Wizard progress"
       >
+        {/* Progress bar — segment lines at 20,40,60,80% align with the right edge of each step slot */}
         <div
-          className="h-full rounded-full bg-gradient-to-r from-[#1e40af] to-[#334155] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
-          style={{ width: `${(progressIndex / 3) * 100}%` }}
-        />
+          className="relative h-2 w-full overflow-hidden rounded-full bg-white/10 sm:h-2.5"
+          role="progressbar"
+          aria-valuenow={progressIndex}
+          aria-valuemin={0}
+          aria-valuemax={4}
+          aria-valuetext={
+            step === 'success' ? 'Complete' : `Step ${progressIndex + 1} of 5`
+          }
+        >
+          {/* Segment dividers: 4 lines at 20, 40, 60, 80% — one at the right edge of each step’s column */}
+          {[20, 40, 60, 80].map((left) => (
+            <div
+              key={left}
+              className="pointer-events-none absolute bottom-0 top-0 w-px bg-white/15"
+              style={{ left: `${left}%` }}
+              aria-hidden
+            />
+          ))}
+          <div
+            className="relative z-10 h-full rounded-full bg-gradient-to-r from-[#1e40af] via-[#2563eb] to-[#334155] shadow-[0_0_10px_rgba(37,99,235,0.35)] transition-[width] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+
+        {/* Step row — 5 equal segments aligned with full bar; completed, current, and upcoming (remaining) */}
+        <div className="mt-2 flex w-full gap-0">
+          {WIZARD_STEPS.map((label, idx) => {
+            const isDone = idx < progressIndex || step === 'success';
+            const isCurrent = idx === progressIndex && step !== 'success';
+            const isUpcoming = idx > progressIndex;
+            return (
+              <div
+                key={label}
+                className="flex min-w-0 flex-1 flex-col items-center gap-1 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                aria-current={isCurrent ? 'step' : undefined}
+              >
+                {/* Marker — same size for all so remaining aligns with bar */}
+                {isDone ? (
+                  <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-[rgba(46,204,113,0.25)] text-[#2ecc71] sm:h-5 sm:w-5">
+                    <CheckIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                  </span>
+                ) : isCurrent ? (
+                  <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border-2 border-primary-500/50 bg-primary-500/20 shadow-[0_0_8px_rgba(30,64,175,0.3)] sm:h-5 sm:w-5">
+                    <span
+                      className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary-300"
+                      aria-hidden
+                    />
+                  </span>
+                ) : (
+                  <span
+                    className="h-4 w-4 flex-shrink-0 rounded-full border-2 border-white/20 bg-white/[0.04] sm:h-5 sm:w-5"
+                    aria-hidden
+                  />
+                )}
+                <span
+                  className={`max-w-full truncate px-0.5 text-center text-[10px] -tracking-[0.1px] sm:text-xs ${
+                    isUpcoming
+                      ? 'text-white/40'
+                      : isCurrent
+                        ? 'font-semibold text-white'
+                        : 'text-white/80'
+                  }`}
+                >
+                  {label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderFooter = () => (
     <div className="flex items-center gap-3">
@@ -347,10 +482,42 @@ export function NewAccountWizard({
               type="submit"
               form="wiz-details-form"
               className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
-              disabled={!canContinueFromDetails}
+              disabled={saving}
               title={
                 !canContinueFromDetails
-                  ? 'Please complete required fields'
+                  ? 'Click to see which fields need to be completed'
+                  : undefined
+              }
+            >
+              Continue
+            </button>
+          )}
+
+          {step === 'account' && (
+            <button
+              type="submit"
+              form="wiz-account-form"
+              className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
+              disabled={saving}
+              title={
+                !canContinueFromAccount
+                  ? 'Click to see which fields need to be completed'
+                  : undefined
+              }
+            >
+              Continue
+            </button>
+          )}
+
+          {step === 'financial' && (
+            <button
+              type="submit"
+              form="wiz-financial-form"
+              className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
+              disabled={saving}
+              title={
+                !canContinueFromFinancial
+                  ? 'Click to see which fields need to be completed'
                   : undefined
               }
             >
@@ -455,64 +622,6 @@ export function NewAccountWizard({
             </div>
 
             <div className="gap-3.75 mt-4 flex flex-col">
-              <div className="grid grid-cols-2 gap-3.5 md-sm:grid-cols-1">
-                <div className="flex flex-col gap-1.5">
-                  <label
-                    htmlFor="wiz-accountNumber"
-                    className="text-white/92 mb-1.5 block text-[0.92rem] font-[650]"
-                  >
-                    Account Number <span className="text-danger-500">*</span>
-                  </label>
-                  <input
-                    id="wiz-accountNumber"
-                    type="text"
-                    value={formData.accountNumber}
-                    onChange={(e) =>
-                      setFormData((p) => ({
-                        ...p,
-                        accountNumber: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g., ACC-0001"
-                    className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                      detailsErrors.accountNumber
-                        ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
-                        : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
-                    }`}
-                    autoFocus
-                  />
-                  {detailsErrors.accountNumber && (
-                    <div className="mt-1.5 text-[0.88rem] text-[#ffb3b3]">
-                      {detailsErrors.accountNumber}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label
-                    htmlFor="wiz-status"
-                    className="text-white/92 mb-1.5 block text-[0.92rem] font-[650]"
-                  >
-                    Status <span className="text-danger-500">*</span>
-                  </label>
-                  <Select
-                    id="wiz-status"
-                    value={formData.status}
-                    onChange={(v) =>
-                      setFormData((p) => ({
-                        ...p,
-                        status: v as AccountStatus,
-                      }))
-                    }
-                    options={ACCOUNT_STATUSES.map((s) => ({
-                      value: s,
-                      label: s.replace('_', ' ').toUpperCase(),
-                    }))}
-                    aria-label="Account status"
-                  />
-                </div>
-              </div>
-
               <div className="flex flex-col gap-1.5">
                 <label
                   htmlFor="wiz-accountName"
@@ -529,12 +638,13 @@ export function NewAccountWizard({
                   }
                   placeholder="e.g., Personal Loan - Bank ABC"
                   className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-200 ease-in-out ${
-                    detailsErrors.accountName
+                    detailsAttempted && detailsErrors.accountName
                       ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
                       : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)]'
                   }`}
+                  autoFocus
                 />
-                {detailsErrors.accountName && (
+                {detailsAttempted && detailsErrors.accountName && (
                   <div className="mt-1.5 text-[0.88rem] text-[#ffb3b3]">
                     {detailsErrors.accountName}
                   </div>
@@ -560,61 +670,207 @@ export function NewAccountWizard({
                   placeholder="e.g., Personal loan for home improvement"
                   rows={3}
                   className={`box-border w-full resize-y rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-200 ease-in-out ${
-                    detailsErrors.accountDescription
+                    detailsAttempted && detailsErrors.accountDescription
                       ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
                       : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)]'
                   }`}
                 />
-                {detailsErrors.accountDescription && (
+                {detailsAttempted && detailsErrors.accountDescription && (
                   <div className="mt-1.5 text-[0.88rem] text-[#ffb3b3]">
                     {detailsErrors.accountDescription}
                   </div>
                 )}
               </div>
+            </div>
+          </form>
+        )}
 
-              <div className="grid grid-cols-2 gap-3.5 md-sm:grid-cols-1">
-                <div className="flex flex-col gap-1.5">
+        {step === 'account' && (
+          <form
+            id="wiz-account-form"
+            onSubmit={(e: FormEvent) => {
+              e.preventDefault();
+              handleNext();
+            }}
+          >
+            <div className="mb-4">
+              <h3 className="m-0 mb-1 text-xl -tracking-[0.3px]">
+                Account & currency
+              </h3>
+              <p className="m-0 text-[0.95rem] opacity-75">
+                Identifier and currency for this account.
+              </p>
+            </div>
+
+            <div className="gap-3.75 mt-4 flex flex-col">
+              <div className="flex flex-col gap-1.5">
+                <div
+                  ref={tipRef}
+                  className="relative mb-1.5 flex items-center gap-1.5"
+                  onMouseEnter={() => setTipOpen(true)}
+                  onMouseLeave={() => setTipOpen(false)}
+                >
                   <label
-                    htmlFor="wiz-currency"
-                    className="text-white/92 mb-1.5 block text-[0.92rem] font-[650]"
+                    htmlFor="wiz-accountNumber"
+                    className="text-white/92 text-[0.92rem] font-[650]"
                   >
-                    Currency <span className="text-danger-500">*</span>
+                    Account Number <span className="text-danger-500">*</span>
                   </label>
-                  <Select
-                    id="wiz-currency"
-                    value={formData.currency}
-                    onChange={(v) =>
-                      setFormData((p) => ({
-                        ...p,
-                        currency: v as 'COP' | 'USD',
-                      }))
-                    }
-                    options={[
-                      { value: 'COP', label: 'COP (Colombian Peso)' },
-                      { value: 'USD', label: 'USD (US Dollar)' },
-                    ]}
-                    aria-label="Currency"
-                  />
+                  <button
+                    type="button"
+                    className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+                    aria-label="Account number tip"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setTipOpen((o) => !o);
+                    }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-4 w-4"
+                      aria-hidden
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 16v-4" />
+                      <path d="M12 8h.01" />
+                    </svg>
+                  </button>
+                  {tipOpen && (
+                    <div
+                      className="absolute left-0 top-full z-50 mt-1 max-w-[260px] rounded-lg border border-neutral-600/40 bg-neutral-900 px-3 py-2.5 text-[0.9rem] leading-relaxed text-white shadow-lg"
+                      role="tooltip"
+                    >
+                      Use an easy-to-remember account number. It becomes the
+                      unique ID.
+                    </div>
+                  )}
                 </div>
-
-                <div className="bg-white/6 rounded-lg border border-neutral-700/30 px-3.5 py-3.5">
-                  <div className="mb-1 font-[750] -tracking-[0.3px]">Tip</div>
-                  <div className="text-[0.92rem] leading-[1.35] opacity-80">
-                    Use an easy-to-remember account number. It becomes the
-                    unique ID.
+                <input
+                  id="wiz-accountNumber"
+                  type="text"
+                  value={formData.accountNumber}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      accountNumber: e.target.value,
+                    }))
+                  }
+                  placeholder="e.g., ACC-0001"
+                  className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                    accountAttempted && accountErrors.accountNumber
+                      ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
+                      : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
+                  }`}
+                  autoFocus
+                />
+                {accountAttempted && accountErrors.accountNumber && (
+                  <div className="mt-1.5 text-[0.88rem] text-[#ffb3b3]">
+                    {accountErrors.accountNumber}
                   </div>
-                </div>
+                )}
               </div>
 
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="wiz-currency"
+                  className="text-white/92 mb-1.5 block text-[0.92rem] font-[650]"
+                >
+                  Currency <span className="text-danger-500">*</span>
+                </label>
+                <Select
+                  id="wiz-currency"
+                  value={formData.currency}
+                  onChange={(v) =>
+                    setFormData((p) => ({
+                      ...p,
+                      currency: v as 'COP' | 'USD',
+                    }))
+                  }
+                  options={[
+                    { value: 'COP', label: 'COP (Colombian Peso)' },
+                    { value: 'USD', label: 'USD (US Dollar)' },
+                  ]}
+                  aria-label="Currency"
+                />
+              </div>
+            </div>
+          </form>
+        )}
+
+        {step === 'financial' && selectedType && (
+          <form
+            id="wiz-financial-form"
+            onSubmit={(e: FormEvent) => {
+              e.preventDefault();
+              handleNext();
+            }}
+          >
+            <div className="mb-4">
+              <h3 className="m-0 mb-1 text-xl -tracking-[0.3px]">
+                Financial data
+              </h3>
+              <p className="m-0 text-[0.95rem] opacity-75">
+                Amounts, rate, and payment schedule.
+              </p>
+            </div>
+
+            <div className="gap-3.75 mt-4 flex flex-col">
               <div className="grid grid-cols-2 gap-3.5 md-sm:grid-cols-1">
                 <div className="flex flex-col gap-1.5">
-                  <label
-                    htmlFor="wiz-totalAmountRemaining"
-                    className="text-white/92 mb-1.5 block text-[0.92rem] font-[650]"
+                  <div
+                    ref={totalRemainingTipRef}
+                    className="relative mb-1.5 flex items-center gap-1.5"
+                    onMouseEnter={() => setTotalRemainingTipOpen(true)}
+                    onMouseLeave={() => setTotalRemainingTipOpen(false)}
                   >
-                    Total Amount Remaining{' '}
-                    <span className="text-danger-500">*</span>
-                  </label>
+                    <label
+                      htmlFor="wiz-totalAmountRemaining"
+                      className="text-white/92 text-[0.92rem] font-[650]"
+                    >
+                      Total Remaining <span className="text-danger-500">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+                      aria-label="Total remaining tip"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setTotalRemainingTipOpen((o) => !o);
+                      }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-4 w-4"
+                        aria-hidden
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 16v-4" />
+                        <path d="M12 8h.01" />
+                      </svg>
+                    </button>
+                    {totalRemainingTipOpen && (
+                      <div
+                        className="absolute left-0 top-full z-50 mt-1 max-w-[280px] rounded-lg border border-neutral-600/40 bg-neutral-900 px-3 py-2.5 text-[0.9rem] leading-relaxed text-white shadow-lg"
+                        role="tooltip"
+                      >
+                        The current balance or principal still owed on this
+                        account. This amount decreases as you make payments and
+                        is used for amortization.
+                      </div>
+                    )}
+                  </div>
                   <input
                     id="wiz-totalAmountRemaining"
                     type="number"
@@ -629,16 +885,18 @@ export function NewAccountWizard({
                     }
                     placeholder="0.00"
                     className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                      detailsErrors.totalAmountRemaining
+                      financialAttempted && financialErrors.totalAmountRemaining
                         ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
                         : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
                     }`}
+                    autoFocus
                   />
-                  {detailsErrors.totalAmountRemaining && (
-                    <div className="mt-1.5 text-[0.88rem] text-[#ffb3b3]">
-                      {detailsErrors.totalAmountRemaining}
-                    </div>
-                  )}
+                  {financialAttempted &&
+                    financialErrors.totalAmountRemaining && (
+                      <div className="mt-1.5 text-[0.88rem] text-[#ffb3b3]">
+                        {financialErrors.totalAmountRemaining}
+                      </div>
+                    )}
                 </div>
 
                 <div className="flex flex-col gap-1.5">
@@ -662,14 +920,14 @@ export function NewAccountWizard({
                     }
                     placeholder="0.00"
                     className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                      detailsErrors.monthlyPayment
+                      financialAttempted && financialErrors.monthlyPayment
                         ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
                         : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
                     }`}
                   />
-                  {detailsErrors.monthlyPayment && (
+                  {financialAttempted && financialErrors.monthlyPayment && (
                     <div className="mt-1.5 text-[0.88rem] text-[#ffb3b3]">
-                      {detailsErrors.monthlyPayment}
+                      {financialErrors.monthlyPayment}
                     </div>
                   )}
                 </div>
@@ -695,14 +953,14 @@ export function NewAccountWizard({
                     }
                     placeholder="0.0"
                     className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                      detailsErrors.rate
+                      financialAttempted && financialErrors.rate
                         ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
                         : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
                     }`}
                   />
-                  {detailsErrors.rate && (
+                  {financialAttempted && financialErrors.rate && (
                     <div className="mt-1.5 text-[0.88rem] text-[#ffb3b3]">
-                      {detailsErrors.rate}
+                      {financialErrors.rate}
                     </div>
                   )}
                 </div>
@@ -726,14 +984,14 @@ export function NewAccountWizard({
                     }
                     min={new Date().toISOString().split('T')[0]}
                     className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                      detailsErrors.nextDueDate
+                      financialAttempted && financialErrors.nextDueDate
                         ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
                         : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
                     }`}
                   />
-                  {detailsErrors.nextDueDate && (
+                  {financialAttempted && financialErrors.nextDueDate && (
                     <div className="mt-1.5 text-[0.88rem] text-[#ffb3b3]">
-                      {detailsErrors.nextDueDate}
+                      {financialErrors.nextDueDate}
                     </div>
                   )}
                 </div>
@@ -745,7 +1003,7 @@ export function NewAccountWizard({
                     htmlFor="wiz-originalAmount"
                     className="text-white/92 mb-1.5 block text-[0.92rem] font-[650]"
                   >
-                    Original Amount (Optional)
+                    Original Amount
                   </label>
                   <input
                     id="wiz-originalAmount"
@@ -769,7 +1027,7 @@ export function NewAccountWizard({
                     htmlFor="wiz-startDate"
                     className="text-white/92 mb-1.5 block text-[0.92rem] font-[650]"
                   >
-                    Start Date (Optional)
+                    Start Date
                   </label>
                   <input
                     id="wiz-startDate"
@@ -784,71 +1042,92 @@ export function NewAccountWizard({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3.5 md-sm:grid-cols-1">
-                <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1.5">
+                <div
+                  ref={numPaymentsTipRef}
+                  className="relative mb-1.5 flex items-center gap-1.5"
+                  onMouseEnter={() => setNumPaymentsTipOpen(true)}
+                  onMouseLeave={() => setNumPaymentsTipOpen(false)}
+                >
                   <label
                     htmlFor="wiz-numberOfPayments"
-                    className="text-white/92 mb-1.5 block text-[0.92rem] font-[650]"
+                    className="text-white/92 text-[0.92rem] font-[650]"
                   >
-                    Number of Payments
+                    # Payments
                     {selectedType !== 'bill' && (
                       <span className="text-danger-500">*</span>
                     )}
-                    {selectedType === 'bill' && (
-                      <span className="ml-2 text-sm font-medium opacity-70">
-                        (Optional for periodic bills)
-                      </span>
-                    )}
                   </label>
-                  <input
-                    id="wiz-numberOfPayments"
-                    type="number"
-                    step="1"
-                    min="1"
-                    value={formData.numberOfPayments}
-                    onChange={(e) =>
-                      setFormData((p) => ({
-                        ...p,
-                        numberOfPayments: e.target.value,
-                      }))
-                    }
-                    className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                      detailsErrors.numberOfPayments
-                        ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
-                        : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
-                    }`}
-                    placeholder={
-                      selectedType === 'bill'
-                        ? 'Leave empty for periodic bills'
-                        : 'e.g., 12'
-                    }
-                  />
-                  {detailsErrors.numberOfPayments && (
-                    <div className="mt-1.5 text-[0.88rem] text-[#ffb3b3]">
-                      {detailsErrors.numberOfPayments}
-                    </div>
-                  )}
-                  {selectedType === 'bill' && (
-                    <div className="mt-1.5 text-[0.86rem] leading-[1.3] opacity-70">
-                      Leave empty if this is a periodic bill (periods will be
-                      generated automatically).
+                  <button
+                    type="button"
+                    className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+                    aria-label="# Payments tip"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setNumPaymentsTipOpen((o) => !o);
+                    }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-4 w-4"
+                      aria-hidden
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 16v-4" />
+                      <path d="M12 8h.01" />
+                    </svg>
+                  </button>
+                  {numPaymentsTipOpen && (
+                    <div
+                      className="absolute left-0 top-full z-50 mt-1 max-w-[280px] rounded-lg border border-neutral-600/40 bg-neutral-900 px-3 py-2.5 text-[0.9rem] leading-relaxed text-white shadow-lg"
+                      role="tooltip"
+                    >
+                      Total scheduled payments (e.g., 12 for a one-year loan).
+                      For periodic bills, leave empty to generate periods
+                      automatically.
                     </div>
                   )}
                 </div>
-
-                <div className="bg-white/6 rounded-lg border border-neutral-700/30 px-3.5 py-3.5">
-                  <div className="mb-1 font-[750] -tracking-[0.3px]">
-                    Preview
+                <input
+                  id="wiz-numberOfPayments"
+                  type="number"
+                  step="1"
+                  min="1"
+                  value={formData.numberOfPayments}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      numberOfPayments: e.target.value,
+                    }))
+                  }
+                  className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                    financialAttempted && financialErrors.numberOfPayments
+                      ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
+                      : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
+                  }`}
+                  placeholder={
+                    selectedType === 'bill'
+                      ? 'Leave empty for periodic bills'
+                      : 'e.g., 12'
+                  }
+                />
+                {financialAttempted && financialErrors.numberOfPayments && (
+                  <div className="mt-1.5 text-[0.88rem] text-[#ffb3b3]">
+                    {financialErrors.numberOfPayments}
                   </div>
-                  <div className="text-[0.92rem] leading-[1.35] opacity-80">
-                    {formData.totalAmountRemaining
-                      ? formatCurrency(
-                          parseFloat(formData.totalAmountRemaining || '0'),
-                          primaryCurrencyPreview
-                        )
-                      : 'Enter an amount to see a formatted preview.'}
+                )}
+                {selectedType === 'bill' && (
+                  <div className="mt-1.5 text-[0.86rem] leading-[1.3] opacity-70">
+                    Leave empty if this is a periodic bill (periods will be
+                    generated automatically).
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </form>
@@ -871,9 +1150,11 @@ export function NewAccountWizard({
                 </div>
               </div>
               <div className="bg-white/8 py-3.75 rounded-lg border border-neutral-700/30 px-4">
-                <div className="mb-1 text-xs opacity-70">Status</div>
+                <div className="mb-1 text-xs opacity-70">Currency</div>
                 <div className="font-[650] -tracking-[0.2px]">
-                  {formData.status.replace('_', ' ').toUpperCase()}
+                  {formData.currency === 'COP'
+                    ? 'COP (Colombian Peso)'
+                    : 'USD (US Dollar)'}
                 </div>
               </div>
               <div className="bg-white/8 py-3.75 rounded-lg border border-neutral-700/30 px-4">
