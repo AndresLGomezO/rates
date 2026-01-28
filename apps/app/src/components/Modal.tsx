@@ -101,7 +101,7 @@ export function Modal({
             )}
           </div>
         )}
-        <div className="modal-scrollbar min-h-0 flex-1 overflow-y-auto px-8 pb-8 pt-2 md:p-6">
+        <div className="modal-scrollbar min-h-0 flex-1 overflow-y-auto px-6 pb-8 pt-2 md:p-6">
           {children}
         </div>
         {footer != null && (

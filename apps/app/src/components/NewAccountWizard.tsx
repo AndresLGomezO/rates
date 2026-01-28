@@ -34,6 +34,16 @@ const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   other: 'Other',
 };
 
+const ACCOUNT_TYPE_ICONS: Record<AccountType, string> = {
+  loan: '💰',
+  credit_card: '💳',
+  bill: '📄',
+  mortgage: '🏠',
+  personal_loan: '👤',
+  auto_loan: '🚗',
+  other: '📋',
+};
+
 const ACCOUNT_TYPE_HELP: Record<AccountType, string> = {
   loan: 'Fixed-term loans with interest and scheduled payments.',
   credit_card: 'Revolving credit balances with monthly minimum payments.',
@@ -103,6 +113,7 @@ export function NewAccountWizard({
 
   const [formData, setFormData] = useState({
     accountNumber: '',
+    accountNumberAutogenerate: true,
     accountName: '',
     accountDescription: '',
     status: 'active' as AccountStatus,
@@ -132,6 +143,7 @@ export function NewAccountWizard({
     setFinancialAttempted(false);
     setFormData({
       accountNumber: '',
+      accountNumberAutogenerate: true,
       accountName: '',
       accountDescription: '',
       status: 'active',
@@ -189,10 +201,11 @@ export function NewAccountWizard({
 
   const accountErrors = useMemo(() => {
     const errs: Record<string, string> = {};
-    if (!formData.accountNumber.trim())
+    if (!formData.accountNumberAutogenerate && !formData.accountNumber.trim()) {
       errs.accountNumber = 'Account number is required';
+    }
     return errs;
-  }, [formData.accountNumber]);
+  }, [formData.accountNumberAutogenerate, formData.accountNumber]);
 
   const financialErrors = useMemo(() => {
     const errs: Record<string, string> = {};
@@ -282,7 +295,9 @@ export function NewAccountWizard({
     }
 
     return {
-      accountNumber: formData.accountNumber.trim(),
+      accountNumber: formData.accountNumberAutogenerate
+        ? crypto.randomUUID()
+        : formData.accountNumber.trim(),
       accountName: formData.accountName.trim(),
       accountDescription: formData.accountDescription.trim(),
       accountType: selectedType,
@@ -561,44 +576,56 @@ export function NewAccountWizard({
 
         {step === 'type' && (
           <div>
-            <div className="mb-4">
-              <h3 className="m-0 mb-1 text-xl -tracking-[0.3px]">
-                Choose an account type
-              </h3>
-              <p className="m-0 text-[0.95rem] opacity-75">
-                Pick the category that best describes this account.
-              </p>
-            </div>
+            <p className="mb-3 text-[0.85rem] opacity-75 sm:mb-4 sm:text-[0.9rem]">
+              Pick the category that best describes this account.
+            </p>
 
             <div
-              className="mt-4 grid grid-cols-2 gap-3.5 md-sm:grid-cols-1"
+              className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:gap-2.5"
               role="list"
             >
               {(Object.keys(ACCOUNT_TYPE_LABELS) as AccountType[]).map(
-                (type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    role="listitem"
-                    className={`cursor-pointer rounded-lg border p-4 text-left text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                      selectedType === type
-                        ? 'bg-primary-500/18 border-primary-500/75 shadow-[0_10px_26px_rgba(30,64,175,0.2)]'
-                        : 'bg-white/8 border-neutral-700/30 backdrop-blur-[14px] hover:-translate-y-0.5 hover:border-neutral-600/40 hover:bg-white/10 hover:shadow-[0_10px_24px_rgba(0,0,0,0.18)]'
-                    }`}
-                    onClick={() => {
-                      setError(null);
-                      setSelectedType(type);
-                      setStep('details');
-                    }}
-                  >
-                    <div className="text-lg font-[750] -tracking-[0.3px]">
-                      {ACCOUNT_TYPE_LABELS[type]}
-                    </div>
-                    <div className="mt-1.5 text-[0.92rem] leading-[1.35] opacity-75">
-                      {ACCOUNT_TYPE_HELP[type]}
-                    </div>
-                  </button>
-                )
+                (type) => {
+                  const isSelected = selectedType === type;
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      role="listitem"
+                      className={`flex min-h-[72px] cursor-pointer flex-col justify-center rounded-md border p-2.5 pt-0 text-left text-white transition-all duration-200 ease-out active:scale-[0.98] sm:min-h-[80px] sm:p-3 ${
+                        isSelected
+                          ? 'border-primary-500/80 bg-primary-500/20 shadow-[0_0_0_2px_rgba(59,130,246,0.35),0_4px_14px_rgba(30,64,175,0.3)]'
+                          : 'border-neutral-700/40 bg-white/[0.07] backdrop-blur-[10px] hover:border-neutral-600/50 hover:bg-white/10 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]'
+                      }`}
+                      onClick={() => {
+                        setError(null);
+                        setSelectedType(type);
+                        setStep('details');
+                      }}
+                    >
+                      {/* Row 1: icon (left) + title (right) */}
+                      <div className="flex min-h-[44px] items-center gap-2">
+                        <span
+                          className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-base ring-1 sm:h-10 sm:w-10 sm:text-lg ${
+                            isSelected
+                              ? 'bg-primary-500/35 shadow-[0_2px_10px_rgba(30,64,175,0.35)] ring-primary-400/40'
+                              : 'bg-white/12 shadow-[0_2px_8px_rgba(0,0,0,0.25)] ring-white/10'
+                          }`}
+                          aria-hidden
+                        >
+                          {ACCOUNT_TYPE_ICONS[type]}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate text-[0.95rem] font-[700] -tracking-[0.2px] sm:text-[1rem]">
+                          {ACCOUNT_TYPE_LABELS[type]}
+                        </span>
+                      </div>
+                      {/* Row 2: description */}
+                      <p className="mt-1 line-clamp-2 min-h-[2.25em] text-[0.75rem] leading-snug opacity-80 sm:text-[0.8rem]">
+                        {ACCOUNT_TYPE_HELP[type]}
+                      </p>
+                    </button>
+                  );
+                }
               )}
             </div>
           </div>
@@ -612,14 +639,9 @@ export function NewAccountWizard({
               handleNext();
             }}
           >
-            <div className="mb-4">
-              <h3 className="m-0 mb-1 text-xl -tracking-[0.3px]">
-                Account details
-              </h3>
-              <p className="m-0 text-[0.95rem] opacity-75">
-                Fill in the basics. You can always edit later.
-              </p>
-            </div>
+            <p className="mb-3 text-[0.85rem] opacity-75 sm:mb-4 sm:text-[0.9rem]">
+              Fill in the basics. You can always edit later.
+            </p>
 
             <div className="gap-3.75 mt-4 flex flex-col">
               <div className="flex flex-col gap-1.5">
@@ -693,63 +715,81 @@ export function NewAccountWizard({
               handleNext();
             }}
           >
-            <div className="mb-4">
-              <h3 className="m-0 mb-1 text-xl -tracking-[0.3px]">
-                Account & currency
-              </h3>
-              <p className="m-0 text-[0.95rem] opacity-75">
-                Identifier and currency for this account.
-              </p>
-            </div>
+            <p className="mb-3 text-[0.85rem] opacity-75 sm:mb-4 sm:text-[0.9rem]">
+              Identifier and currency for this account.
+            </p>
 
             <div className="gap-3.75 mt-4 flex flex-col">
               <div className="flex flex-col gap-1.5">
                 <div
                   ref={tipRef}
-                  className="relative mb-1.5 flex items-center gap-1.5"
+                  className="relative mb-1.5 flex w-full items-center justify-between gap-2"
                   onMouseEnter={() => setTipOpen(true)}
                   onMouseLeave={() => setTipOpen(false)}
                 >
-                  <label
-                    htmlFor="wiz-accountNumber"
-                    className="text-white/92 text-[0.92rem] font-[650]"
-                  >
-                    Account Number <span className="text-danger-500">*</span>
-                  </label>
-                  <button
-                    type="button"
-                    className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50"
-                    aria-label="Account number tip"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setTipOpen((o) => !o);
-                    }}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-4 w-4"
-                      aria-hidden
+                  <div className="flex flex-shrink-0 items-center gap-1.5">
+                    <label
+                      htmlFor="wiz-accountNumber"
+                      className="text-white/92 text-[0.92rem] font-[650]"
                     >
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M12 16v-4" />
-                      <path d="M12 8h.01" />
-                    </svg>
-                  </button>
+                      Account Number
+                      {!formData.accountNumberAutogenerate && (
+                        <span className="text-danger-500"> *</span>
+                      )}
+                    </label>
+                    <button
+                      type="button"
+                      className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+                      aria-label="Account number tip"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setTipOpen((o) => !o);
+                      }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-4 w-4"
+                        aria-hidden
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 16v-4" />
+                        <path d="M12 8h.01" />
+                      </svg>
+                    </button>
+                  </div>
                   {tipOpen && (
                     <div
                       className="absolute left-0 top-full z-50 mt-1 max-w-[260px] rounded-lg border border-neutral-600/40 bg-neutral-900 px-3 py-2.5 text-[0.9rem] leading-relaxed text-white shadow-lg"
                       role="tooltip"
                     >
-                      Use an easy-to-remember account number. It becomes the
-                      unique ID.
+                      {formData.accountNumberAutogenerate
+                        ? 'When autogenerate is on, a unique ID is created on save.'
+                        : 'Use an easy-to-remember account number. It becomes the unique ID.'}
                     </div>
                   )}
+                  <label className="flex flex-shrink-0 cursor-pointer select-none items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.accountNumberAutogenerate}
+                      onChange={(e) =>
+                        setFormData((p) => ({
+                          ...p,
+                          accountNumberAutogenerate: e.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4 rounded border-2 border-neutral-600/40 bg-black/20 accent-primary-500 transition-colors focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-0 focus:ring-offset-transparent"
+                      aria-label="Autogenerate account number"
+                    />
+                    <span className="text-white/92 text-[0.92rem] font-[650]">
+                      Autogenerate
+                    </span>
+                  </label>
                 </div>
                 <input
                   id="wiz-accountNumber"
@@ -761,8 +801,13 @@ export function NewAccountWizard({
                       accountNumber: e.target.value,
                     }))
                   }
-                  placeholder="e.g., ACC-0001"
-                  className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                  disabled={formData.accountNumberAutogenerate}
+                  placeholder={
+                    formData.accountNumberAutogenerate
+                      ? 'Auto-generated on create'
+                      : 'e.g., ACC-0001'
+                  }
+                  className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] disabled:cursor-not-allowed disabled:opacity-60 ${
                     accountAttempted && accountErrors.accountNumber
                       ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
                       : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
@@ -811,14 +856,9 @@ export function NewAccountWizard({
               handleNext();
             }}
           >
-            <div className="mb-4">
-              <h3 className="m-0 mb-1 text-xl -tracking-[0.3px]">
-                Financial data
-              </h3>
-              <p className="m-0 text-[0.95rem] opacity-75">
-                Amounts, rate, and payment schedule.
-              </p>
-            </div>
+            <p className="mb-3 text-[0.85rem] opacity-75 sm:mb-4 sm:text-[0.9rem]">
+              Amounts, rate, and payment schedule.
+            </p>
 
             <div className="gap-3.75 mt-4 flex flex-col">
               <div className="grid grid-cols-2 gap-3.5 md-sm:grid-cols-1">
@@ -1135,12 +1175,9 @@ export function NewAccountWizard({
 
         {step === 'review' && selectedType && (
           <div>
-            <div className="mb-4">
-              <h3 className="m-0 mb-1 text-xl -tracking-[0.3px]">Review</h3>
-              <p className="m-0 text-[0.95rem] opacity-75">
-                Make sure everything looks right before creating the account.
-              </p>
-            </div>
+            <p className="mb-3 text-[0.85rem] opacity-75 sm:mb-4 sm:text-[0.9rem]">
+              Make sure everything looks right before creating the account.
+            </p>
 
             <div className="mt-4 grid grid-cols-2 gap-3.5 md-sm:grid-cols-1">
               <div className="bg-white/8 py-3.75 rounded-lg border border-neutral-700/30 px-4">
@@ -1160,7 +1197,9 @@ export function NewAccountWizard({
               <div className="bg-white/8 py-3.75 rounded-lg border border-neutral-700/30 px-4">
                 <div className="mb-1 text-xs opacity-70">Account Number</div>
                 <div className="font-mono font-[650] -tracking-[0.2px]">
-                  {formData.accountNumber || '—'}
+                  {formData.accountNumberAutogenerate
+                    ? '(Auto-generated)'
+                    : formData.accountNumber || '—'}
                 </div>
               </div>
               <div className="bg-white/8 py-3.75 rounded-lg border border-neutral-700/30 px-4">
