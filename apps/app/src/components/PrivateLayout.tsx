@@ -238,10 +238,10 @@ export function PrivateLayout({ children }: PropsWithChildren) {
         </div>
       </aside>
       <main
-        className={`duration-400 relative z-[1] flex h-screen max-h-screen min-h-screen flex-col overflow-hidden bg-transparent transition-[margin-left,width] ease-[cubic-bezier(0.4,0,0.2,1)] ${
+        className={`duration-400 relative z-[1] flex h-screen max-h-screen min-h-screen min-w-0 flex-col overflow-hidden bg-transparent transition-[margin-left,width] ease-[cubic-bezier(0.4,0,0.2,1)] ${
           sidebarExpanded
-            ? 'ml-0 md:ml-[280px] md:w-[calc(100%-280px)] lg:ml-[280px] lg:w-[calc(100%-280px)]'
-            : 'ml-0 md:ml-20 md:w-[calc(100%-80px)] lg:ml-20 lg:w-[calc(100%-80px)]'
+            ? 'ml-0 w-full md:ml-[280px] md:w-[calc(100%-280px)] lg:ml-[280px] lg:w-[calc(100%-280px)]'
+            : 'ml-0 w-full md:ml-20 md:w-[calc(100%-80px)] lg:ml-20 lg:w-[calc(100%-80px)]'
         }`}
       >
         {/* Mobile header with hamburger and search */}
@@ -269,7 +269,7 @@ export function PrivateLayout({ children }: PropsWithChildren) {
         <div className="hidden md:block">
           <SearchBar />
         </div>
-        <div className="main-scrollbar mx-auto box-border w-full max-w-full flex-1 overflow-y-auto overflow-x-hidden px-10 py-10 md:p-6">
+        <div className="main-scrollbar mx-auto box-border min-h-0 w-full min-w-0 max-w-full flex-1 overflow-y-auto overflow-x-hidden px-6 py-5 md:p-6">
           {children}
         </div>
       </main>

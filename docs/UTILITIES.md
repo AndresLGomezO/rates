@@ -180,6 +180,13 @@ function LoginPage() {
 
 #### `apps/app/src/utils/formatters.ts`
 
+**`formatCompactNumber(value: number)`**
+
+- **Purpose:** Formats a number in compact form for charts and tight layouts (e.g. 1,000,000 → 1M, 600,000 → 600k, 1,200 → 1.2k).
+- **Parameters:** `value` - Numeric value to format
+- **Returns:** `string` - Compact string (e.g. "1M", "600k", "1.2k", "500")
+- **Usage:** Used in dashboard insight bar chart labels and tooltips when values are large
+
 **`formatCurrency(amount: number, currency: CurrencyCode)`**
 
 - **Purpose:** Formats number as currency based on currency code
@@ -236,14 +243,14 @@ function LoginPage() {
 - **Purpose:** Formats account status for display (replaces underscores, uppercases)
 - **Returns:** `string`
 
-**`getAccountPaymentStatusColor(status: 'no_pending' | 'pending' | 'delayed' | 'overdue')`**
+**`getAccountPaymentStatusColor(status: 'no_pending' | 'pending' | 'overdue')`**
 
-- **Purpose:** Returns color code for account payment status
+- **Purpose:** Returns color code for account payment status. Overdue = payments past their due date.
 - **Returns:** `string` - Hex color code
 
-**`formatAccountPaymentStatus(status: 'no_pending' | 'pending' | 'delayed' | 'overdue')`**
+**`formatAccountPaymentStatus(status: 'no_pending' | 'pending' | 'overdue')`**
 
-- **Purpose:** Formats account payment status for display
+- **Purpose:** Formats account payment status for display. Overdue = payments past their due date.
 - **Returns:** `string` - Human-readable status text
 
 ---
@@ -327,8 +334,8 @@ function LoginPage() {
 
 **`getAccountPaymentStatus(paymentPeriods: PaymentPeriod[])`**
 
-- **Purpose:** Gets overall payment status for an account based on payment periods
-- **Returns:** `AccountPaymentStatus` - 'no_pending' | 'pending' | 'delayed' | 'overdue'
+- **Purpose:** Gets overall payment status for an account based on payment periods. Overdue and delayed are unified: both mean payments past their due date.
+- **Returns:** `AccountPaymentStatus` - 'no_pending' | 'pending' | 'overdue'
 
 ---
 
@@ -989,7 +996,7 @@ function LoginPage() {
 
 - **Location:** `apps/app/src/utils/paymentUtils.ts`
 - **Type:** Union type
-- **Values:** `'no_pending' | 'pending' | 'delayed' | 'overdue'`
+- **Values:** `'no_pending' | 'pending' | 'overdue'` (overdue = payments past their due date; same as delayed)
 
 **`TokenValidationResult`**
 

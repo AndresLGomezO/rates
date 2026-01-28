@@ -82,58 +82,46 @@ function isEmulatorMode(): boolean {
 }
 
 /**
- * Validate emulator token (simpler validation for unsigned tokens)
- * In emulator mode, we're more lenient with expired tokens for development
+ * Decode base64url JWT segment (JWT uses base64url, not standard base64).
+ * Node Buffer supports 'base64url'; fallback to 'base64' for compatibility.
+ */
+function decodeJwtSegment(seg: string): string {
+  try {
+    return Buffer.from(seg, 'base64url').toString('utf8');
+  } catch {
+    return Buffer.from(
+      seg.replace(/-/g, '+').replace(/_/g, '/'),
+      'base64'
+    ).toString('utf8');
+  }
+}
+
+/**
+ * Validate emulator token (simpler validation for unsigned tokens).
+ * Auth Emulator issues JWTs with alg:"none" in the header and no "kid" claim;
+ * verifyIdToken() cannot verify these, so we decode and check exp locally.
+ * In emulator mode, we accept expired tokens for development.
  */
 function validateEmulatorToken(token: string): ValidationResponse {
   try {
-    // Basic format check
     const parts = token.split('.');
     if (parts.length !== 3) {
-      return {
-        valid: false,
-        error: 'Invalid token format',
-      };
+      return { valid: false, error: 'Invalid token format' };
     }
 
-    // Decode payload to check expiration
-    const payload = JSON.parse(atob(parts[1])) as {
-      exp?: number;
-      alg?: string;
-      iss?: string;
-      sub?: string;
-    };
-
-    // Check if it's an emulator token (alg: "none")
-    if (payload.alg !== 'none') {
-      // Not an emulator token, should use Admin SDK
-      return {
-        valid: false,
-        error: 'Token is not an emulator token',
-      };
+    // alg is in the JWT header, not the payload
+    const header = JSON.parse(decodeJwtSegment(parts[0])) as { alg?: string };
+    if (header.alg !== 'none') {
+      return { valid: false, error: 'Token is not an emulator token' };
     }
 
-    // Check expiration
+    const payload = JSON.parse(decodeJwtSegment(parts[1])) as { exp?: number };
     const exp = payload.exp;
-    const now = Math.floor(Date.now() / 1000);
-    const isExpired = exp && exp <= now;
 
-    // In emulator mode, allow expired tokens for development
-    // But still indicate they're expired so client can refresh if needed
-    if (isExpired) {
-      // For emulator, we'll accept expired tokens but mark them as needing refresh
-      // This allows development to continue without constant re-authentication
-      return {
-        valid: true, // Accept expired tokens in emulator for development
-        expiresAt: exp ? exp * 1000 : undefined,
-        // Note: We can't refresh without the user object, so client should handle this
-      };
-    }
-
-    // Emulator token is valid and not expired
+    // In emulator, accept expired tokens for development; still expose expiresAt
     return {
       valid: true,
-      expiresAt: exp ? exp * 1000 : undefined,
+      expiresAt: exp != null ? exp * 1000 : undefined,
     };
   } catch (error) {
     return {
@@ -293,12 +281,14 @@ export async function validateTokenWithAdmin(
       customToken, // Include custom token for client-side Firebase Auth sign-in
     };
   } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+
     console.error(
       `${logPrefix} [validateTokenWithAdmin] Error during verification`,
       {
         errorType:
           error instanceof Error ? error.constructor.name : typeof error,
-        errorMessage: error instanceof Error ? error.message : String(error),
+        errorMessage: errMsg,
         errorCode:
           error && typeof error === 'object' && 'code' in error
             ? (error as { code: string }).code
@@ -306,6 +296,30 @@ export async function validateTokenWithAdmin(
         errorStack: error instanceof Error ? error.stack : undefined,
       }
     );
+
+    // Auth Emulator tokens have no "kid" claim; verifyIdToken() fails. If the token
+    // header has alg:"none", treat it as an emulator token and validate locally.
+    if (errMsg.includes('kid')) {
+      try {
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const header = JSON.parse(decodeJwtSegment(parts[0])) as {
+            alg?: string;
+          };
+          if (header.alg === 'none') {
+            const res = validateEmulatorToken(token);
+            if (res.valid) {
+              console.log(
+                `${logPrefix} [validateTokenWithAdmin] Resolved "kid" error via emulator token validation`
+              );
+              return res;
+            }
+          }
+        }
+      } catch {
+        // ignore decode errors
+      }
+    }
 
     // Handle specific Firebase Auth errors
     if (error && typeof error === 'object' && 'code' in error) {
@@ -349,27 +363,16 @@ export async function validateTokenWithAdmin(
             error: 'Token revoked',
           };
         case 'auth/invalid-id-token':
-          // In emulator mode, if Admin SDK fails but token looks like emulator token, try emulator validation
           if (isEmulatorMode()) {
-            try {
-              const parts = token.split('.');
-              if (parts.length === 3) {
-                const payload = JSON.parse(atob(parts[1])) as { alg?: string };
-                if (payload.alg === 'none') {
-                  console.log(
-                    `${logPrefix} [validateTokenWithAdmin] Token appears to be emulator token, retrying emulator validation`
-                  );
-                  return validateEmulatorToken(token);
-                }
-              }
-            } catch {
-              // Fall through to error
+            const res = validateEmulatorToken(token);
+            if (res.valid) {
+              console.log(
+                `${logPrefix} [validateTokenWithAdmin] auth/invalid-id-token: resolved via emulator validation`
+              );
+              return res;
             }
           }
-          return {
-            valid: false,
-            error: 'Invalid token',
-          };
+          return { valid: false, error: 'Invalid token' };
         default:
           return {
             valid: false,
@@ -378,10 +381,6 @@ export async function validateTokenWithAdmin(
       }
     }
 
-    // Generic error handling
-    return {
-      valid: false,
-      error: error instanceof Error ? error.message : 'Token validation failed',
-    };
+    return { valid: false, error: errMsg };
   }
 }

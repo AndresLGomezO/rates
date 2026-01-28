@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { FinancialAccount, PaymentPeriod } from '@rates/firebase-client';
 import { Modal } from './Modal';
+import { Select } from './Select';
 import {
   batchLogPaymentsToPeriods,
   getPaymentPeriods,
@@ -323,27 +324,21 @@ export function BatchPaymentModal({
               >
                 From Period <span className="text-danger-500">*</span>
               </label>
-              <select
+              <Select
                 id="start-period"
-                value={startPeriod}
-                onChange={(e) => {
-                  const newStart = Number(e.target.value);
+                value={String(startPeriod)}
+                onChange={(v) => {
+                  const newStart = Number(v);
                   setStartPeriod(newStart);
-                  // Auto-adjust end period if needed
-                  if (newStart > endPeriod) {
-                    setEndPeriod(newStart);
-                  }
+                  if (newStart > endPeriod) setEndPeriod(newStart);
                 }}
-                required
+                options={availablePeriodNumbers.map((num) => ({
+                  value: String(num),
+                  label: `Period #${num}`,
+                }))}
                 disabled={isSubmitting}
-                className="bg-white/8 font-inherit focus:bg-white/12 cursor-pointer rounded-lg border border-white/15 px-4 py-3 text-base text-white/95 transition-all duration-200 ease-in-out focus:border-primary-500/50 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 [&>option]:bg-[rgba(30,30,30,0.95)] [&>option]:text-white/95"
-              >
-                {availablePeriodNumbers.map((num) => (
-                  <option key={num} value={num}>
-                    Period #{num}
-                  </option>
-                ))}
-              </select>
+                aria-label="From period"
+              />
             </div>
 
             <div className="flex flex-col gap-2">
@@ -358,12 +353,11 @@ export function BatchPaymentModal({
                   </span>
                 )}
               </label>
-              <select
+              <Select
                 id="end-period"
-                value={endPeriod}
-                onChange={(e) => {
-                  const newEnd = Number(e.target.value);
-                  // Ensure it doesn't exceed current period
+                value={String(endPeriod)}
+                onChange={(v) => {
+                  const newEnd = Number(v);
                   if (
                     currentPeriodNumber === null ||
                     newEnd <= currentPeriodNumber
@@ -375,18 +369,15 @@ export function BatchPaymentModal({
                     );
                   }
                 }}
-                required
-                disabled={isSubmitting}
-                className="bg-white/8 font-inherit focus:bg-white/12 cursor-pointer rounded-lg border border-white/15 px-4 py-3 text-base text-white/95 transition-all duration-200 ease-in-out focus:border-primary-500/50 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 [&>option]:bg-[rgba(30,30,30,0.95)] [&>option]:text-white/95"
-              >
-                {availablePeriodNumbers
+                options={availablePeriodNumbers
                   .filter((num) => num >= startPeriod)
-                  .map((num) => (
-                    <option key={num} value={num}>
-                      Period #{num}
-                    </option>
-                  ))}
-              </select>
+                  .map((num) => ({
+                    value: String(num),
+                    label: `Period #${num}`,
+                  }))}
+                disabled={isSubmitting}
+                aria-label="To period"
+              />
             </div>
 
             {periodsInRange.length > 0 && (

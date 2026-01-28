@@ -516,13 +516,13 @@ export default function AccountDetail() {
             Back
           </button>
           <div>
-            <h1 className="m-0 mb-2 bg-gradient-to-br from-white to-white/80 bg-clip-text text-4xl font-bold -tracking-[0.5px] text-transparent text-white md:text-3xl">
+            <h1 className="m-0 mb-2 bg-gradient-to-br from-white to-white/80 bg-clip-text text-xl font-bold -tracking-[0.5px] text-transparent text-white md:text-3xl">
               {account.accountName}
             </h1>
-            <p className="m-0 mb-2 font-mono text-base text-white/70">
+            <p className="m-0 mb-2 font-mono text-sm text-white/70 md:text-base">
               {account.accountNumber}
             </p>
-            <p className="m-0 text-lg leading-relaxed text-white/80">
+            <p className="m-0 text-base leading-relaxed text-white/80 md:text-lg">
               {account.accountDescription}
             </p>
           </div>

@@ -119,7 +119,12 @@ ${BOLD}What this script does:${NC}
   2. Builds app static files container image
   3. Pushes both images to Artifact Registry
   4. Uses secrets from Secret Manager for build configuration
-  5. (Optional) Deploys images to Cloud Run via Terraform
+  5. (Optional with --deploy) Deploys to Cloud Run via Terraform
+
+${BOLD}Deploying with "latest":${NC}
+  For --deploy with tag "latest", the script uses a unique tag (e.g. dev-1738...)
+  and builds without cache so Terraform and Cloud Run see a real change.
+  Use an explicit tag (e.g. v1.0.0) to avoid that and control the image tag.
 
 ${BOLD}Prerequisites:${NC}
   - Docker installed and running
@@ -325,7 +330,7 @@ build_and_push_images() {
     
     # Build API image
     print_step "Building API image (auth-app)..."
-    if docker build --platform linux/amd64 -t "${image_name_api}" \
+    if docker build --platform linux/amd64 ${FORCE_REBUILD:+--no-cache} -t "${image_name_api}" \
         -f "${PROJECT_ROOT}/Dockerfile" \
         ${docker_build_args_api} \
         "${PROJECT_ROOT}" >> "${LOG_FILE}" 2>&1; then
@@ -447,7 +452,7 @@ EOF
     
     # Build app image
     print_step "Building app image..."
-    if docker build --platform linux/amd64 -t "${image_name_app}" \
+    if docker build --platform linux/amd64 ${FORCE_REBUILD:+--no-cache} -t "${image_name_app}" \
         -f "${app_dockerfile}" \
         "${PROJECT_ROOT}" >> "${LOG_FILE}" 2>&1; then
         print_success "App image built successfully"
@@ -532,11 +537,13 @@ update_cloud_run_with_secrets() {
         print_warning "Could not update include_secrets (may already be true)"
     fi
     
-    # Update container_image_tag if provided and different
-    if [[ -n "${image_tag}" ]] && [[ "${image_tag}" != "latest" ]]; then
+    # Update container_image_tag so Terraform deploys the images we just pushed
+    if [[ -n "${image_tag}" ]]; then
         if sed -i.bak "s/container_image_tag[[:space:]]*=[[:space:]]*\"[^\"]*\"/container_image_tag = \"${image_tag}\"/" terraform.tfvars 2>/dev/null; then
             print_success "Updated container_image_tag = ${image_tag}"
             rm -f terraform.tfvars.bak
+        else
+            print_warning "Could not update container_image_tag in terraform.tfvars"
         fi
     fi
     
@@ -679,6 +686,15 @@ main() {
     # Validate environment
     if ! validate_environment "${environment}"; then
         exit 1
+    fi
+    
+    # When deploying with tag "latest", use a unique tag so Terraform will update
+    # Cloud Run. Terraform only sees the image URL (e.g. .../api:latest), not the
+    # digest, so re-pushing :latest produces no plan change and no deploy.
+    if [[ "${deploy}" == "true" ]] && [[ "${image_tag}" == "latest" ]]; then
+        image_tag="${environment}-$(date +%s)"
+        export FORCE_REBUILD=1
+        print_info "Using unique deploy tag: ${image_tag} (avoids Terraform no-op on :latest; building without cache)"
     fi
     
     # Check prerequisites

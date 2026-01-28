@@ -168,20 +168,39 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
 
   return (
     <>
-      {/* Mobile compact search button - only render if showMobileCompact is true */}
+      {/* Mobile compact: search icon and filters button next to each other in header */}
       {showMobileCompact && (
-        <div className="md:hidden">
+        <div className="flex items-center gap-2 md:hidden">
           {!isMobileExpanded ? (
-            <button
-              onClick={handleMobileExpand}
-              className="relative flex h-11 min-w-[44px] cursor-pointer items-center justify-center rounded-lg border border-neutral-600/40 bg-white/10 p-2.5 text-xl text-white shadow-[0_4px_12px_rgba(10,14,26,0.3)] backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:scale-105 hover:border-neutral-500/50 hover:bg-white/20 hover:shadow-[0_6px_20px_rgba(10,14,26,0.4)] active:scale-95"
-              aria-label="Open search"
-            >
-              <span className="flex items-center justify-center">🔍</span>
-              {searchQuery && (
-                <span className="absolute right-0 top-0 h-2 w-2 rounded-full border-2 border-white/20 bg-primary-500" />
-              )}
-            </button>
+            <>
+              <button
+                onClick={handleMobileExpand}
+                className="relative flex h-11 min-w-[44px] cursor-pointer items-center justify-center rounded-lg border border-neutral-600/40 bg-white/10 p-2.5 text-xl text-white shadow-[0_4px_12px_rgba(10,14,26,0.3)] backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:scale-105 hover:border-neutral-500/50 hover:bg-white/20 hover:shadow-[0_6px_20px_rgba(10,14,26,0.4)] active:scale-95"
+                aria-label="Open search"
+              >
+                <span className="flex items-center justify-center">🔍</span>
+                {searchQuery && (
+                  <span className="absolute right-0 top-0 h-2 w-2 rounded-full border-2 border-white/20 bg-primary-500" />
+                )}
+              </button>
+              <button
+                className={`relative flex h-11 min-w-[44px] cursor-pointer items-center justify-center rounded-lg p-2.5 text-xl text-white shadow-[0_4px_12px_rgba(10,14,26,0.3)] backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:scale-105 hover:border-neutral-500/50 hover:bg-white/25 hover:shadow-[0_6px_20px_rgba(10,14,26,0.4)] active:scale-95 ${
+                  hasActiveFilters
+                    ? 'border border-[rgba(30,64,175,0.5)] bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)]'
+                    : 'border border-neutral-600/40 bg-white/10'
+                }`}
+                onClick={() => setIsFiltersModalOpen(true)}
+                aria-label="Open filters"
+                title="Filters"
+              >
+                <span className="flex items-center justify-center">⚙️</span>
+                {hasActiveFilters && (
+                  <span className="absolute right-[-4px] top-[-4px] min-w-4 rounded-md border-2 border-neutral-600/40 bg-gradient-to-br from-[#1e40af] to-[#334155] px-[0.35rem] py-[0.15rem] text-center text-[0.6rem] font-bold text-white shadow-[0_2px_6px_rgba(30,64,175,0.4)]">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </button>
+            </>
           ) : null}
         </div>
       )}
@@ -221,28 +240,6 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
                     ✕
                   </button>
                 )}
-                <button
-                  className={`relative flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-md p-0 text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                    hasActiveFilters
-                      ? 'border border-[rgba(30,64,175,0.5)] bg-gradient-to-br from-[rgba(30,64,175,0.3)] to-[rgba(51,65,85,0.3)] shadow-[0_2px_8px_rgba(30,64,175,0.3)]'
-                      : 'border border-neutral-600/40 bg-white/15'
-                  } hover:-translate-y-0.5 hover:border-neutral-500/50 hover:bg-white/25 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:translate-y-0`}
-                  onClick={() => {
-                    setIsFiltersModalOpen(true);
-                    handleMobileCollapse();
-                  }}
-                  aria-label="Open filters"
-                  title="Filters"
-                >
-                  <span className="flex items-center justify-center text-base">
-                    ⚙️
-                  </span>
-                  {hasActiveFilters && (
-                    <span className="absolute right-[-4px] top-[-4px] min-w-4 min-w-[18px] rounded-md border-2 border-neutral-600/40 bg-gradient-to-br from-[#1e40af] to-[#334155] px-[0.35rem] py-[0.15rem] text-center text-[0.6rem] font-bold text-white shadow-[0_2px_6px_rgba(30,64,175,0.4)]">
-                      {activeFiltersCount}
-                    </span>
-                  )}
-                </button>
               </div>
             </div>
           </div>

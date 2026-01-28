@@ -336,16 +336,14 @@ export async function hasPendingPaymentsFromPeriods(
 }
 
 /**
- * Overall payment status for an account
+ * Overall payment status for an account.
+ * Overdue = payments past their due date (already expired).
  */
-export type AccountPaymentStatus =
-  | 'no_pending'
-  | 'pending'
-  | 'delayed'
-  | 'overdue';
+export type AccountPaymentStatus = 'no_pending' | 'pending' | 'overdue';
 
 /**
- * Get the overall payment status for an account based on payment periods
+ * Get the overall payment status for an account based on payment periods.
+ * Overdue and delayed are the same: payments past their due date (already expired).
  *
  * @param paymentPeriods - Array of payment periods for the account
  * @returns The overall payment status
@@ -361,7 +359,6 @@ export function getAccountPaymentStatus(
   today.setHours(0, 0, 0, 0);
 
   let hasOverdue = false;
-  let hasDelayed = false;
   let hasPending = false;
   let allPaid = true;
 
@@ -371,32 +368,20 @@ export function getAccountPaymentStatus(
     const periodDate = new Date(dueDate);
     periodDate.setHours(0, 0, 0, 0);
 
-    const daysPastDue = Math.floor(
-      (today.getTime() - periodDate.getTime()) / (1000 * 60 * 60 * 24)
-    );
     const isOverdue = periodDate < today;
-    const isPaid = period.status === 'paid';
+    const amountDue = period.amount ?? 0;
+    const amountPaid = period.amountPaid ?? 0;
+    const isPaid = period.status === 'paid' || amountPaid >= amountDue;
 
     if (!isPaid) {
       allPaid = false;
     }
 
-    // Check for overdue status (explicitly marked or significantly past due)
-    if (period.status === 'overdue' || (isOverdue && daysPastDue > 30)) {
+    // Overdue = past due date and not fully paid (same as delayed; one concept)
+    if (!isPaid && isOverdue) {
       hasOverdue = true;
-    }
-    // Check for delayed status (past due but not too far)
-    else if (isOverdue && daysPastDue <= 30) {
-      hasDelayed = true;
-    }
-    // Check for pending status (not yet due)
-    else if (period.status === 'pending' || period.status === 'partial') {
-      if (isOverdue) {
-        // This shouldn't happen if logic is correct, but handle it
-        hasDelayed = true;
-      } else {
-        hasPending = true;
-      }
+    } else if (!isPaid && !isOverdue) {
+      hasPending = true;
     }
   }
 
@@ -408,14 +393,9 @@ export function getAccountPaymentStatus(
     return 'overdue';
   }
 
-  if (hasDelayed) {
-    return 'delayed';
-  }
-
   if (hasPending) {
     return 'pending';
   }
 
-  // Default to no pending if we can't determine
   return 'no_pending';
 }

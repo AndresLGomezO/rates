@@ -20,11 +20,19 @@
   }
 
   html {
-    @apply h-full overflow-x-hidden;
+    @apply h-full overflow-hidden;
+  }
+
+  /* Mobile only (max-width: 767px): smaller base font — iPhone 14 Pro Max / regular mobile standard.
+   * 13px base scales all rem-based typography (Tailwind text-*, spacing) for a more compact mobile UI. */
+  @media (max-width: 767px) {
+    html {
+      font-size: 13px;
+    }
   }
 
   body {
-    @apply m-0 min-h-screen min-w-[320px] h-full overflow-x-hidden relative;
+    @apply m-0 min-w-[320px] h-full max-h-screen overflow-hidden relative;
     @apply bg-background text-neutral-50 antialiased;
     font-family: theme('fontFamily.sans');
     line-height: 1.5;
@@ -36,7 +44,7 @@
   }
 
   #root {
-    @apply w-full min-h-screen relative;
+    @apply w-full h-full min-h-0 relative;
   }
 
   a {

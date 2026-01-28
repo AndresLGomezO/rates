@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { apiPlugin } from './vite.plugin.api';
 
@@ -10,6 +10,16 @@ const buildTimeOnly = buildTime.toTimeString().split(' ')[0]; // HH:mm:ss
 const buildNumber = buildTime.getTime().toString(36).toUpperCase(); // Base36 timestamp as build number
 
 export default defineConfig(({ mode }) => {
+  // Load .env into process.env so server-side code (API plugin, Firebase Admin)
+  // can read FIREBASE_PROJECT_ID, VITE_FIREBASE_PROJECT_ID, etc.
+  const envDir = process.cwd();
+  const loaded = loadEnv(mode ?? 'development', envDir, '');
+  for (const [k, v] of Object.entries(loaded)) {
+    if (v !== undefined && process.env[k] === undefined) {
+      process.env[k] = v;
+    }
+  }
+
   // Force production mode if NODE_ENV is production
   const isProduction =
     process.env.NODE_ENV === 'production' || mode === 'production';

@@ -5,6 +5,7 @@ import type {
   CreateFinancialAccountInput,
   FinancialAccount,
 } from '@rates/firebase-client';
+import { Select } from './Select';
 
 interface CreateAccountFormProps {
   accountType: AccountType;
@@ -250,24 +251,17 @@ export function CreateAccountForm({
           >
             Status <span className="text-danger-500">*</span>
           </label>
-          <select
+          <Select
             id="status"
             value={formData.status}
-            onChange={(e) =>
-              handleChange('status', e.target.value as AccountStatus)
-            }
-            className="font-inherit cursor-pointer appearance-none rounded-lg border border-white/20 bg-white/10 bg-[url('data:image/svg+xml,%3Csvg_xmlns=\\'http://www.w3.org/2000/svg\\'_width=\\'12\\'_height=\\'12\\'_viewBox=\\'0_0_12_12\\'%3E%3Cpath_fill=\\'white\\'_d=\\'M6_9L1_4h10z\\'/%3E%3C/svg%3E')] bg-[right_1rem_center] bg-no-repeat px-4 py-3.5 pr-10 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none"
-          >
-            {ACCOUNT_STATUSES.map((status) => (
-              <option
-                key={status}
-                value={status}
-                className="bg-neutral-900 text-white"
-              >
-                {status.replace('_', ' ').toUpperCase()}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => handleChange('status', v as AccountStatus)}
+            options={ACCOUNT_STATUSES.map((s) => ({
+              value: s,
+              label: s.replace('_', ' ').toUpperCase(),
+            }))}
+            disabled={isSubmitting}
+            aria-label="Account status"
+          />
         </div>
       </div>
 
@@ -330,19 +324,17 @@ export function CreateAccountForm({
         >
           Currency <span className="text-danger-500">*</span>
         </label>
-        <select
+        <Select
           id="currency"
           value={formData.currency}
-          onChange={(e) => handleChange('currency', e.target.value)}
-          className="font-inherit cursor-pointer appearance-none rounded-lg border border-white/20 bg-white/10 bg-[url('data:image/svg+xml,%3Csvg_xmlns=\\'http://www.w3.org/2000/svg\\'_width=\\'12\\'_height=\\'12\\'_viewBox=\\'0_0_12_12\\'%3E%3Cpath_fill=\\'white\\'_d=\\'M6_9L1_4h10z\\'/%3E%3C/svg%3E')] bg-[right_1rem_center] bg-no-repeat px-4 py-3.5 pr-10 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none"
-        >
-          <option value="COP" className="bg-neutral-900 text-white">
-            COP (Colombian Peso)
-          </option>
-          <option value="USD" className="bg-neutral-900 text-white">
-            USD (US Dollar)
-          </option>
-        </select>
+          onChange={(v) => handleChange('currency', v)}
+          options={[
+            { value: 'COP', label: 'COP (Colombian Peso)' },
+            { value: 'USD', label: 'USD (US Dollar)' },
+          ]}
+          disabled={isSubmitting}
+          aria-label="Currency"
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-6">

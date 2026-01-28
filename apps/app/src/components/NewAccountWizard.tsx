@@ -7,6 +7,7 @@ import type {
 } from '@rates/firebase-client';
 import { createFinancialAccount } from '../services/financialAccounts';
 import { Modal } from './Modal';
+import { Select } from './Select';
 import { formatCurrency } from '../utils/formatters';
 
 type WizardStep = 'type' | 'details' | 'review' | 'success';
@@ -247,54 +248,141 @@ export function NewAccountWizard({
 
   const primaryCurrencyPreview = formData.currency;
 
+  const renderProgressIndicator = () => (
+    <div
+      className="bg-white/8 rounded-lg border border-neutral-700/30 px-4 pb-2.5 pt-2 backdrop-blur-[14px]"
+      aria-label="Wizard progress"
+    >
+      <div className="flex items-center justify-between gap-2 sm:gap-3">
+        {['Type', 'Details', 'Review', 'Done'].map((label, idx) => (
+          <div
+            key={label}
+            className={`flex flex-1 items-center gap-2 transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] sm:gap-2.5 ${
+              idx < progressIndex || idx === progressIndex
+                ? 'opacity-100'
+                : 'opacity-65'
+            }`}
+          >
+            <div
+              className={`h-2.5 w-2.5 flex-shrink-0 rounded-full border transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                idx === progressIndex
+                  ? 'border-neutral-500/50 bg-gradient-to-br from-[#1e40af] to-[#334155] shadow-[0_0_0_6px_rgba(30,64,175,0.18)]'
+                  : idx < progressIndex
+                    ? 'border-[rgba(46,204,113,0.95)] bg-[rgba(46,204,113,0.9)]'
+                    : 'border-neutral-600/40 bg-white/25'
+              }`}
+              aria-hidden="true"
+            />
+            <div className="whitespace-nowrap text-xs font-[650] -tracking-[0.2px] sm:text-sm">
+              {label}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div
+        className="bg-white/8 mt-2 h-1.5 overflow-hidden rounded-full border border-neutral-700/25"
+        aria-hidden="true"
+      >
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-[#1e40af] to-[#334155] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+          style={{ width: `${(progressIndex / 3) * 100}%` }}
+        />
+      </div>
+    </div>
+  );
+
+  const renderFooter = () => (
+    <div className="flex items-center gap-3">
+      {step === 'success' ? (
+        <>
+          <button
+            type="button"
+            className="hover:bg-white/16 cursor-pointer rounded-lg border border-neutral-600/40 bg-white/10 px-5 py-3.5 font-[650] text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:border-neutral-500/50 disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={handleClose}
+            disabled={saving}
+          >
+            Close
+          </button>
+          <div className="flex-1" />
+          {createdAccountId && (
+            <button
+              type="button"
+              className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
+              onClick={() => {
+                handleClose();
+                void navigate(`/account/${createdAccountId}`);
+              }}
+              disabled={saving}
+            >
+              View Account
+            </button>
+          )}
+        </>
+      ) : (
+        <>
+          <button
+            type="button"
+            className="hover:bg-white/16 cursor-pointer rounded-lg border border-neutral-600/40 bg-white/10 px-5 py-3.5 font-[650] text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:border-neutral-500/50 disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={step === 'type' ? handleClose : handleBack}
+            disabled={saving}
+          >
+            {step === 'type' ? 'Cancel' : 'Back'}
+          </button>
+
+          <div className="flex-1" />
+
+          {step === 'type' && (
+            <button
+              type="button"
+              className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
+              onClick={handleNext}
+              disabled={!canContinueFromType}
+            >
+              Continue
+            </button>
+          )}
+
+          {step === 'details' && (
+            <button
+              type="submit"
+              form="wiz-details-form"
+              className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
+              disabled={!canContinueFromDetails}
+              title={
+                !canContinueFromDetails
+                  ? 'Please complete required fields'
+                  : undefined
+              }
+            >
+              Review
+            </button>
+          )}
+
+          {step === 'review' && (
+            <button
+              type="button"
+              className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
+              onClick={() => void handleCreate()}
+              disabled={saving}
+            >
+              {saving ? 'Creating…' : 'Create account'}
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  );
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
       title={buildTitle(step, selectedType)}
+      footer={renderFooter()}
+      compactHeader
+      headerSupplement={renderProgressIndicator()}
     >
       <div className="flex flex-col gap-5 text-white">
-        <div
-          className="bg-white/8 rounded-lg border border-neutral-700/30 px-4 pb-3.5 pt-4 backdrop-blur-[14px]"
-          aria-label="Wizard progress"
-        >
-          <div className="flex items-center justify-between gap-2 sm:gap-3">
-            {['Type', 'Details', 'Review', 'Done'].map((label, idx) => (
-              <div
-                key={label}
-                className={`flex flex-1 items-center gap-2 transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] sm:gap-2.5 ${
-                  idx < progressIndex || idx === progressIndex
-                    ? 'opacity-100'
-                    : 'opacity-65'
-                }`}
-              >
-                <div
-                  className={`h-2.5 w-2.5 flex-shrink-0 rounded-full border transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                    idx === progressIndex
-                      ? 'border-neutral-500/50 bg-gradient-to-br from-[#1e40af] to-[#334155] shadow-[0_0_0_6px_rgba(30,64,175,0.18)]'
-                      : idx < progressIndex
-                        ? 'border-[rgba(46,204,113,0.95)] bg-[rgba(46,204,113,0.9)]'
-                        : 'border-neutral-600/40 bg-white/25'
-                  }`}
-                  aria-hidden="true"
-                />
-                <div className="whitespace-nowrap text-xs font-[650] -tracking-[0.2px] sm:text-sm">
-                  {label}
-                </div>
-              </div>
-            ))}
-          </div>
-          <div
-            className="bg-white/8 mt-3 h-2 overflow-hidden rounded-full border border-neutral-700/25"
-            aria-hidden="true"
-          >
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-[#1e40af] to-[#334155] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
-              style={{ width: `${(progressIndex / 3) * 100}%` }}
-            />
-          </div>
-        </div>
-
         {error && (
           <div
             className="rounded-lg border border-danger-500/35 bg-danger-500/15 px-4 py-3.5 text-[0.95rem] text-[#ffb3b3]"
@@ -330,7 +418,11 @@ export function NewAccountWizard({
                         ? 'bg-primary-500/18 border-primary-500/75 shadow-[0_10px_26px_rgba(30,64,175,0.2)]'
                         : 'bg-white/8 border-neutral-700/30 backdrop-blur-[14px] hover:-translate-y-0.5 hover:border-neutral-600/40 hover:bg-white/10 hover:shadow-[0_10px_24px_rgba(0,0,0,0.18)]'
                     }`}
-                    onClick={() => setSelectedType(type)}
+                    onClick={() => {
+                      setError(null);
+                      setSelectedType(type);
+                      setStep('details');
+                    }}
                   >
                     <div className="text-lg font-[750] -tracking-[0.3px]">
                       {ACCOUNT_TYPE_LABELS[type]}
@@ -347,6 +439,7 @@ export function NewAccountWizard({
 
         {step === 'details' && (
           <form
+            id="wiz-details-form"
             onSubmit={(e: FormEvent) => {
               e.preventDefault();
               handleNext();
@@ -402,23 +495,21 @@ export function NewAccountWizard({
                   >
                     Status <span className="text-danger-500">*</span>
                   </label>
-                  <select
+                  <Select
                     id="wiz-status"
                     value={formData.status}
-                    onChange={(e) =>
+                    onChange={(v) =>
                       setFormData((p) => ({
                         ...p,
-                        status: e.target.value as AccountStatus,
+                        status: v as AccountStatus,
                       }))
                     }
-                    className="box-border w-full rounded-lg border border-neutral-600/40 bg-black/20 px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]"
-                  >
-                    {ACCOUNT_STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {status.replace('_', ' ').toUpperCase()}
-                      </option>
-                    ))}
-                  </select>
+                    options={ACCOUNT_STATUSES.map((s) => ({
+                      value: s,
+                      label: s.replace('_', ' ').toUpperCase(),
+                    }))}
+                    aria-label="Account status"
+                  />
                 </div>
               </div>
 
@@ -489,20 +580,21 @@ export function NewAccountWizard({
                   >
                     Currency <span className="text-danger-500">*</span>
                   </label>
-                  <select
+                  <Select
                     id="wiz-currency"
                     value={formData.currency}
-                    onChange={(e) =>
+                    onChange={(v) =>
                       setFormData((p) => ({
                         ...p,
-                        currency: e.target.value as 'COP' | 'USD',
+                        currency: v as 'COP' | 'USD',
                       }))
                     }
-                    className="box-border w-full rounded-lg border border-neutral-600/40 bg-black/20 px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]"
-                  >
-                    <option value="COP">COP (Colombian Peso)</option>
-                    <option value="USD">USD (US Dollar)</option>
-                  </select>
+                    options={[
+                      { value: 'COP', label: 'COP (Colombian Peso)' },
+                      { value: 'USD', label: 'USD (US Dollar)' },
+                    ]}
+                    aria-label="Currency"
+                  />
                 </div>
 
                 <div className="bg-white/6 rounded-lg border border-neutral-700/30 px-3.5 py-3.5">
@@ -870,86 +962,6 @@ export function NewAccountWizard({
             </div>
           </div>
         )}
-
-        <div className="flex items-center gap-3 border-t border-neutral-700/30 pt-4">
-          {step === 'success' ? (
-            <>
-              <button
-                type="button"
-                className="hover:bg-white/16 cursor-pointer rounded-lg border border-neutral-600/40 bg-white/10 px-5 py-3.5 font-[650] text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:border-neutral-500/50 disabled:cursor-not-allowed disabled:opacity-60"
-                onClick={handleClose}
-                disabled={saving}
-              >
-                Close
-              </button>
-              <div className="flex-1" />
-              {createdAccountId && (
-                <button
-                  type="button"
-                  className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
-                  onClick={() => {
-                    handleClose();
-                    void navigate(`/account/${createdAccountId}`);
-                  }}
-                  disabled={saving}
-                >
-                  View Account
-                </button>
-              )}
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                className="hover:bg-white/16 cursor-pointer rounded-lg border border-neutral-600/40 bg-white/10 px-5 py-3.5 font-[650] text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:border-neutral-500/50 disabled:cursor-not-allowed disabled:opacity-60"
-                onClick={step === 'type' ? handleClose : handleBack}
-                disabled={saving}
-              >
-                {step === 'type' ? 'Cancel' : 'Back'}
-              </button>
-
-              <div className="flex-1" />
-
-              {step === 'type' && (
-                <button
-                  type="button"
-                  className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
-                  onClick={handleNext}
-                  disabled={!canContinueFromType}
-                >
-                  Continue
-                </button>
-              )}
-
-              {step === 'details' && (
-                <button
-                  type="submit"
-                  className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
-                  onClick={handleNext}
-                  disabled={!canContinueFromDetails}
-                  title={
-                    !canContinueFromDetails
-                      ? 'Please complete required fields'
-                      : undefined
-                  }
-                >
-                  Review
-                </button>
-              )}
-
-              {step === 'review' && (
-                <button
-                  type="button"
-                  className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
-                  onClick={() => void handleCreate()}
-                  disabled={saving}
-                >
-                  {saving ? 'Creating…' : 'Create account'}
-                </button>
-              )}
-            </>
-          )}
-        </div>
       </div>
     </Modal>
   );
