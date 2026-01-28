@@ -546,17 +546,17 @@ export async function generateAmortizationPlanForAccount(
             const dueDate = new Date(lastDueDate);
             dueDate.setMonth(dueDate.getMonth() + i * paymentIntervalMonths);
 
-            const monthlyPayment = account.monthlyPayment.amount;
-            const currency = account.monthlyPayment.currency;
+            const paymentAmount = account.paymentAmount.amount;
+            const currency = account.paymentAmount.currency;
 
             // For periodic bills, payment is fixed (no principal reduction)
             const period: CreatePaymentPeriodInput = {
               accountNumber: account.accountNumber,
               periodNumber,
               dueDate: Timestamp.fromDate(dueDate) as unknown as Date,
-              amount: monthlyPayment,
+              amount: paymentAmount,
               currency,
-              capital: monthlyPayment,
+              capital: paymentAmount,
               interest: 0,
               // Don't set remainingPrincipal for bills
             };
@@ -577,19 +577,11 @@ export async function generateAmortizationPlanForAccount(
     await deleteAllPaymentPeriods(accountNumber);
   }
 
-  // Get payment interval from metadata or default to 1 (monthly)
-  const paymentIntervalMonths =
-    (account.metadata?.paymentIntervalMonths as number) ?? 1;
-
   // For periodic bills, use current date as end date if not provided
   const effectiveEndDate = isPeriodic ? (endDate ?? new Date()) : undefined;
 
   // Generate periods
-  const periods = generateAmortizationPlan(
-    account,
-    paymentIntervalMonths,
-    effectiveEndDate
-  );
+  const periods = generateAmortizationPlan(account, 1, effectiveEndDate);
 
   // Create all periods
   for (const periodData of periods) {
@@ -671,8 +663,8 @@ export async function extendPeriodicBillPeriods(
   }
 
   const periodsToGenerate = Math.floor(monthsDiff / paymentIntervalMonths);
-  const monthlyPayment = account.monthlyPayment.amount;
-  const currency = account.monthlyPayment.currency;
+  const paymentAmount = account.paymentAmount.amount;
+  const currency = account.paymentAmount.currency;
 
   // Generate only the new periods
   for (let i = 1; i <= periodsToGenerate; i++) {
@@ -685,9 +677,9 @@ export async function extendPeriodicBillPeriods(
       accountNumber: account.accountNumber,
       periodNumber,
       dueDate: Timestamp.fromDate(dueDate) as unknown as Date,
-      amount: monthlyPayment,
+      amount: paymentAmount,
       currency,
-      capital: monthlyPayment,
+      capital: paymentAmount,
       interest: 0,
       // Don't set remainingPrincipal for bills
     };
@@ -742,7 +734,7 @@ export async function batchLogPaymentsToPeriods(
     throw new Error(`Account ${accountNumber} not found`);
   }
 
-  const currency = account.monthlyPayment.currency;
+  const currency = account.paymentAmount.currency;
   const results: Array<{
     periodNumber: number;
     success: boolean;

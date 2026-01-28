@@ -12,7 +12,7 @@ import {
   logPaymentToPeriod,
 } from '../services/paymentPeriods';
 import { parseMonthYear } from './paymentUtils';
-import type { PaymentPeriod } from '@rates/firebase-client';
+import type { PaymentFrequency, PaymentPeriod } from '@rates/firebase-client';
 
 /**
  * Raw account data from spreadsheet
@@ -61,6 +61,32 @@ function getPaymentIntervalMonths(frequency: string): number {
   }
   // Default to monthly
   return 1;
+}
+
+/**
+ * Get payment frequency enum from frequency string
+ */
+function getPaymentFrequency(frequency: string): PaymentFrequency {
+  const freq = frequency.toLowerCase();
+
+  if (freq.includes('semanal') || freq.includes('weekly')) {
+    return 'weekly';
+  }
+  if (freq.includes('quincenal') || freq.includes('biweekly')) {
+    return 'biweekly';
+  }
+  if (freq.includes('trimestral') || freq.includes('quarterly')) {
+    return 'quarterly';
+  }
+  if (freq.includes('semestral') || freq.includes('semiannual')) {
+    return 'semi_annually';
+  }
+  if (freq.includes('anual') || freq.includes('annual')) {
+    return 'annually';
+  }
+
+  // Default to monthly (includes 'mensual', 'bimestral', etc. until supported)
+  return 'monthly';
 }
 
 /**
@@ -163,10 +189,11 @@ function convertToAccountInput(
       amount: totalAmount,
       currency: 'COP',
     },
-    monthlyPayment: {
+    paymentAmount: {
       amount: monthlyPaymentAmount,
       currency: 'COP',
     },
+    paymentFrequency: getPaymentFrequency(raw.frequency),
     rate, // Interest rate as percentage
     nextDueDate: parseDate(raw.due_date),
     paymentLog: [],
@@ -519,7 +546,7 @@ export async function runMigration(): Promise<void> {
         accountName: accountInput.accountName,
         accountType: accountInput.accountType,
         totalAmount: accountInput.totalAmountRemaining.amount,
-        monthlyPayment: accountInput.monthlyPayment.amount,
+        paymentAmount: accountInput.paymentAmount.amount,
       });
 
       const accountId = await createFinancialAccount(accountInput);
@@ -587,7 +614,7 @@ export function previewMigration(): void {
       `   Total Remaining: ${accountInput.totalAmountRemaining.amount.toLocaleString('es-CO')} ${accountInput.totalAmountRemaining.currency}`
     );
     console.log(
-      `   Monthly Payment: ${accountInput.monthlyPayment.amount.toLocaleString('es-CO')} ${accountInput.monthlyPayment.currency}`
+      `   Payment Amount: ${accountInput.paymentAmount.amount.toLocaleString('es-CO')} ${accountInput.paymentAmount.currency}`
     );
     console.log(`   Rate: ${accountInput.rate}%`);
     console.log(`   Next Due Date: ${dueDate.toLocaleDateString('es-CO')}`);
@@ -792,14 +819,14 @@ export async function migrateHistoricalPayments(
             {
               datePaid: paymentDate,
               amount: paymentAmount,
-              currency: account.monthlyPayment.currency,
+              currency: account.paymentAmount.currency,
               notes: `Historical payment migrated for ${paymentDateStr}`,
             }
           );
 
           paymentsLogged++;
           console.log(
-            `   ✅ Logged payment ${paymentAmount.toLocaleString('es-CO')} ${account.monthlyPayment.currency} for ${paymentDateStr} (Period ${matchingPeriod.periodNumber})`
+            `   ✅ Logged payment ${paymentAmount.toLocaleString('es-CO')} ${account.paymentAmount.currency} for ${paymentDateStr} (Period ${matchingPeriod.periodNumber})`
           );
         } catch (error) {
           const errorMsg =

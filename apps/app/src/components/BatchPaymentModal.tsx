@@ -396,7 +396,7 @@ export function BatchPaymentModal({
                     <strong className="text-[#2563eb]">
                       {formatCurrency(
                         totalAmount,
-                        account.monthlyPayment.currency
+                        account.paymentAmount.currency
                       )}
                     </strong>
                   </div>

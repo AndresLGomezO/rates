@@ -89,22 +89,22 @@ export function calculateAccountFields(
       : account.nextDueDate.toDate();
 
   const daysRemaining = calculateDaysRemaining(nextDueDate);
-  const nextDueDateMonth = getMonthString(nextDueDate);
+  const nextDueDatePeriod = getMonthString(nextDueDate);
 
-  // Calculate monthly capital and interest breakdown
+  // Calculate periodic capital and interest breakdown
   const breakdown = calculatePaymentBreakdown(
     account.totalAmountRemaining.amount,
     account.rate,
-    account.monthlyPayment.amount,
-    account.monthlyPayment.currency
+    account.paymentAmount.amount,
+    account.paymentAmount.currency
   );
 
-  const monthlyCapital: CurrencyAmount = {
+  const periodicCapital: CurrencyAmount = {
     amount: breakdown.capital,
     currency: breakdown.currency,
   };
 
-  const monthlyInterest: CurrencyAmount = {
+  const periodicInterest: CurrencyAmount = {
     amount: breakdown.interest,
     currency: breakdown.currency,
   };
@@ -176,11 +176,11 @@ export function calculateAccountFields(
   // Estimate payoff date (simplified - assumes fixed monthly payments)
   let estimatedPayoffDate: Date | undefined;
   if (
-    account.monthlyPayment.amount > 0 &&
+    account.paymentAmount.amount > 0 &&
     account.totalAmountRemaining.amount > 0
   ) {
     const monthsRemaining = Math.ceil(
-      account.totalAmountRemaining.amount / account.monthlyPayment.amount
+      account.totalAmountRemaining.amount / account.paymentAmount.amount
     );
     estimatedPayoffDate = new Date(nextDueDate);
     estimatedPayoffDate.setMonth(
@@ -190,9 +190,9 @@ export function calculateAccountFields(
 
   return {
     daysRemainingToDueDate: daysRemaining,
-    nextDueDateMonth,
-    monthlyCapital,
-    monthlyInterest,
+    nextDueDatePeriod,
+    periodicCapital,
+    periodicInterest,
     totalAmountsByCurrency,
     totalPaid,
     remainingBalancePercentage,
@@ -256,13 +256,13 @@ export function validateFinancialAccount(
     }
   }
 
-  if (!account.monthlyPayment) {
-    errors.push('monthlyPayment is required');
+  if (!account.paymentAmount) {
+    errors.push('paymentAmount is required');
   } else {
-    if (typeof account.monthlyPayment.amount !== 'number') {
-      errors.push('monthlyPayment.amount must be a number');
+    if (typeof account.paymentAmount.amount !== 'number') {
+      errors.push('paymentAmount.amount must be a number');
     }
-    if (!account.monthlyPayment.currency) {
+    if (!account.paymentAmount.currency) {
       errors.push('monthlyPayment.currency is required');
     }
   }

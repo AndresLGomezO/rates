@@ -218,7 +218,8 @@ export default function AccountsByType() {
         accountType: accountData.accountType,
         status: accountData.status,
         totalAmountRemaining: accountData.totalAmountRemaining,
-        monthlyPayment: accountData.monthlyPayment,
+        paymentAmount: accountData.paymentAmount,
+        paymentFrequency: accountData.paymentFrequency,
         rate: accountData.rate,
         nextDueDate: accountData.nextDueDate,
         paymentLog: [],
@@ -289,7 +290,8 @@ export default function AccountsByType() {
         accountDescription: accountData.accountDescription,
         status: accountData.status,
         totalAmountRemaining: accountData.totalAmountRemaining,
-        monthlyPayment: accountData.monthlyPayment,
+        paymentAmount: accountData.paymentAmount,
+        paymentFrequency: accountData.paymentFrequency,
         rate: accountData.rate,
         nextDueDate: accountData.nextDueDate,
         updatedAt: new Date(),
@@ -771,12 +773,12 @@ export default function AccountsByType() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-white/70">
-                        Monthly Payment:
+                        Payment Amount:
                       </span>
                       <span className="text-sm font-semibold text-white">
                         {formatCurrency(
-                          account.monthlyPayment.amount,
-                          account.monthlyPayment.currency
+                          account.paymentAmount.amount,
+                          account.paymentAmount.currency
                         )}
                       </span>
                     </div>
@@ -794,13 +796,13 @@ export default function AccountsByType() {
                       </span>
                       <span className="text-sm font-semibold text-white">
                         {formatCurrency(
-                          accountWithCalculated.monthlyCapital.amount,
-                          accountWithCalculated.monthlyCapital.currency
+                          accountWithCalculated.periodicCapital.amount,
+                          accountWithCalculated.periodicCapital.currency
                         )}{' '}
                         /{' '}
                         {formatCurrency(
-                          accountWithCalculated.monthlyInterest.amount,
-                          accountWithCalculated.monthlyInterest.currency
+                          accountWithCalculated.periodicInterest.amount,
+                          accountWithCalculated.periodicInterest.currency
                         )}
                       </span>
                     </div>
@@ -818,7 +820,7 @@ export default function AccountsByType() {
                         }`}
                       >
                         {formatDate(account.nextDueDate)} (
-                        {accountWithCalculated.nextDueDateMonth})
+                        {accountWithCalculated.nextDueDatePeriod})
                       </span>
                     </div>
                     <div className="flex items-center justify-between">

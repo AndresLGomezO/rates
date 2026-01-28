@@ -77,8 +77,8 @@ export function generateAmortizationPlan(
     numberOfPayments = account.numberOfPayments;
   }
 
-  const monthlyPayment = account.monthlyPayment.amount;
-  const currency = account.monthlyPayment.currency;
+  const monthlyPayment = account.paymentAmount.amount;
+  const currency = account.paymentAmount.currency;
   const rate = account.rate;
   const originalAmount =
     account.originalAmount?.amount ?? account.totalAmountRemaining.amount;

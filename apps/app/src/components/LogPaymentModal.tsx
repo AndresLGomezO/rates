@@ -40,7 +40,7 @@ export function LogPaymentModal({
           Math.max(0, period.amount - period.amountPaid) || period.amount;
         setPaymentAmount(defaultAmount.toString());
       } else {
-        setPaymentAmount(account.monthlyPayment.amount.toString());
+        setPaymentAmount(account.paymentAmount.amount.toString());
       }
       setNotes('');
       setError(null);
@@ -87,14 +87,14 @@ export function LogPaymentModal({
         await logPaymentToPeriod(account.accountNumber, period.periodNumber, {
           datePaid: date,
           amount: amount,
-          currency: account.monthlyPayment.currency,
+          currency: account.paymentAmount.currency,
           notes: notes?.trim() || undefined,
         });
       } else {
         // Fallback to general account payment logging
         await logPayment(account.accountNumber, {
           valuePaid: amount,
-          currency: account.monthlyPayment.currency,
+          currency: account.paymentAmount.currency,
           datePaid: date,
           notes: notes?.trim() || undefined,
         });
@@ -148,12 +148,12 @@ export function LogPaymentModal({
       ? account.nextDueDate
       : account.nextDueDate.toDate();
 
-  const periodAmount = period ? period.amount : account.monthlyPayment.amount;
+  const periodAmount = period ? period.amount : account.paymentAmount.amount;
   const periodAmountPaid = period ? period.amountPaid : 0;
   const periodAmountRemaining = period
     ? Math.max(0, period.amount - period.amountPaid)
     : account.totalAmountRemaining.amount;
-  const currency = period ? period.currency : account.monthlyPayment.currency;
+  const currency = period ? period.currency : account.paymentAmount.currency;
 
   return (
     <Modal
@@ -188,7 +188,7 @@ export function LogPaymentModal({
           )}
           <div className="flex items-center justify-between border-b border-white/5 py-3 last:border-b-0">
             <span className="text-sm font-medium text-white/70">
-              {period ? 'Period Amount:' : 'Monthly Payment:'}
+              {period ? 'Period Amount:' : 'Expected Payment:'}
             </span>
             <span className="text-base font-semibold text-white/95">
               {formatCurrency(periodAmount, currency)}

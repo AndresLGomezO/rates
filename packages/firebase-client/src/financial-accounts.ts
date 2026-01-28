@@ -36,6 +36,18 @@ export type AccountStatus =
   | 'on_hold';
 
 /**
+ * Payment frequency
+ */
+export type PaymentFrequency =
+  | 'daily'
+  | 'weekly'
+  | 'biweekly'
+  | 'monthly'
+  | 'quarterly'
+  | 'semi_annually'
+  | 'annually';
+
+/**
  * Payment log entry
  * Records each payment made to the account
  */
@@ -105,8 +117,11 @@ export interface FinancialAccount {
   /** Total amount remaining in the account's primary currency */
   totalAmountRemaining: CurrencyAmount;
 
-  /** Monthly payment amount in the account's primary currency */
-  monthlyPayment: CurrencyAmount;
+  /** Payment amount per period in the account's primary currency */
+  paymentAmount: CurrencyAmount;
+
+  /** Payment frequency */
+  paymentFrequency: PaymentFrequency;
 
   /** Interest rate (as a percentage, e.g., 12.5 for 12.5%) */
   rate: number;
@@ -167,14 +182,14 @@ export interface FinancialAccountCalculated {
   /** Days remaining until next due date */
   daysRemainingToDueDate: number;
 
-  /** Next due date month (YYYY-MM format) */
-  nextDueDateMonth: string;
+  /** Next due date period (YYYY-MM format) */
+  nextDueDatePeriod: string;
 
-  /** Capital portion of monthly payment based on rate */
-  monthlyCapital: CurrencyAmount;
+  /** Capital portion of periodic payment based on rate */
+  periodicCapital: CurrencyAmount;
 
-  /** Interest portion of monthly payment based on rate */
-  monthlyInterest: CurrencyAmount;
+  /** Interest portion of periodic payment based on rate */
+  periodicInterest: CurrencyAmount;
 
   /** Total amount remaining in all currencies */
   totalAmountsByCurrency: Record<CurrencyCode, number>;

@@ -997,14 +997,14 @@ export default function MigrateAccounts() {
                                 fontSize: '0.85rem',
                               }}
                             >
-                              Monthly Payment:{' '}
+                              Payment Amount:{' '}
                             </span>
                             <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
                               {new Intl.NumberFormat('es-CO', {
                                 style: 'currency',
-                                currency: account.monthlyPayment.currency,
+                                currency: account.paymentAmount.currency,
                                 minimumFractionDigits: 0,
-                              }).format(account.monthlyPayment.amount)}
+                              }).format(account.paymentAmount.amount)}
                             </span>
                           </div>
                         </div>

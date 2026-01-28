@@ -584,13 +584,13 @@ export default function AccountDetail() {
         </div>
         <div className="ds-card-light p-6">
           <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/70">
-            Monthly Payment
+            Payment Amount
           </div>
           <div className="mb-2 text-[1.75rem] font-bold text-white">
-            {formatCurrency(account.monthlyPayment.amount, currency)}
+            {formatCurrency(account.paymentAmount.amount, currency)}
           </div>
           <div className="text-sm text-white/50">
-            {account.rate}% interest rate
+            {account.rate}% interest rate ({account.paymentFrequency})
           </div>
         </div>
         <div className="ds-card-light p-6">

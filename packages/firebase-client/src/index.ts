@@ -15,6 +15,7 @@ export type {
   CurrencyCode,
   AccountType,
   AccountStatus,
+  PaymentFrequency,
   PaymentLogEntry,
   CurrencyAmount,
   PaymentBreakdown,

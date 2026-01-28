@@ -76,7 +76,7 @@ function generateDueDate(): Date {
  */
 function generatePaymentLog(
   accountCreatedAt: Date,
-  monthlyPayment: number,
+  paymentAmount: number,
   currency: string,
   numberOfPayments: number
 ): PaymentLogEntry[] {
@@ -94,14 +94,14 @@ function generatePaymentLog(
 
     // Add some randomness to payment amounts (±10%)
     const variance = randomNumber(-10, 10) / 100;
-    const paymentAmount = monthlyPayment * (1 + variance);
+    const amount = paymentAmount * (1 + variance);
 
     payments.push({
       monthPaid: `${paymentDate.getFullYear()}-${String(
         paymentDate.getMonth() + 1
       ).padStart(2, '0')}`,
       datePaid: paymentDate,
-      valuePaid: Math.round(paymentAmount),
+      valuePaid: Math.round(amount),
       currency,
       notes: `Payment ${i + 1}`,
       createdAt: paymentDate,
@@ -131,7 +131,7 @@ export function generateMockFinancialAccount(
   // Generate amounts based on account type
   let originalAmount: number;
   let totalAmountRemaining: number;
-  let monthlyPayment: number;
+  let paymentAmount: number;
   let rate: number;
 
   switch (accountType) {
@@ -141,7 +141,7 @@ export function generateMockFinancialAccount(
         originalAmount * 0.3,
         originalAmount * 0.8
       );
-      monthlyPayment = randomNumber(2000000, 5000000); // 2M - 5M COP
+      paymentAmount = randomNumber(2000000, 5000000); // 2M - 5M COP
       rate = randomNumber(8, 12); // 8% - 12%
       break;
     case 'auto_loan':
@@ -150,7 +150,7 @@ export function generateMockFinancialAccount(
         originalAmount * 0.2,
         originalAmount * 0.7
       );
-      monthlyPayment = randomNumber(1500000, 3000000); // 1.5M - 3M COP
+      paymentAmount = randomNumber(1500000, 3000000); // 1.5M - 3M COP
       rate = randomNumber(10, 15); // 10% - 15%
       break;
     case 'credit_card':
@@ -159,7 +159,7 @@ export function generateMockFinancialAccount(
         originalAmount * 0.1,
         originalAmount * 0.9
       );
-      monthlyPayment = randomNumber(200000, 1000000); // 200K - 1M COP
+      paymentAmount = randomNumber(200000, 1000000); // 200K - 1M COP
       rate = randomNumber(18, 28); // 18% - 28%
       break;
     case 'personal_loan':
@@ -170,7 +170,7 @@ export function generateMockFinancialAccount(
         originalAmount * 0.2,
         originalAmount * 0.8
       );
-      monthlyPayment = randomNumber(500000, 2000000); // 500K - 2M COP
+      paymentAmount = randomNumber(500000, 2000000); // 500K - 2M COP
       rate = randomNumber(12, 20); // 12% - 20%
       break;
   }
@@ -186,7 +186,7 @@ export function generateMockFinancialAccount(
   const numberOfPayments = Math.max(0, Math.floor(monthsSinceCreation) - 1);
   const paymentLog = generatePaymentLog(
     accountCreatedAt,
-    monthlyPayment,
+    paymentAmount,
     'COP',
     numberOfPayments
   );
@@ -223,10 +223,11 @@ export function generateMockFinancialAccount(
       amount: adjustedTotalRemaining,
       currency: 'COP',
     },
-    monthlyPayment: {
-      amount: monthlyPayment,
+    paymentAmount: {
+      amount: paymentAmount,
       currency: 'COP',
     },
+    paymentFrequency: 'monthly',
     rate,
     nextDueDate: nextDueDate,
     paymentLog,

@@ -4,6 +4,7 @@ import type {
   AccountStatus,
   CreateFinancialAccountInput,
   FinancialAccount,
+  PaymentFrequency,
 } from '@rates/firebase-client';
 import { Select } from './Select';
 
@@ -24,6 +25,16 @@ const ACCOUNT_STATUSES: AccountStatus[] = [
   'closed',
   'defaulted',
   'on_hold',
+];
+
+const FREQUENCIES: PaymentFrequency[] = [
+  'daily',
+  'weekly',
+  'biweekly',
+  'monthly',
+  'quarterly',
+  'semi_annually',
+  'annually',
 ];
 
 export function CreateAccountForm({
@@ -49,7 +60,8 @@ export function CreateAccountForm({
     status: initialData?.status ?? 'active',
     totalAmountRemaining:
       initialData?.totalAmountRemaining.amount.toString() ?? '',
-    monthlyPayment: initialData?.monthlyPayment.amount.toString() ?? '',
+    paymentAmount: initialData?.paymentAmount.amount.toString() ?? '',
+    paymentFrequency: initialData?.paymentFrequency ?? 'monthly',
     rate: initialData?.rate.toString() ?? '',
     nextDueDate: formatDateForInput(initialData?.nextDueDate) ?? '',
     currency: (initialData?.totalAmountRemaining.currency ?? 'COP') as
@@ -70,7 +82,8 @@ export function CreateAccountForm({
         status: initialData.status,
         totalAmountRemaining:
           initialData.totalAmountRemaining.amount.toString(),
-        monthlyPayment: initialData.monthlyPayment.amount.toString(),
+        paymentAmount: initialData.paymentAmount.amount.toString(),
+        paymentFrequency: initialData.paymentFrequency,
         rate: initialData.rate.toString(),
         nextDueDate: formatDateForInput(initialData.nextDueDate),
         currency: initialData.totalAmountRemaining.currency as 'COP' | 'USD',
@@ -106,8 +119,12 @@ export function CreateAccountForm({
         'Valid total amount remaining is required';
     }
 
-    if (!formData.monthlyPayment || parseFloat(formData.monthlyPayment) <= 0) {
-      newErrors.monthlyPayment = 'Valid monthly payment is required';
+    if (!formData.paymentAmount || parseFloat(formData.paymentAmount) <= 0) {
+      newErrors.paymentAmount = 'Valid payment amount is required';
+    }
+
+    if (!formData.paymentFrequency) {
+      newErrors.paymentFrequency = 'Payment frequency is required';
     }
 
     if (
@@ -167,10 +184,11 @@ export function CreateAccountForm({
         amount: parseFloat(formData.totalAmountRemaining),
         currency: formData.currency,
       },
-      monthlyPayment: {
-        amount: parseFloat(formData.monthlyPayment),
+      paymentAmount: {
+        amount: parseFloat(formData.paymentAmount),
         currency: formData.currency,
       },
+      paymentFrequency: formData.paymentFrequency,
       rate: parseFloat(formData.rate),
       nextDueDate: new Date(formData.nextDueDate),
       ...(formData.originalAmount && {
@@ -337,61 +355,86 @@ export function CreateAccountForm({
         />
       </div>
 
+      <div className="flex flex-col gap-2">
+        <label
+          htmlFor="totalAmountRemaining"
+          className="text-sm font-semibold uppercase tracking-wide text-white/90"
+        >
+          Total Amount Remaining <span className="text-danger-500">*</span>
+        </label>
+        <input
+          id="totalAmountRemaining"
+          type="number"
+          step="0.01"
+          min="0"
+          value={formData.totalAmountRemaining}
+          onChange={(e) => handleChange('totalAmountRemaining', e.target.value)}
+          className={`font-inherit rounded-lg border bg-white/10 px-4 py-3.5 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] placeholder:text-white/40 focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none ${
+            errors.totalAmountRemaining
+              ? 'border-danger-500 bg-danger-500/10'
+              : 'border-white/20'
+          }`}
+          placeholder="0.00"
+        />
+        {errors.totalAmountRemaining && (
+          <span className="mt-1 text-sm font-medium text-danger-500">
+            {errors.totalAmountRemaining}
+          </span>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-6">
         <div className="flex flex-col gap-2">
           <label
-            htmlFor="totalAmountRemaining"
+            htmlFor="paymentAmount"
             className="text-sm font-semibold uppercase tracking-wide text-white/90"
           >
-            Total Amount Remaining <span className="text-danger-500">*</span>
+            Payment Amount <span className="text-danger-500">*</span>
           </label>
           <input
-            id="totalAmountRemaining"
+            id="paymentAmount"
             type="number"
             step="0.01"
             min="0"
-            value={formData.totalAmountRemaining}
-            onChange={(e) =>
-              handleChange('totalAmountRemaining', e.target.value)
-            }
+            value={formData.paymentAmount}
+            onChange={(e) => handleChange('paymentAmount', e.target.value)}
             className={`font-inherit rounded-lg border bg-white/10 px-4 py-3.5 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] placeholder:text-white/40 focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none ${
-              errors.totalAmountRemaining
+              errors.paymentAmount
                 ? 'border-danger-500 bg-danger-500/10'
                 : 'border-white/20'
             }`}
             placeholder="0.00"
           />
-          {errors.totalAmountRemaining && (
+          {errors.paymentAmount && (
             <span className="mt-1 text-sm font-medium text-danger-500">
-              {errors.totalAmountRemaining}
+              {errors.paymentAmount}
             </span>
           )}
         </div>
 
         <div className="flex flex-col gap-2">
           <label
-            htmlFor="monthlyPayment"
+            htmlFor="paymentFrequency"
             className="text-sm font-semibold uppercase tracking-wide text-white/90"
           >
-            Monthly Payment <span className="text-danger-500">*</span>
+            Frequency <span className="text-danger-500">*</span>
           </label>
-          <input
-            id="monthlyPayment"
-            type="number"
-            step="0.01"
-            min="0"
-            value={formData.monthlyPayment}
-            onChange={(e) => handleChange('monthlyPayment', e.target.value)}
-            className={`font-inherit rounded-lg border bg-white/10 px-4 py-3.5 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] placeholder:text-white/40 focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none ${
-              errors.monthlyPayment
-                ? 'border-danger-500 bg-danger-500/10'
-                : 'border-white/20'
-            }`}
-            placeholder="0.00"
+          <Select
+            id="paymentFrequency"
+            value={formData.paymentFrequency}
+            onChange={(v) => handleChange('paymentFrequency', v)}
+            options={FREQUENCIES.map((f) => ({
+              value: f,
+              label: f
+                .replace('_', ' ')
+                .replace(/\b\w/g, (l) => l.toUpperCase()),
+            }))}
+            disabled={isSubmitting}
+            aria-label="Payment Frequency"
           />
-          {errors.monthlyPayment && (
+          {errors.paymentFrequency && (
             <span className="mt-1 text-sm font-medium text-danger-500">
-              {errors.monthlyPayment}
+              {errors.paymentFrequency}
             </span>
           )}
         </div>

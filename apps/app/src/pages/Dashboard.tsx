@@ -492,7 +492,7 @@ export default function Dashboard() {
 
   const primaryCurrency =
     filteredPeriods[0]?.period.currency ||
-    accounts[0]?.monthlyPayment.currency ||
+    accounts[0]?.paymentAmount.currency ||
     'COP';
 
   // Get pending periods (not fully paid: pending, partial, or overdue), sorted by due date (oldest first)

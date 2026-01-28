@@ -5,6 +5,9 @@ import type {
   AccountType,
   CreateFinancialAccountInput,
   PaymentFrequency,
+  InstallmentLoanSubtype,
+  RevolvingCreditSubtype,
+  BillSubtype,
 } from '@rates/firebase-client';
 import { createFinancialAccount } from '../services/financialAccounts';
 import { Modal } from './Modal';
@@ -26,22 +29,41 @@ interface NewAccountWizardProps {
 }
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
-  loan: 'Loan',
-  credit_card: 'Credit Card',
+  installment_loan: 'Installment Loan',
+  revolving_credit: 'Revolving Credit',
   bill: 'Bill',
-  mortgage: 'Mortgage',
-  personal_loan: 'Personal Loan',
-  auto_loan: 'Auto Loan',
   other: 'Other',
 };
 
+const LOAN_SUBTYPE_LABELS: Record<InstallmentLoanSubtype, string> = {
+  mortgage: 'Mortgage',
+  auto: 'Auto Loan',
+  personal: 'Personal Loan',
+  student: 'Student Loan',
+  other: 'Other Loan',
+};
+
+const CREDIT_SUBTYPE_LABELS: Record<RevolvingCreditSubtype, string> = {
+  credit_card: 'Credit Card',
+  line_of_credit: 'Line of Credit',
+  store_card: 'Store Card',
+  overdraft: 'Overdraft',
+  other: 'Other Credit',
+};
+
+const BILL_SUBTYPE_LABELS: Record<BillSubtype, string> = {
+  subscription: 'Subscription',
+  utility: 'Utility',
+  rent: 'Rent',
+  insurance: 'Insurance',
+  tax: 'Tax',
+  other: 'Other Bill',
+};
+
 const ACCOUNT_TYPE_ICONS: Record<AccountType, string> = {
-  loan: '💰',
-  credit_card: '💳',
+  installment_loan: '💰',
+  revolving_credit: '💳',
   bill: '📄',
-  mortgage: '🏠',
-  personal_loan: '👤',
-  auto_loan: '🚗',
   other: '📋',
 };
 
@@ -311,7 +333,7 @@ export function NewAccountWizard({
         amount: parseFloat(formData.paymentAmount),
         currency: formData.currency,
       },
-      paymentFrequency: formData.paymentFrequency,
+      paymentFrequency: formData.paymentFrequency as any,
       rate: parseFloat(formData.rate),
       nextDueDate: new Date(formData.nextDueDate || getDefaultDueDate()),
       paymentLog: [],
@@ -423,13 +445,12 @@ export function NewAccountWizard({
                   />
                 )}
                 <span
-                  className={`max-w-full truncate px-0.5 text-center text-[10px] -tracking-[0.1px] sm:text-xs ${
-                    isUpcoming
-                      ? 'text-white/40'
-                      : isCurrent
-                        ? 'font-semibold text-white'
-                        : 'text-white/80'
-                  }`}
+                  className={`max-w-full truncate px-0.5 text-center text-[10px] -tracking-[0.1px] sm:text-xs ${isUpcoming
+                    ? 'text-white/40'
+                    : isCurrent
+                      ? 'font-semibold text-white'
+                      : 'text-white/80'
+                    }`}
                 >
                   {label}
                 </span>
@@ -565,11 +586,10 @@ export function NewAccountWizard({
                       key={type}
                       type="button"
                       role="listitem"
-                      className={`flex min-h-[72px] cursor-pointer flex-col justify-center rounded-md border p-2.5 pt-0 text-left text-white transition-all duration-200 ease-out active:scale-[0.98] sm:min-h-[80px] sm:p-3 ${
-                        isSelected
-                          ? 'border-primary-500/80 bg-primary-500/20 shadow-[0_0_0_2px_rgba(59,130,246,0.35),0_4px_14px_rgba(30,64,175,0.3)]'
-                          : 'border-neutral-700/40 bg-white/[0.07] backdrop-blur-[10px] hover:border-neutral-600/50 hover:bg-white/10 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]'
-                      }`}
+                      className={`flex min-h-[72px] cursor-pointer flex-col justify-center rounded-md border p-2.5 pt-0 text-left text-white transition-all duration-200 ease-out active:scale-[0.98] sm:min-h-[80px] sm:p-3 ${isSelected
+                        ? 'border-primary-500/80 bg-primary-500/20 shadow-[0_0_0_2px_rgba(59,130,246,0.35),0_4px_14px_rgba(30,64,175,0.3)]'
+                        : 'border-neutral-700/40 bg-white/[0.07] backdrop-blur-[10px] hover:border-neutral-600/50 hover:bg-white/10 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]'
+                        }`}
                       onClick={() => {
                         setError(null);
                         setSelectedType(type);
@@ -579,11 +599,10 @@ export function NewAccountWizard({
                       {/* Row 1: icon (left) + title (right) */}
                       <div className="flex min-h-[44px] items-center gap-2">
                         <span
-                          className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-base ring-1 sm:h-10 sm:w-10 sm:text-lg ${
-                            isSelected
-                              ? 'bg-primary-500/35 shadow-[0_2px_10px_rgba(30,64,175,0.35)] ring-primary-400/40'
-                              : 'bg-white/12 shadow-[0_2px_8px_rgba(0,0,0,0.25)] ring-white/10'
-                          }`}
+                          className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-base ring-1 sm:h-10 sm:w-10 sm:text-lg ${isSelected
+                            ? 'bg-primary-500/35 shadow-[0_2px_10px_rgba(30,64,175,0.35)] ring-primary-400/40'
+                            : 'bg-white/12 shadow-[0_2px_8px_rgba(0,0,0,0.25)] ring-white/10'
+                            }`}
                           aria-hidden
                         >
                           {ACCOUNT_TYPE_ICONS[type]}
@@ -632,11 +651,10 @@ export function NewAccountWizard({
                     setFormData((p) => ({ ...p, accountName: e.target.value }))
                   }
                   placeholder="e.g., Personal Loan - Bank ABC"
-                  className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-200 ease-in-out ${
-                    detailsAttempted && detailsErrors.accountName
-                      ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
-                      : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)]'
-                  }`}
+                  className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-200 ease-in-out ${detailsAttempted && detailsErrors.accountName
+                    ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
+                    : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)]'
+                    }`}
                   autoFocus
                 />
                 {detailsAttempted && detailsErrors.accountName && (
@@ -664,11 +682,10 @@ export function NewAccountWizard({
                   }
                   placeholder="e.g., Personal loan for home improvement"
                   rows={3}
-                  className={`box-border w-full resize-y rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-200 ease-in-out ${
-                    detailsAttempted && detailsErrors.accountDescription
-                      ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
-                      : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)]'
-                  }`}
+                  className={`box-border w-full resize-y rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-200 ease-in-out ${detailsAttempted && detailsErrors.accountDescription
+                    ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
+                    : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)]'
+                    }`}
                 />
                 {detailsAttempted && detailsErrors.accountDescription && (
                   <div className="mt-1.5 text-[0.88rem] text-[#ffb3b3]">
@@ -780,11 +797,10 @@ export function NewAccountWizard({
                       ? 'Auto-generated on create'
                       : 'e.g., ACC-0001'
                   }
-                  className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] disabled:cursor-not-allowed disabled:opacity-60 ${
-                    accountAttempted && accountErrors.accountNumber
-                      ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
-                      : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
-                  }`}
+                  className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] disabled:cursor-not-allowed disabled:opacity-60 ${accountAttempted && accountErrors.accountNumber
+                    ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
+                    : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
+                    }`}
                   autoFocus
                 />
                 {accountAttempted && accountErrors.accountNumber && (
@@ -897,11 +913,10 @@ export function NewAccountWizard({
                       }))
                     }
                     placeholder="0.00"
-                    className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                      financialAttempted && financialErrors.totalAmountRemaining
-                        ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
-                        : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
-                    }`}
+                    className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${financialAttempted && financialErrors.totalAmountRemaining
+                      ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
+                      : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
+                      }`}
                     autoFocus
                   />
                   {financialAttempted &&
@@ -932,11 +947,10 @@ export function NewAccountWizard({
                       }))
                     }
                     placeholder="0.00"
-                    className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                      financialAttempted && financialErrors.paymentAmount
-                        ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
-                        : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
-                    }`}
+                    className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${financialAttempted && financialErrors.paymentAmount
+                      ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
+                      : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
+                      }`}
                   />
                   {financialAttempted && financialErrors.paymentAmount && (
                     <div className="mt-1.5 text-[0.88rem] text-[#ffb3b3]">
@@ -993,11 +1007,10 @@ export function NewAccountWizard({
                       setFormData((p) => ({ ...p, rate: e.target.value }))
                     }
                     placeholder="0.0"
-                    className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                      financialAttempted && financialErrors.rate
-                        ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
-                        : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
-                    }`}
+                    className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${financialAttempted && financialErrors.rate
+                      ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
+                      : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
+                      }`}
                   />
                   {financialAttempted && financialErrors.rate && (
                     <div className="mt-1.5 text-[0.88rem] text-[#ffb3b3]">
@@ -1024,11 +1037,10 @@ export function NewAccountWizard({
                       }))
                     }
                     min={new Date().toISOString().split('T')[0]}
-                    className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                      financialAttempted && financialErrors.nextDueDate
-                        ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
-                        : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
-                    }`}
+                    className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${financialAttempted && financialErrors.nextDueDate
+                      ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
+                      : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
+                      }`}
                   />
                   {financialAttempted && financialErrors.nextDueDate && (
                     <div className="mt-1.5 text-[0.88rem] text-[#ffb3b3]">
@@ -1147,11 +1159,10 @@ export function NewAccountWizard({
                       numberOfPayments: e.target.value,
                     }))
                   }
-                  className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                    financialAttempted && financialErrors.numberOfPayments
-                      ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
-                      : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
-                  }`}
+                  className={`box-border w-full rounded-lg border px-3.5 py-3.5 text-white outline-none transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${financialAttempted && financialErrors.numberOfPayments
+                    ? 'border-danger-500/75 bg-black/25 shadow-[0_0_0_6px_rgba(255,107,107,0.16)]'
+                    : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(30,64,175,0.25)]'
+                    }`}
                   placeholder={
                     selectedType === 'bill'
                       ? 'Leave empty for periodic bills'
@@ -1220,9 +1231,9 @@ export function NewAccountWizard({
                 <div className="font-[650] -tracking-[0.2px]">
                   {formData.totalAmountRemaining
                     ? formatCurrency(
-                        parseFloat(formData.totalAmountRemaining),
-                        formData.currency
-                      )
+                      parseFloat(formData.totalAmountRemaining),
+                      formData.currency
+                    )
                     : '—'}
                 </div>
               </div>
@@ -1231,9 +1242,9 @@ export function NewAccountWizard({
                 <div className="font-[650] -tracking-[0.2px]">
                   {formData.paymentAmount
                     ? formatCurrency(
-                        parseFloat(formData.paymentAmount),
-                        formData.currency
-                      )
+                      parseFloat(formData.paymentAmount),
+                      formData.currency
+                    )
                     : '—'}
                 </div>
               </div>
