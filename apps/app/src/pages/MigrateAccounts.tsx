@@ -16,6 +16,11 @@ import {
   extendPeriodicBillPeriods,
 } from '../services/paymentPeriods';
 import type { FinancialAccount } from '@rates/firebase-client';
+import {
+  isInstallmentLoan,
+  isBill,
+  isRevolvingCredit,
+} from '@rates/firebase-client';
 import { BatchPaymentModal } from '../components/BatchPaymentModal';
 
 // Helper to decode user ID from token
@@ -157,6 +162,8 @@ export default function MigrateAccounts() {
       // Check plan status for each account
       const plansStatus: Record<string, AccountPlanStatus> = {};
       for (const account of userAccounts) {
+        if (!account.accountNumber) continue;
+
         try {
           const periods = await getPaymentPeriods(account.accountNumber);
           const pendingPeriods = periods.filter((p) => p.status === 'pending');
@@ -195,10 +202,12 @@ export default function MigrateAccounts() {
     if (!planStatus) return;
 
     const account = planStatus.account;
-    const isPeriodic =
-      account.accountType === 'bill' &&
-      (account.metadata?.isPeriodic === true ||
-        account.numberOfPayments === undefined);
+    let isPeriodic = false;
+    if (isBill(account)) {
+      isPeriodic = account.metadata?.isPeriodic === true; // Bills don't have numberOfPayments usually if periodic
+    } else if (isInstallmentLoan(account)) {
+      // Loan is not periodic bill
+    }
 
     setAccountPlans((prev) => ({
       ...prev,
@@ -489,10 +498,10 @@ export default function MigrateAccounts() {
     <div className="m-0 box-border flex w-full max-w-full animate-fadeIn-slow flex-col gap-8 overflow-x-hidden p-0">
       <div className="relative mb-10 flex items-center justify-between pb-6 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:content-['']">
         <div>
-          <h1 className="m-0 mb-2 bg-gradient-to-br from-white to-white/80 bg-clip-text text-4xl font-bold -tracking-[0.5px] text-transparent text-white drop-shadow-[0_2px_20px_rgba(255,255,255,0.1)]">
+          <h1 className="m-0 mb-2 bg-gradient-to-br from-white to-white/80 bg-clip-text text-xl font-bold -tracking-[0.5px] text-transparent text-white drop-shadow-[0_2px_20px_rgba(255,255,255,0.1)] md:text-4xl">
             Account Migration
           </h1>
-          <p className="m-0 text-base text-white/70">
+          <p className="m-0 text-sm text-white/70 md:text-base">
             Migrate your initial accounts from the spreadsheet to the database
           </p>
         </div>
@@ -846,25 +855,72 @@ export default function MigrateAccounts() {
               style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
             >
               {accounts.map((account) => {
+                if (!account.accountNumber) return null;
                 const planStatus = accountPlans[account.accountNumber];
                 if (!planStatus) return null;
 
                 // Check if this is a periodic bill
-                const isPeriodic =
-                  account.accountType === 'bill' &&
-                  (account.metadata?.isPeriodic === true ||
-                    account.numberOfPayments === undefined);
+                let isPeriodic = false;
+                if (isBill(account)) {
+                  isPeriodic = account.metadata?.isPeriodic === true;
+                }
 
-                // For periodic bills, only need startDate
-                // For loans and fixed-period bills, need both startDate and numberOfPayments
-                const canGenerate = isPeriodic
-                  ? !!account.startDate
-                  : !!(account.startDate && account.numberOfPayments);
-
+                // For periodic bills, only need startDate (and it should exist if they migrated correctly)
+                // For loans, need startDate and term
+                let canGenerate = false;
                 const missingFields: string[] = [];
-                if (!account.startDate) missingFields.push('startDate');
-                if (!isPeriodic && !account.numberOfPayments)
-                  missingFields.push('numberOfPayments');
+
+                if (isPeriodic) {
+                  // For bills, we usually have startDate (migrated as createdAt or contractStartDate?).
+                  // If safe migration, bills might not have startDate required on type?
+                  // Let's check safely.
+                  if (!account.createdAt && !('contractStartDate' in account))
+                    missingFields.push('startDate');
+                  else canGenerate = true;
+                } else if (isInstallmentLoan(account)) {
+                  if (!account.contractStartDate)
+                    missingFields.push('startDate');
+                  if (!account.termInPayments)
+                    missingFields.push('numberOfPayments');
+                  if (account.contractStartDate && account.termInPayments)
+                    canGenerate = true;
+                } else if (isBill(account)) {
+                  // Fixed term bill?
+                  // If not periodic, requires term?
+                  // Let's assume bill needs dates.
+                  if (!('contractStartDate' in account))
+                    missingFields.push('startDate');
+                  // Bills usually don't have termInPayments unless mapped.
+                  canGenerate = true; // defaulting to true for bills if not strict
+                } else {
+                  // Other accounts
+                  canGenerate = false;
+                }
+
+                // Helper for payment amount display
+                let paymentAmountStr = '';
+                try {
+                  let amount = 0;
+                  let currency = 'COP';
+                  if (isInstallmentLoan(account)) {
+                    amount = account.scheduledPayment?.amount ?? 0;
+                    currency = account.scheduledPayment?.currency ?? 'COP';
+                  } else if (isRevolvingCredit(account)) {
+                    amount = account.currentMinimumPayment?.amount ?? 0;
+                    currency = account.currentMinimumPayment?.currency ?? 'COP';
+                  } else if (isBill(account)) {
+                    amount = account.recurringAmount?.amount ?? 0;
+                    currency = account.recurringAmount?.currency ?? 'COP';
+                  }
+
+                  paymentAmountStr = new Intl.NumberFormat('es-CO', {
+                    style: 'currency',
+                    currency: currency,
+                    minimumFractionDigits: 0,
+                  }).format(amount);
+                } catch {
+                  paymentAmountStr = 'N/A';
+                }
 
                 return (
                   <div
@@ -934,27 +990,33 @@ export default function MigrateAccounts() {
                                 : 'No plan'}
                             </span>
                           </div>
-                          {account.startDate && (
-                            <div>
-                              <span
-                                style={{
-                                  color: 'rgba(255, 255, 255, 0.6)',
-                                  fontSize: '0.85rem',
-                                }}
-                              >
-                                Start Date:{' '}
-                              </span>
-                              <span
-                                style={{ color: 'rgba(255, 255, 255, 0.9)' }}
-                              >
-                                {new Date(
-                                  account.startDate instanceof Date
-                                    ? account.startDate
-                                    : account.startDate.toDate()
-                                ).toLocaleDateString()}
-                              </span>
-                            </div>
-                          )}
+
+                          {/* Start Date Display */}
+                          <div>
+                            <span
+                              style={{
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                fontSize: '0.85rem',
+                              }}
+                            >
+                              Start Date:{' '}
+                            </span>
+                            <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                              {isInstallmentLoan(account) &&
+                              account.contractStartDate
+                                ? new Date(
+                                    account.contractStartDate instanceof Date
+                                      ? account.contractStartDate
+                                      : (
+                                          account.contractStartDate as {
+                                            toDate: () => Date;
+                                          }
+                                        ).toDate()
+                                  ).toLocaleDateString()
+                                : 'N/A'}
+                            </span>
+                          </div>
+
                           {isPeriodic ? (
                             <div>
                               <span
@@ -972,7 +1034,8 @@ export default function MigrateAccounts() {
                               </span>
                             </div>
                           ) : (
-                            account.numberOfPayments && (
+                            isInstallmentLoan(account) &&
+                            account.termInPayments && (
                               <div>
                                 <span
                                   style={{
@@ -985,7 +1048,7 @@ export default function MigrateAccounts() {
                                 <span
                                   style={{ color: 'rgba(255, 255, 255, 0.9)' }}
                                 >
-                                  {account.numberOfPayments}
+                                  {account.termInPayments}
                                 </span>
                               </div>
                             )
@@ -997,18 +1060,14 @@ export default function MigrateAccounts() {
                                 fontSize: '0.85rem',
                               }}
                             >
-                              Monthly Payment:{' '}
+                              Payment Amount:{' '}
                             </span>
                             <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-                              {new Intl.NumberFormat('es-CO', {
-                                style: 'currency',
-                                currency: account.monthlyPayment.currency,
-                                minimumFractionDigits: 0,
-                              }).format(account.monthlyPayment.amount)}
+                              {paymentAmountStr}
                             </span>
                           </div>
                         </div>
-                        {!canGenerate && (
+                        {!canGenerate && !planStatus.hasPlan && (
                           <div
                             style={{
                               marginTop: '0.75rem',
@@ -1086,7 +1145,9 @@ export default function MigrateAccounts() {
                             )}
                             <button
                               onClick={() =>
-                                void handleRegeneratePlan(account.accountNumber)
+                                void handleRegeneratePlan(
+                                  account.accountNumber ?? ''
+                                )
                               }
                               disabled={!canGenerate || planStatus.isGenerating}
                               style={{
@@ -1115,7 +1176,9 @@ export default function MigrateAccounts() {
                         ) : (
                           <button
                             onClick={() =>
-                              void handleGeneratePlan(account.accountNumber)
+                              void handleGeneratePlan(
+                                account.accountNumber ?? ''
+                              )
                             }
                             disabled={!canGenerate || planStatus.isGenerating}
                             style={{

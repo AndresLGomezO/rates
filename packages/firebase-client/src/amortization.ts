@@ -1,87 +1,62 @@
 /**
  * Amortization Plan Generator
  *
- * Generates payment periods for a financial account based on loan terms.
+ * Generates payment periods for installment loan accounts based on loan terms.
  */
 
-import type { FinancialAccount } from './financial-accounts';
-import type { CreatePaymentPeriodInput } from './payment-periods';
-import { calculatePaymentBreakdown } from './financial-accounts-utils';
+import type { InstallmentLoanAccount } from './financial-accounts.js';
+import type { CreatePaymentPeriodInput } from './payment-periods.js';
+import { calculatePaymentBreakdown } from './financial-accounts-utils.js';
 import { Timestamp } from 'firebase/firestore';
 
 /**
- * Calculate number of periods from start date to current date (or end date if provided)
+ * Generate amortization plan (all payment periods) for an installment loan account
  *
- * @param startDate - Start date of the account
- * @param paymentIntervalMonths - Payment interval in months
- * @param endDate - Optional end date (defaults to current date)
- * @returns Number of periods
- */
-function calculatePeriodicPeriods(
-  startDate: Date,
-  paymentIntervalMonths: number,
-  endDate?: Date
-): number {
-  const end = endDate ?? new Date();
-  const monthsDiff =
-    (end.getFullYear() - startDate.getFullYear()) * 12 +
-    (end.getMonth() - startDate.getMonth());
-  return Math.max(1, Math.ceil(monthsDiff / paymentIntervalMonths));
-}
-
-/**
- * Generate amortization plan (all payment periods) for an account
- *
- * @param account - Financial account to generate plan for
+ * @param account - InstallmentLoanAccount to generate plan for
  * @param paymentIntervalMonths - Payment interval in months (default: 1 for monthly)
- * @param endDate - Optional end date for periodic bills (defaults to current date)
  * @returns Array of payment period inputs ready to be created
  */
 export function generateAmortizationPlan(
-  account: FinancialAccount,
-  paymentIntervalMonths: number = 1,
-  endDate?: Date
+  account: InstallmentLoanAccount,
+  paymentIntervalMonths: number = 1
 ): CreatePaymentPeriodInput[] {
-  if (!account.startDate) {
+  if (!account.contractStartDate) {
     throw new Error(
-      'Account must have startDate to generate amortization plan'
+      'Account must have contractStartDate to generate amortization plan'
     );
   }
 
   const startDate =
-    account.startDate instanceof Date
-      ? account.startDate
-      : account.startDate.toDate();
+    account.contractStartDate instanceof Date
+      ? account.contractStartDate
+      : account.contractStartDate.toDate();
 
-  // Check if this is a periodic bill
-  const isPeriodic =
-    account.accountType === 'bill' &&
-    (account.metadata?.isPeriodic === true ||
-      account.numberOfPayments === undefined);
-
-  let numberOfPayments: number;
-  if (isPeriodic) {
-    // For periodic bills, calculate periods from start date to current date (or provided end date)
-    numberOfPayments = calculatePeriodicPeriods(
-      startDate,
-      paymentIntervalMonths,
-      endDate
+  // Determine number of payments
+  if (!account.termInPayments) {
+    throw new Error(
+      'Account must have termInPayments to generate amortization plan'
     );
-  } else {
-    // For loans and fixed-period bills, use numberOfPayments
-    if (!account.numberOfPayments) {
-      throw new Error(
-        'Account must have numberOfPayments to generate amortization plan (or be a periodic bill)'
-      );
-    }
-    numberOfPayments = account.numberOfPayments;
+  }
+  const numberOfPayments = account.termInPayments;
+
+  // Determine payment amount
+  const monthlyPayment = account.scheduledPayment?.amount;
+  if (!monthlyPayment) {
+    throw new Error(
+      'Account must have scheduledPayment to generate amortization plan'
+    );
   }
 
-  const monthlyPayment = account.monthlyPayment.amount;
-  const currency = account.monthlyPayment.currency;
-  const rate = account.rate;
+  const currency = account.currency;
+  const rate = account.annualInterestRate;
   const originalAmount =
-    account.originalAmount?.amount ?? account.totalAmountRemaining.amount;
+    account.originalPrincipal?.amount ?? account.currentPrincipal?.amount ?? 0;
+
+  if (originalAmount === 0) {
+    throw new Error(
+      'Account must have originalPrincipal or currentPrincipal to generate amortization plan'
+    );
+  }
 
   const periods: CreatePaymentPeriodInput[] = [];
   let remainingPrincipal = originalAmount;
@@ -93,51 +68,33 @@ export function generateAmortizationPlan(
       dueDate.getMonth() + (periodNumber - 1) * paymentIntervalMonths
     );
 
-    // For bills (especially periodic ones), use simpler calculation
-    // Bills typically have fixed payments without principal reduction
-    let capital: number;
-    let interest: number;
-    let periodRemainingPrincipal: number | undefined;
+    // Calculate payment breakdown with principal reduction
+    const breakdown = calculatePaymentBreakdown(
+      remainingPrincipal,
+      rate,
+      monthlyPayment,
+      currency
+    );
+    const capital = breakdown.capital;
+    const interest = breakdown.interest;
+    const periodRemainingPrincipal = Math.max(
+      0,
+      remainingPrincipal - breakdown.capital
+    );
 
-    if (account.accountType === 'bill' && isPeriodic) {
-      // For periodic bills, payment is typically just the monthly amount
-      // No principal reduction (bills are recurring expenses)
-      capital = monthlyPayment;
-      interest = 0;
-      // Don't set remainingPrincipal for bills (they don't have principal)
-      periodRemainingPrincipal = undefined;
-    } else {
-      // For loans, calculate payment breakdown with principal reduction
-      const breakdown = calculatePaymentBreakdown(
-        remainingPrincipal,
-        rate,
-        monthlyPayment,
-        currency
-      );
-      capital = breakdown.capital;
-      interest = breakdown.interest;
-      periodRemainingPrincipal = Math.max(
-        0,
-        remainingPrincipal - breakdown.capital
-      );
-
-      // Update remaining principal for next period
-      remainingPrincipal = periodRemainingPrincipal;
-    }
+    // Update remaining principal for next period
+    remainingPrincipal = periodRemainingPrincipal;
 
     // Create period input
-    // Only include remainingPrincipal if it's defined (bills don't have principal)
     const period: CreatePaymentPeriodInput = {
-      accountNumber: account.accountNumber,
+      accountNumber: account.accountNumber ?? '',
       periodNumber,
       dueDate: Timestamp.fromDate(dueDate) as unknown as Date,
       amount: monthlyPayment,
       currency,
       capital,
       interest,
-      ...(periodRemainingPrincipal !== undefined && {
-        remainingPrincipal: periodRemainingPrincipal,
-      }),
+      remainingPrincipal: periodRemainingPrincipal,
     };
 
     periods.push(period);

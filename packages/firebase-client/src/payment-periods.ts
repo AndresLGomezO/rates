@@ -6,7 +6,7 @@
  */
 
 import type { Timestamp } from 'firebase/firestore';
-import type { CurrencyCode } from './financial-accounts';
+import type { CurrencyCode } from './financial-accounts.js';
 
 /**
  * Payment period status

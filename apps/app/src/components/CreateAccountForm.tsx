@@ -4,7 +4,14 @@ import type {
   AccountStatus,
   CreateFinancialAccountInput,
   FinancialAccount,
+  PaymentFrequency,
 } from '@rates/firebase-client';
+import {
+  isInstallmentLoan,
+  isRevolvingCredit,
+  isBill,
+} from '@rates/firebase-client';
+import { Select } from './Select';
 
 interface CreateAccountFormProps {
   accountType: AccountType;
@@ -25,6 +32,16 @@ const ACCOUNT_STATUSES: AccountStatus[] = [
   'on_hold',
 ];
 
+const FREQUENCIES: PaymentFrequency[] = [
+  'daily',
+  'weekly',
+  'biweekly',
+  'monthly',
+  'quarterly',
+  'semi_annually',
+  'annually',
+];
+
 export function CreateAccountForm({
   accountType,
   onSubmit,
@@ -41,43 +58,91 @@ export function CreateAccountForm({
     return d.toISOString().split('T')[0];
   };
 
-  const [formData, setFormData] = useState({
-    accountNumber: initialData?.accountNumber ?? '',
-    accountName: initialData?.accountName ?? '',
-    accountDescription: initialData?.accountDescription ?? '',
-    status: initialData?.status ?? 'active',
-    totalAmountRemaining:
-      initialData?.totalAmountRemaining.amount.toString() ?? '',
-    monthlyPayment: initialData?.monthlyPayment.amount.toString() ?? '',
-    rate: initialData?.rate.toString() ?? '',
-    nextDueDate: formatDateForInput(initialData?.nextDueDate) ?? '',
-    currency: (initialData?.totalAmountRemaining.currency ?? 'COP') as
-      | 'COP'
-      | 'USD',
-    originalAmount: initialData?.originalAmount?.amount.toString() ?? '',
-    startDate: formatDateForInput(initialData?.startDate) ?? '',
-    numberOfPayments: initialData?.numberOfPayments?.toString() ?? '',
-  });
+  // Helper to safely get field values from discriminated union
+  const getInitialValue = () => {
+    if (!initialData) {
+      return {
+        accountNumber: '',
+        accountName: '',
+        accountDescription: '',
+        status: 'active' as AccountStatus,
+        totalAmountRemaining: '',
+        paymentAmount: '',
+        paymentFrequency: 'monthly' as PaymentFrequency,
+        rate: '',
+        nextDueDate: '',
+        currency: 'COP' as 'COP' | 'USD',
+        originalAmount: '',
+        startDate: '',
+        numberOfPayments: '',
+      };
+    }
+
+    // Extract type-specific fields based on account type
+    let totalAmountRemaining = '';
+    let paymentAmount = '';
+    let rate = '';
+    let nextDueDate = '';
+    let currency: 'COP' | 'USD' = 'COP';
+    let originalAmount = '';
+    let startDate = '';
+    let numberOfPayments = '';
+    let paymentFrequency: PaymentFrequency = 'monthly';
+
+    if (isInstallmentLoan(initialData)) {
+      totalAmountRemaining =
+        initialData.currentPrincipal?.amount.toString() ?? '';
+      paymentAmount = initialData.scheduledPayment?.amount.toString() ?? '';
+      rate = initialData.annualInterestRate?.toString() ?? '';
+      nextDueDate = formatDateForInput(initialData.nextDueDate);
+      currency = (initialData.currentPrincipal?.currency ??
+        initialData.currency) as 'COP' | 'USD';
+      originalAmount = initialData.originalPrincipal?.amount.toString() ?? '';
+      startDate = formatDateForInput(initialData.contractStartDate);
+      numberOfPayments = initialData.termInPayments?.toString() ?? '';
+      paymentFrequency = initialData.paymentFrequency ?? 'monthly';
+    } else if (isRevolvingCredit(initialData)) {
+      totalAmountRemaining = initialData.currentBalance.amount.toString();
+      paymentAmount =
+        initialData.userPlannedPayment?.amount.toString() ??
+        initialData.currentMinimumPayment?.amount.toString() ??
+        '';
+      rate = initialData.purchaseApr?.toString() ?? '';
+      nextDueDate = formatDateForInput(initialData.nextDueDate);
+      currency = initialData.currentBalance.currency as 'COP' | 'USD';
+    } else if (isBill(initialData)) {
+      paymentAmount = initialData.recurringAmount?.amount.toString() ?? '';
+      nextDueDate = formatDateForInput(initialData.nextDueDate);
+      currency = (initialData.recurringAmount?.currency ??
+        initialData.currency) as 'COP' | 'USD';
+      paymentFrequency = initialData.paymentFrequency ?? 'monthly';
+    }
+
+    return {
+      accountNumber: initialData.accountNumber ?? '',
+      accountName: initialData.accountName,
+      accountDescription: initialData.accountDescription ?? '',
+      status: initialData.status,
+      totalAmountRemaining,
+      paymentAmount,
+      paymentFrequency,
+      rate,
+      nextDueDate,
+      currency,
+      originalAmount,
+      startDate,
+      numberOfPayments,
+    };
+  };
+
+  const [formData, setFormData] = useState(getInitialValue());
 
   // Update form data when initialData changes (for edit mode)
   useEffect(() => {
     if (initialData && mode === 'edit') {
-      setFormData({
-        accountNumber: initialData.accountNumber,
-        accountName: initialData.accountName,
-        accountDescription: initialData.accountDescription,
-        status: initialData.status,
-        totalAmountRemaining:
-          initialData.totalAmountRemaining.amount.toString(),
-        monthlyPayment: initialData.monthlyPayment.amount.toString(),
-        rate: initialData.rate.toString(),
-        nextDueDate: formatDateForInput(initialData.nextDueDate),
-        currency: initialData.totalAmountRemaining.currency as 'COP' | 'USD',
-        originalAmount: initialData.originalAmount?.amount.toString() ?? '',
-        startDate: formatDateForInput(initialData.startDate),
-        numberOfPayments: initialData.numberOfPayments?.toString() ?? '',
-      });
+      setFormData(getInitialValue());
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, mode]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -105,8 +170,12 @@ export function CreateAccountForm({
         'Valid total amount remaining is required';
     }
 
-    if (!formData.monthlyPayment || parseFloat(formData.monthlyPayment) <= 0) {
-      newErrors.monthlyPayment = 'Valid monthly payment is required';
+    if (!formData.paymentAmount || parseFloat(formData.paymentAmount) <= 0) {
+      newErrors.paymentAmount = 'Valid payment amount is required';
+    }
+
+    if (!formData.paymentFrequency) {
+      newErrors.paymentFrequency = 'Payment frequency is required';
     }
 
     if (
@@ -156,40 +225,118 @@ export function CreateAccountForm({
       return;
     }
 
-    const account: Omit<CreateFinancialAccountInput, 'userId'> = {
+    // Build type-specific payload
+    const basePayload = {
       accountNumber: formData.accountNumber.trim(),
       accountName: formData.accountName.trim(),
       accountDescription: formData.accountDescription.trim(),
-      accountType,
       status: formData.status,
-      totalAmountRemaining: {
-        amount: parseFloat(formData.totalAmountRemaining),
-        currency: formData.currency,
-      },
-      monthlyPayment: {
-        amount: parseFloat(formData.monthlyPayment),
-        currency: formData.currency,
-      },
-      rate: parseFloat(formData.rate),
-      nextDueDate: new Date(formData.nextDueDate),
-      ...(formData.originalAmount && {
-        originalAmount: {
-          amount: parseFloat(formData.originalAmount),
-          currency: formData.currency,
-        },
-      }),
-      ...(formData.startDate && {
-        startDate: new Date(formData.startDate),
-      }),
-      ...(formData.numberOfPayments.trim() &&
-        (() => {
-          const numPayments = parseInt(formData.numberOfPayments.trim(), 10);
-          if (!isNaN(numPayments) && numPayments > 0) {
-            return { numberOfPayments: numPayments };
-          }
-          return {};
-        })()),
+      currency: formData.currency,
+      paymentLog: [],
     };
+
+    let account: Omit<CreateFinancialAccountInput, 'userId'>;
+
+    switch (accountType) {
+      case 'installment_loan':
+        account = {
+          ...basePayload,
+          accountType: 'installment_loan' as const,
+          loanSubtype: 'personal_loan' as const,
+          annualInterestRate: parseFloat(formData.rate),
+          paymentFrequency: formData.paymentFrequency,
+          currentPrincipal: {
+            amount: parseFloat(formData.totalAmountRemaining),
+            currency: formData.currency,
+          },
+          scheduledPayment: formData.paymentAmount
+            ? {
+                amount: parseFloat(formData.paymentAmount),
+                currency: formData.currency,
+              }
+            : undefined,
+          originalPrincipal: formData.originalAmount
+            ? {
+                amount: parseFloat(formData.originalAmount),
+                currency: formData.currency,
+              }
+            : undefined,
+          contractStartDate: formData.startDate
+            ? new Date(formData.startDate)
+            : new Date(),
+          termInPayments: formData.numberOfPayments
+            ? parseInt(formData.numberOfPayments, 10)
+            : undefined,
+          nextDueDate: formData.nextDueDate
+            ? new Date(formData.nextDueDate)
+            : undefined,
+        } as Omit<CreateFinancialAccountInput, 'userId'>;
+        break;
+
+      case 'revolving_credit':
+        account = {
+          ...basePayload,
+          accountType: 'revolving_credit' as const,
+          creditSubtype: 'credit_card' as const,
+          currentBalance: {
+            amount: parseFloat(formData.totalAmountRemaining),
+            currency: formData.currency,
+          },
+          purchaseApr: parseFloat(formData.rate),
+          userPlannedPayment: formData.paymentAmount
+            ? {
+                amount: parseFloat(formData.paymentAmount),
+                currency: formData.currency,
+              }
+            : undefined,
+          nextDueDate: formData.nextDueDate
+            ? new Date(formData.nextDueDate)
+            : undefined,
+        } as Omit<CreateFinancialAccountInput, 'userId'>;
+        break;
+
+      case 'bill':
+        account = {
+          ...basePayload,
+          accountType: 'bill' as const,
+          billSubtype: 'utility' as const,
+          isRecurring: true,
+          isAmountVariable: false,
+          nextDueDate: new Date(formData.nextDueDate),
+          recurringAmount: formData.paymentAmount
+            ? {
+                amount: parseFloat(formData.paymentAmount),
+                currency: formData.currency,
+              }
+            : undefined,
+          paymentFrequency: formData.paymentFrequency,
+          endDate: formData.numberOfPayments
+            ? (() => {
+                const start = new Date(formData.nextDueDate);
+                const months = parseInt(formData.numberOfPayments, 10);
+                const end = new Date(start);
+                end.setMonth(end.getMonth() + months);
+                return end;
+              })()
+            : undefined,
+        } as Omit<CreateFinancialAccountInput, 'userId'>;
+        break;
+
+      case 'other':
+        account = {
+          ...basePayload,
+          accountType: 'other' as const,
+          nextRelevantDate: formData.nextDueDate
+            ? new Date(formData.nextDueDate)
+            : undefined,
+        } as Omit<CreateFinancialAccountInput, 'userId'>;
+        break;
+
+      default: {
+        const _exhaustive: never = accountType;
+        throw new Error(`Unknown account type: ${_exhaustive}`);
+      }
+    }
 
     void onSubmit(account);
   };
@@ -250,24 +397,17 @@ export function CreateAccountForm({
           >
             Status <span className="text-danger-500">*</span>
           </label>
-          <select
+          <Select
             id="status"
             value={formData.status}
-            onChange={(e) =>
-              handleChange('status', e.target.value as AccountStatus)
-            }
-            className="font-inherit cursor-pointer appearance-none rounded-lg border border-white/20 bg-white/10 bg-[url('data:image/svg+xml,%3Csvg_xmlns=\\'http://www.w3.org/2000/svg\\'_width=\\'12\\'_height=\\'12\\'_viewBox=\\'0_0_12_12\\'%3E%3Cpath_fill=\\'white\\'_d=\\'M6_9L1_4h10z\\'/%3E%3C/svg%3E')] bg-[right_1rem_center] bg-no-repeat px-4 py-3.5 pr-10 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none"
-          >
-            {ACCOUNT_STATUSES.map((status) => (
-              <option
-                key={status}
-                value={status}
-                className="bg-neutral-900 text-white"
-              >
-                {status.replace('_', ' ').toUpperCase()}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => handleChange('status', v as AccountStatus)}
+            options={ACCOUNT_STATUSES.map((s) => ({
+              value: s,
+              label: s.replace('_', ' ').toUpperCase(),
+            }))}
+            disabled={isSubmitting}
+            aria-label="Account status"
+          />
         </div>
       </div>
 
@@ -330,76 +470,99 @@ export function CreateAccountForm({
         >
           Currency <span className="text-danger-500">*</span>
         </label>
-        <select
+        <Select
           id="currency"
           value={formData.currency}
-          onChange={(e) => handleChange('currency', e.target.value)}
-          className="font-inherit cursor-pointer appearance-none rounded-lg border border-white/20 bg-white/10 bg-[url('data:image/svg+xml,%3Csvg_xmlns=\\'http://www.w3.org/2000/svg\\'_width=\\'12\\'_height=\\'12\\'_viewBox=\\'0_0_12_12\\'%3E%3Cpath_fill=\\'white\\'_d=\\'M6_9L1_4h10z\\'/%3E%3C/svg%3E')] bg-[right_1rem_center] bg-no-repeat px-4 py-3.5 pr-10 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none"
+          onChange={(v) => handleChange('currency', v)}
+          options={[
+            { value: 'COP', label: 'COP (Colombian Peso)' },
+            { value: 'USD', label: 'USD (US Dollar)' },
+          ]}
+          disabled={isSubmitting}
+          aria-label="Currency"
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label
+          htmlFor="totalAmountRemaining"
+          className="text-sm font-semibold uppercase tracking-wide text-white/90"
         >
-          <option value="COP" className="bg-neutral-900 text-white">
-            COP (Colombian Peso)
-          </option>
-          <option value="USD" className="bg-neutral-900 text-white">
-            USD (US Dollar)
-          </option>
-        </select>
+          Total Amount Remaining <span className="text-danger-500">*</span>
+        </label>
+        <input
+          id="totalAmountRemaining"
+          type="number"
+          step="0.01"
+          min="0"
+          value={formData.totalAmountRemaining}
+          onChange={(e) => handleChange('totalAmountRemaining', e.target.value)}
+          className={`font-inherit rounded-lg border bg-white/10 px-4 py-3.5 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] placeholder:text-white/40 focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none ${
+            errors.totalAmountRemaining
+              ? 'border-danger-500 bg-danger-500/10'
+              : 'border-white/20'
+          }`}
+          placeholder="0.00"
+        />
+        {errors.totalAmountRemaining && (
+          <span className="mt-1 text-sm font-medium text-danger-500">
+            {errors.totalAmountRemaining}
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-6">
         <div className="flex flex-col gap-2">
           <label
-            htmlFor="totalAmountRemaining"
+            htmlFor="paymentAmount"
             className="text-sm font-semibold uppercase tracking-wide text-white/90"
           >
-            Total Amount Remaining <span className="text-danger-500">*</span>
+            Payment Amount <span className="text-danger-500">*</span>
           </label>
           <input
-            id="totalAmountRemaining"
+            id="paymentAmount"
             type="number"
             step="0.01"
             min="0"
-            value={formData.totalAmountRemaining}
-            onChange={(e) =>
-              handleChange('totalAmountRemaining', e.target.value)
-            }
+            value={formData.paymentAmount}
+            onChange={(e) => handleChange('paymentAmount', e.target.value)}
             className={`font-inherit rounded-lg border bg-white/10 px-4 py-3.5 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] placeholder:text-white/40 focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none ${
-              errors.totalAmountRemaining
+              errors.paymentAmount
                 ? 'border-danger-500 bg-danger-500/10'
                 : 'border-white/20'
             }`}
             placeholder="0.00"
           />
-          {errors.totalAmountRemaining && (
+          {errors.paymentAmount && (
             <span className="mt-1 text-sm font-medium text-danger-500">
-              {errors.totalAmountRemaining}
+              {errors.paymentAmount}
             </span>
           )}
         </div>
 
         <div className="flex flex-col gap-2">
           <label
-            htmlFor="monthlyPayment"
+            htmlFor="paymentFrequency"
             className="text-sm font-semibold uppercase tracking-wide text-white/90"
           >
-            Monthly Payment <span className="text-danger-500">*</span>
+            Frequency <span className="text-danger-500">*</span>
           </label>
-          <input
-            id="monthlyPayment"
-            type="number"
-            step="0.01"
-            min="0"
-            value={formData.monthlyPayment}
-            onChange={(e) => handleChange('monthlyPayment', e.target.value)}
-            className={`font-inherit rounded-lg border bg-white/10 px-4 py-3.5 text-base text-white backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] placeholder:text-white/40 focus:border-white/40 focus:bg-white/15 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.1)] focus:outline-none ${
-              errors.monthlyPayment
-                ? 'border-danger-500 bg-danger-500/10'
-                : 'border-white/20'
-            }`}
-            placeholder="0.00"
+          <Select
+            id="paymentFrequency"
+            value={formData.paymentFrequency}
+            onChange={(v) => handleChange('paymentFrequency', v)}
+            options={FREQUENCIES.map((f) => ({
+              value: f,
+              label: f
+                .replace('_', ' ')
+                .replace(/\b\w/g, (l) => l.toUpperCase()),
+            }))}
+            disabled={isSubmitting}
+            aria-label="Payment Frequency"
           />
-          {errors.monthlyPayment && (
+          {errors.paymentFrequency && (
             <span className="mt-1 text-sm font-medium text-danger-500">
-              {errors.monthlyPayment}
+              {errors.paymentFrequency}
             </span>
           )}
         </div>

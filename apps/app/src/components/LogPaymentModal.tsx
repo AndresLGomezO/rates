@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
 import type { FinancialAccount, PaymentPeriod } from '@rates/firebase-client';
+import {
+  isInstallmentLoan,
+  isRevolvingCredit,
+  isBill,
+} from '@rates/firebase-client';
 import { Modal } from './Modal';
 import { logPayment } from '../services/financialAccounts';
 import { logPaymentToPeriod } from '../services/paymentPeriods';
@@ -33,14 +38,26 @@ export function LogPaymentModal({
       today.setHours(0, 0, 0, 0);
       setPaymentDate(today.toISOString().split('T')[0]);
 
-      // Set default amount based on period if available, otherwise use monthly payment
+      // Set default amount based on period if available, otherwise use account-specific payment
       if (period) {
         // Use remaining amount for this period, or the period amount if nothing paid yet
         const defaultAmount =
           Math.max(0, period.amount - period.amountPaid) || period.amount;
         setPaymentAmount(defaultAmount.toString());
       } else {
-        setPaymentAmount(account.monthlyPayment.amount.toString());
+        // Get default payment amount based on account type
+        let defaultAmount = 0;
+        if (isInstallmentLoan(account)) {
+          defaultAmount = account.scheduledPayment?.amount ?? 0;
+        } else if (isRevolvingCredit(account)) {
+          defaultAmount =
+            account.userPlannedPayment?.amount ??
+            account.currentMinimumPayment?.amount ??
+            0;
+        } else if (isBill(account)) {
+          defaultAmount = account.recurringAmount?.amount ?? 0;
+        }
+        setPaymentAmount(defaultAmount.toString());
       }
       setNotes('');
       setError(null);
@@ -84,17 +101,21 @@ export function LogPaymentModal({
 
       // If we have a specific period, log directly to that period
       if (period) {
-        await logPaymentToPeriod(account.accountNumber, period.periodNumber, {
-          datePaid: date,
-          amount: amount,
-          currency: account.monthlyPayment.currency,
-          notes: notes?.trim() || undefined,
-        });
+        await logPaymentToPeriod(
+          account.accountNumber ?? '',
+          period.periodNumber,
+          {
+            datePaid: date,
+            amount: amount,
+            currency: account.currency,
+            notes: notes?.trim() || undefined,
+          }
+        );
       } else {
         // Fallback to general account payment logging
-        await logPayment(account.accountNumber, {
+        await logPayment(account.accountNumber ?? '', {
           valuePaid: amount,
-          currency: account.monthlyPayment.currency,
+          currency: account.currency,
           datePaid: date,
           notes: notes?.trim() || undefined,
         });
@@ -140,20 +161,49 @@ export function LogPaymentModal({
   };
 
   // Use period-specific information if available, otherwise use account info
+  // Get type-specific fields
+  let accountNextDueDate: Date | undefined;
+  let accountPaymentAmount = 0;
+  let accountRemainingBalance = 0;
+
+  if (isInstallmentLoan(account)) {
+    accountNextDueDate =
+      account.nextDueDate instanceof Date
+        ? account.nextDueDate
+        : account.nextDueDate?.toDate();
+    accountPaymentAmount = account.scheduledPayment?.amount ?? 0;
+    accountRemainingBalance = account.currentPrincipal?.amount ?? 0;
+  } else if (isRevolvingCredit(account)) {
+    accountNextDueDate =
+      account.nextDueDate instanceof Date
+        ? account.nextDueDate
+        : account.nextDueDate?.toDate();
+    accountPaymentAmount =
+      account.userPlannedPayment?.amount ??
+      account.currentMinimumPayment?.amount ??
+      0;
+    accountRemainingBalance = account.currentBalance.amount;
+  } else if (isBill(account)) {
+    accountNextDueDate =
+      account.nextDueDate instanceof Date
+        ? account.nextDueDate
+        : account.nextDueDate?.toDate();
+    accountPaymentAmount = account.recurringAmount?.amount ?? 0;
+    accountRemainingBalance = 0; // Bills don't have a remaining balance
+  }
+
   const periodDueDate = period
     ? period.dueDate instanceof Date
       ? period.dueDate
       : period.dueDate.toDate()
-    : account.nextDueDate instanceof Date
-      ? account.nextDueDate
-      : account.nextDueDate.toDate();
+    : (accountNextDueDate ?? new Date());
 
-  const periodAmount = period ? period.amount : account.monthlyPayment.amount;
+  const periodAmount = period ? period.amount : accountPaymentAmount;
   const periodAmountPaid = period ? period.amountPaid : 0;
   const periodAmountRemaining = period
     ? Math.max(0, period.amount - period.amountPaid)
-    : account.totalAmountRemaining.amount;
-  const currency = period ? period.currency : account.monthlyPayment.currency;
+    : accountRemainingBalance;
+  const currency = period ? period.currency : account.currency;
 
   return (
     <Modal
@@ -188,7 +238,7 @@ export function LogPaymentModal({
           )}
           <div className="flex items-center justify-between border-b border-white/5 py-3 last:border-b-0">
             <span className="text-sm font-medium text-white/70">
-              {period ? 'Period Amount:' : 'Monthly Payment:'}
+              {period ? 'Period Amount:' : 'Expected Payment:'}
             </span>
             <span className="text-base font-semibold text-white/95">
               {formatCurrency(periodAmount, currency)}

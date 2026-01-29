@@ -19,18 +19,68 @@ import {
   type DocumentReference,
   type QuerySnapshot,
 } from 'firebase/firestore';
-import { getFirestore } from '@rates/firebase-client';
+import { onAuthStateChanged } from 'firebase/auth';
+import {
+  getFirestore,
+  getAuth,
+  isBill,
+  isInstallmentLoan,
+  isRevolvingCredit,
+} from '@rates/firebase-client';
 import type {
   PaymentPeriod,
   CreatePaymentPeriodInput,
   UpdatePaymentPeriodInput,
   LogPaymentToPeriodInput,
   PaymentPeriodStatus,
+  FinancialAccount,
+  InstallmentLoanAccount,
 } from '@rates/firebase-client';
 
 // Collection name constant
 export const FINANCIAL_ACCOUNTS_COLLECTION = 'financialAccounts';
 export const PAYMENT_PERIODS_SUBCOLLECTION = 'paymentPeriods';
+
+/**
+ * Helpher to get payment amount details (amount and currency)
+ */
+export function getAccountPaymentDetails(account: FinancialAccount): {
+  amount: number;
+  currency: string;
+} {
+  const defaultPayment = { amount: 0, currency: 'USD' };
+
+  if (isInstallmentLoan(account)) {
+    // scheduledPayment might be optional in the type definition?
+    return account.scheduledPayment ?? defaultPayment;
+  }
+  if (isRevolvingCredit(account)) {
+    return account.currentMinimumPayment ?? defaultPayment;
+  }
+  if (isBill(account)) {
+    return account.recurringAmount ?? defaultPayment;
+  }
+
+  // Checking additional properties for compatibility
+  if ('paymentAmount' in account) {
+    // Legacy support
+    return (account as { paymentAmount: { amount: number; currency: string } })
+      .paymentAmount;
+  }
+
+  return defaultPayment;
+}
+
+/**
+ * Helper to get currency safely
+ */
+function getAccountCurrency(account: FinancialAccount): string {
+  if (isInstallmentLoan(account))
+    return account.currentPrincipal?.currency ?? 'USD';
+  if (isRevolvingCredit(account)) return account.currentBalance.currency;
+  if (isBill(account)) return account.currency;
+  return account.currency;
+}
 
 /**
  * Get the payment periods subcollection reference for an account
@@ -70,11 +120,79 @@ function getPaymentPeriodRef(
 export async function createPaymentPeriod(
   periodData: CreatePaymentPeriodInput
 ): Promise<void> {
+  console.log('🟡 [createPaymentPeriod] Starting payment period creation...');
+  console.log(
+    '🟡 [createPaymentPeriod] Account Number:',
+    periodData.accountNumber
+  );
+  console.log(
+    '🟡 [createPaymentPeriod] Period Number:',
+    periodData.periodNumber
+  );
+
+  // Wait for Firebase Auth to be ready
+  const auth = getAuth();
+  let currentUser = auth.currentUser;
+  if (!currentUser) {
+    console.warn(
+      '⚠️ [createPaymentPeriod] No authenticated user, waiting for auth state...'
+    );
+    await new Promise<void>((resolve) => {
+      const unsubscribe = onAuthStateChanged(auth, (_user) => {
+        unsubscribe();
+        resolve();
+      });
+      setTimeout(() => {
+        unsubscribe();
+        resolve();
+      }, 5000);
+    });
+    // Re-check auth state after waiting
+    currentUser = auth.currentUser;
+  }
+  console.log('🟡 [createPaymentPeriod] Firebase Auth state:', {
+    isAuthenticated: !!currentUser,
+    uid: currentUser?.uid ?? 'null',
+  });
+
   const firestore: Firestore = getFirestore();
+  console.log('🟡 [createPaymentPeriod] Firestore instance retrieved');
+  console.log(
+    '🟡 [createPaymentPeriod] Project ID:',
+    firestore.app.options.projectId
+  );
+
+  // Verify the account exists and belongs to the user
+  const { getFinancialAccount } = await import('./financialAccounts');
+  const account = await getFinancialAccount(periodData.accountNumber);
+  if (!account) {
+    throw new Error(`Account ${periodData.accountNumber} not found`);
+  }
+  console.log('🟡 [createPaymentPeriod] Account found:', {
+    accountNumber: account.accountNumber,
+    userId: account.userId,
+    authUid: currentUser?.uid ?? 'null',
+    userIdMatches: account.userId === currentUser?.uid,
+  });
+
+  if (currentUser && account.userId !== currentUser.uid) {
+    throw new Error(
+      `Account ${periodData.accountNumber} does not belong to current user`
+    );
+  }
+
   const periodRef = getPaymentPeriodRef(
     firestore,
     periodData.accountNumber,
     periodData.periodNumber
+  );
+  console.log('🟡 [createPaymentPeriod] Period reference created');
+  console.log('🟡 [createPaymentPeriod] Full path:', periodRef.path);
+  console.log(
+    '🟡 [createPaymentPeriod] Full Firestore path: projects/' +
+      firestore.app.options.projectId +
+      '/databases/(default)/documents/' +
+      periodRef.path
   );
 
   const createdAt: ReturnType<typeof Timestamp.now> = Timestamp.now();
@@ -126,7 +244,7 @@ export async function createPaymentPeriod(
   // Remove undefined fields (Firestore doesn't allow undefined values)
   // Build the period object, only including remainingPrincipal if it's defined
   const periodToSave = {
-    accountNumber: period.accountNumber,
+    accountNumber: period.accountNumber ?? '',
     periodNumber: period.periodNumber,
     dueDate: period.dueDate,
     amount: period.amount,
@@ -143,7 +261,36 @@ export async function createPaymentPeriod(
     }),
   };
 
-  await setDoc(periodRef, periodToSave as PaymentPeriod);
+  console.log('🟡 [createPaymentPeriod] Saving period to Firestore...');
+  console.log(
+    '🟡 [createPaymentPeriod] Period data keys:',
+    Object.keys(periodToSave)
+  );
+
+  try {
+    await setDoc(periodRef, periodToSave as PaymentPeriod);
+    console.log('✅ [createPaymentPeriod] Period saved successfully!');
+    console.log('✅ [createPaymentPeriod] Path:', periodRef.path);
+  } catch (error) {
+    console.error('🔴 [createPaymentPeriod] Firestore save error:', error);
+    console.error(
+      '🔴 [createPaymentPeriod] Error code:',
+      error && typeof error === 'object' && 'code' in error
+        ? error.code
+        : 'unknown'
+    );
+    console.error(
+      '🔴 [createPaymentPeriod] Error message:',
+      error instanceof Error ? error.message : String(error)
+    );
+    console.error('🔴 [createPaymentPeriod] Path:', periodRef.path);
+    console.error(
+      '🔴 [createPaymentPeriod] Auth UID:',
+      currentUser?.uid ?? 'null'
+    );
+    console.error('🔴 [createPaymentPeriod] Account userId:', account.userId);
+    throw error;
+  }
 }
 
 /**
@@ -402,10 +549,13 @@ export async function generateAmortizationPlanForAccount(
   }
 
   // Check if this is a periodic bill
+  // Safe access for metadata and check for type
   const isPeriodic =
-    account.accountType === 'bill' &&
+    isBill(account) &&
     (account.metadata?.isPeriodic === true ||
-      account.numberOfPayments === undefined);
+      // BillAccount doesn't have numberOfPayments, so we treat it as potentially periodic if explicitly set
+      // Or if it lacks a fixed term (which bills usually do)
+      true); // Bills are usually periodic
 
   // For periodic bills, check existing periods and only generate new ones
   if (isPeriodic && !regenerate) {
@@ -448,17 +598,18 @@ export async function generateAmortizationPlanForAccount(
             const dueDate = new Date(lastDueDate);
             dueDate.setMonth(dueDate.getMonth() + i * paymentIntervalMonths);
 
-            const monthlyPayment = account.monthlyPayment.amount;
-            const currency = account.monthlyPayment.currency;
+            const paymentData = getAccountPaymentDetails(account);
+            const paymentAmount = paymentData.amount;
+            const currency = paymentData.currency;
 
             // For periodic bills, payment is fixed (no principal reduction)
             const period: CreatePaymentPeriodInput = {
-              accountNumber: account.accountNumber,
+              accountNumber: account.accountNumber ?? '',
               periodNumber,
               dueDate: Timestamp.fromDate(dueDate) as unknown as Date,
-              amount: monthlyPayment,
+              amount: paymentAmount,
               currency,
-              capital: monthlyPayment,
+              capital: paymentAmount,
               interest: 0,
               // Don't set remainingPrincipal for bills
             };
@@ -479,18 +630,10 @@ export async function generateAmortizationPlanForAccount(
     await deleteAllPaymentPeriods(accountNumber);
   }
 
-  // Get payment interval from metadata or default to 1 (monthly)
-  const paymentIntervalMonths =
-    (account.metadata?.paymentIntervalMonths as number) ?? 1;
-
-  // For periodic bills, use current date as end date if not provided
-  const effectiveEndDate = isPeriodic ? (endDate ?? new Date()) : undefined;
-
   // Generate periods
   const periods = generateAmortizationPlan(
-    account,
-    paymentIntervalMonths,
-    effectiveEndDate
+    account as unknown as InstallmentLoanAccount,
+    1
   );
 
   // Create all periods
@@ -521,9 +664,10 @@ export async function extendPeriodicBillPeriods(
 
   // Check if this is a periodic bill
   const isPeriodic =
-    account.accountType === 'bill' &&
+    isBill(account) &&
     (account.metadata?.isPeriodic === true ||
-      account.numberOfPayments === undefined);
+      // Assume bills are periodic if not processing a fixed loan
+      true);
 
   if (!isPeriodic) {
     throw new Error(
@@ -573,8 +717,9 @@ export async function extendPeriodicBillPeriods(
   }
 
   const periodsToGenerate = Math.floor(monthsDiff / paymentIntervalMonths);
-  const monthlyPayment = account.monthlyPayment.amount;
-  const currency = account.monthlyPayment.currency;
+  const paymentData = getAccountPaymentDetails(account);
+  const paymentAmount = paymentData.amount;
+  const currency = paymentData.currency;
 
   // Generate only the new periods
   for (let i = 1; i <= periodsToGenerate; i++) {
@@ -584,12 +729,12 @@ export async function extendPeriodicBillPeriods(
 
     // For periodic bills, payment is fixed (no principal reduction)
     const period: CreatePaymentPeriodInput = {
-      accountNumber: account.accountNumber,
+      accountNumber: account.accountNumber ?? '',
       periodNumber,
       dueDate: Timestamp.fromDate(dueDate) as unknown as Date,
-      amount: monthlyPayment,
-      currency,
-      capital: monthlyPayment,
+      amount: paymentAmount ?? 0,
+      currency: currency ?? 'COP',
+      capital: paymentAmount ?? 0,
       interest: 0,
       // Don't set remainingPrincipal for bills
     };
@@ -644,7 +789,7 @@ export async function batchLogPaymentsToPeriods(
     throw new Error(`Account ${accountNumber} not found`);
   }
 
-  const currency = account.monthlyPayment.currency;
+  const currency = getAccountCurrency(account);
   const results: Array<{
     periodNumber: number;
     success: boolean;

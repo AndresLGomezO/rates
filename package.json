@@ -29,7 +29,21 @@
     "docker:emulators:restart": "docker-compose -f docker/docker-compose.yml restart",
     "docker:emulators:build": "docker-compose -f docker/docker-compose.yml build",
     "docker:emulators:clean": "docker-compose -f docker/docker-compose.yml down -v",
-    "docker:emulators:check": "docker/check-emulators.sh"
+    "docker:emulators:check": "docker/check-emulators.sh",
+    "deploy": "./infra/build-and-push.sh",
+    "deploy:dev": "./infra/build-and-push.sh dev latest --deploy",
+    "deploy:dev:app": "./infra/build-and-push.sh dev latest --deploy --only app",
+    "deploy:dev:auth-app": "./infra/build-and-push.sh dev latest --deploy --only auth-app",
+    "deploy:prod": "./infra/build-and-push.sh prod latest --deploy",
+    "deploy:prod:app": "./infra/build-and-push.sh prod latest --deploy --only app",
+    "deploy:prod:auth-app": "./infra/build-and-push.sh prod latest --deploy --only auth-app",
+    "build-push": "./infra/build-and-push.sh",
+    "build-push:dev": "./infra/build-and-push.sh dev",
+    "build-push:dev:app": "./infra/build-and-push.sh dev --only app",
+    "build-push:dev:auth-app": "./infra/build-and-push.sh dev --only auth-app",
+    "build-push:prod": "./infra/build-and-push.sh prod",
+    "build-push:prod:app": "./infra/build-and-push.sh prod --only app",
+    "build-push:prod:auth-app": "./infra/build-and-push.sh prod --only auth-app"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.23",

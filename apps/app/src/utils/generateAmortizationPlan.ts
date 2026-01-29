@@ -6,6 +6,11 @@
 
 import { generateAmortizationPlanForAccount } from '../services/paymentPeriods';
 import { getUserFinancialAccounts } from '../services/financialAccounts';
+import {
+  isInstallmentLoan,
+  isBill,
+  isRevolvingCredit,
+} from '@rates/firebase-client';
 
 /**
  * Generate amortization plan for a single account
@@ -32,12 +37,27 @@ export async function generatePlansForAllAccounts(
   const errors: Array<{ account: string; error: string }> = [];
 
   for (const account of accounts) {
-    // Only generate for accounts with required fields
-    if (!account.startDate || !account.numberOfPayments) {
-      errors.push({
-        account: account.accountNumber,
-        error: 'Missing startDate or numberOfPayments',
-      });
+    // Only generate for accounts with required fields based on type
+    let shouldGenerate = false;
+
+    if (isInstallmentLoan(account)) {
+      // Installment loans need start date and term
+      if (account.contractStartDate && account.termInPayments) {
+        shouldGenerate = true;
+      }
+    } else if (isBill(account)) {
+      // Bills generate if periodic (logic handled in service, but we can verify here)
+      // or just let the service decide.
+      shouldGenerate = true;
+    } else if (isRevolvingCredit(account)) {
+      // Revolving credit usually doesn't have a fixed amortization plan generated upfront
+      // unless we implementing a specific "payoff plan" feature, but standard logic doesn't require it.
+      // However, if we want to generate periods for "minimum payments" maybe?
+      // For now, let's assume NO for revolving credit unless specified.
+      shouldGenerate = false;
+    }
+
+    if (!shouldGenerate || !account.accountNumber) {
       continue;
     }
 
@@ -64,6 +84,7 @@ export async function generatePlansForAllAccounts(
       await generateAmortizationPlanForAccount(account.accountNumber);
       success.push(account.accountNumber);
     } catch (error) {
+      // Log but don't fail entire batch
       errors.push({
         account: account.accountNumber,
         error: error instanceof Error ? error.message : String(error),

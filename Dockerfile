@@ -53,7 +53,49 @@ COPY packages/ui-theme ./packages/ui-theme
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
-RUN pnpm --filter=auth-app build:api
+# Build arguments for environment variables (can be overridden at build time)
+ARG VITE_FIREBASE_MODE=live
+ARG VITE_USE_FIREBASE_EMULATOR=false
+ARG VITE_ALLOWED_REDIRECTS
+ARG VITE_DEFAULT_RETURN_URL
+ARG VITE_NONCE_SECRET
+ARG VITE_FIREBASE_API_KEY
+ARG VITE_FIREBASE_AUTH_DOMAIN
+ARG VITE_FIREBASE_PROJECT_ID
+ARG VITE_FIREBASE_STORAGE_BUCKET
+ARG VITE_FIREBASE_MESSAGING_SENDER_ID
+ARG VITE_FIREBASE_APP_ID
+ARG VITE_FIREBASE_MEASUREMENT_ID
+
+# Set environment variables for the build
+ENV VITE_FIREBASE_MODE=${VITE_FIREBASE_MODE}
+ENV VITE_USE_FIREBASE_EMULATOR=${VITE_USE_FIREBASE_EMULATOR}
+ENV VITE_ALLOWED_REDIRECTS=${VITE_ALLOWED_REDIRECTS}
+ENV VITE_DEFAULT_RETURN_URL=${VITE_DEFAULT_RETURN_URL}
+ENV VITE_NONCE_SECRET=${VITE_NONCE_SECRET}
+ENV VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY}
+ENV VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN}
+ENV VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID}
+ENV VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET}
+ENV VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID}
+ENV VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID}
+ENV VITE_FIREBASE_MEASUREMENT_ID=${VITE_FIREBASE_MEASUREMENT_ID}
+
+# Create .env.production file for Vite to read
+RUN echo "VITE_FIREBASE_MODE=${VITE_FIREBASE_MODE}" > /app/apps/auth-app/.env.production && \
+    echo "VITE_USE_FIREBASE_EMULATOR=${VITE_USE_FIREBASE_EMULATOR}" >> /app/apps/auth-app/.env.production && \
+    echo "VITE_ALLOWED_REDIRECTS=${VITE_ALLOWED_REDIRECTS}" >> /app/apps/auth-app/.env.production && \
+    echo "VITE_DEFAULT_RETURN_URL=${VITE_DEFAULT_RETURN_URL}" >> /app/apps/auth-app/.env.production && \
+    echo "VITE_NONCE_SECRET=${VITE_NONCE_SECRET}" >> /app/apps/auth-app/.env.production && \
+    echo "VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY}" >> /app/apps/auth-app/.env.production && \
+    echo "VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN}" >> /app/apps/auth-app/.env.production && \
+    echo "VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID}" >> /app/apps/auth-app/.env.production && \
+    echo "VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET}" >> /app/apps/auth-app/.env.production && \
+    echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID}" >> /app/apps/auth-app/.env.production && \
+    echo "VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID}" >> /app/apps/auth-app/.env.production && \
+    echo "VITE_FIREBASE_MEASUREMENT_ID=${VITE_FIREBASE_MEASUREMENT_ID}" >> /app/apps/auth-app/.env.production
+
+RUN pnpm --filter=auth-app build --mode production
 
 # ----------------------------------------------------------------------------
 # Stage 3: Production

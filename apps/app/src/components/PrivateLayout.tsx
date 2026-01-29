@@ -1,6 +1,7 @@
 import { useState, useEffect, type PropsWithChildren } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { DebugIndicator } from './DebugIndicator';
 import { SearchBar } from './SearchBar';
 
 const ACCOUNT_TYPES = [
@@ -208,16 +209,19 @@ export function PrivateLayout({ children }: PropsWithChildren) {
         </nav>
         <div className="relative border-t border-neutral-700/30 p-6 before:absolute before:left-6 before:right-6 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-neutral-600/40 before:to-transparent before:content-['']">
           {(sidebarExpanded || isMobileMenuOpen) && (
-            <button
-              className="before:duration-600 relative w-full cursor-pointer overflow-hidden rounded-lg border border-neutral-600/40 bg-white/15 px-5 py-3.5 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(10,14,26,0.3)] backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:left-1/2 before:top-1/2 before:h-0 before:w-0 before:-translate-x-1/2 before:-translate-y-1/2 before:rounded-full before:bg-white/20 before:transition-[width,height] before:content-[''] hover:-translate-y-0.5 hover:border-neutral-500/50 hover:bg-white/25 hover:shadow-[0_6px_20px_rgba(10,14,26,0.4)] hover:before:h-[300px] hover:before:w-[300px] active:translate-y-0"
-              onClick={() => {
-                void signOut();
-                closeMobileMenu();
-              }}
-            >
-              <span className="mr-2 text-lg">🚪</span>
-              Sign Out
-            </button>
+            <>
+              <DebugIndicator position="inline" />
+              <button
+                className="before:duration-600 relative w-full cursor-pointer overflow-hidden rounded-lg border border-neutral-600/40 bg-white/15 px-5 py-3.5 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(10,14,26,0.3)] backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:left-1/2 before:top-1/2 before:h-0 before:w-0 before:-translate-x-1/2 before:-translate-y-1/2 before:rounded-full before:bg-white/20 before:transition-[width,height] before:content-[''] hover:-translate-y-0.5 hover:border-neutral-500/50 hover:bg-white/25 hover:shadow-[0_6px_20px_rgba(10,14,26,0.4)] hover:before:h-[300px] hover:before:w-[300px] active:translate-y-0"
+                onClick={() => {
+                  void signOut();
+                  closeMobileMenu();
+                }}
+              >
+                <span className="mr-2 text-lg">🚪</span>
+                Sign Out
+              </button>
+            </>
           )}
           {!(sidebarExpanded || isMobileMenuOpen) && (
             <button
@@ -234,10 +238,10 @@ export function PrivateLayout({ children }: PropsWithChildren) {
         </div>
       </aside>
       <main
-        className={`duration-400 relative z-[1] flex h-screen max-h-screen min-h-screen flex-col overflow-hidden bg-transparent transition-[margin-left,width] ease-[cubic-bezier(0.4,0,0.2,1)] ${
+        className={`duration-400 relative z-[1] flex h-screen max-h-screen min-h-screen min-w-0 flex-col overflow-hidden bg-transparent transition-[margin-left,width] ease-[cubic-bezier(0.4,0,0.2,1)] ${
           sidebarExpanded
-            ? 'ml-0 md:ml-[280px] md:w-[calc(100%-280px)] lg:ml-[280px] lg:w-[calc(100%-280px)]'
-            : 'ml-0 md:ml-20 md:w-[calc(100%-80px)] lg:ml-20 lg:w-[calc(100%-80px)]'
+            ? 'ml-0 w-full md:ml-[280px] md:w-[calc(100%-280px)] lg:ml-[280px] lg:w-[calc(100%-280px)]'
+            : 'ml-0 w-full md:ml-20 md:w-[calc(100%-80px)] lg:ml-20 lg:w-[calc(100%-80px)]'
         }`}
       >
         {/* Mobile header with hamburger and search */}
@@ -265,7 +269,7 @@ export function PrivateLayout({ children }: PropsWithChildren) {
         <div className="hidden md:block">
           <SearchBar />
         </div>
-        <div className="main-scrollbar mx-auto box-border w-full max-w-full flex-1 overflow-y-auto overflow-x-hidden px-10 py-10 md:p-6">
+        <div className="main-scrollbar mx-auto box-border min-h-0 w-full min-w-0 max-w-full flex-1 overflow-y-auto overflow-x-hidden px-6 py-5 md:p-6">
           {children}
         </div>
       </main>

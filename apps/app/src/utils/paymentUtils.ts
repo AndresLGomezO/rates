@@ -5,8 +5,45 @@
  */
 
 import type { FinancialAccount, PaymentPeriod } from '@rates/firebase-client';
-import { getMonthString } from '@rates/firebase-client';
+import {
+  getMonthString,
+  isInstallmentLoan,
+  isRevolvingCredit,
+  isBill,
+} from '@rates/firebase-client';
 import { getPaymentPeriods } from '../services/paymentPeriods';
+
+// Helper to safely convert Timestamp/Date to Date
+function toDate(
+  date: Date | { toDate: () => Date } | undefined | null
+): Date | undefined {
+  if (!date) return undefined;
+  if (date instanceof Date) return date;
+  if ('toDate' in date && typeof date.toDate === 'function') {
+    return date.toDate();
+  }
+  return undefined;
+}
+
+/**
+ * Helper to safely get the next due date from any account type
+ */
+function getAccountNextDueDate(account: FinancialAccount): Date | undefined {
+  if (isInstallmentLoan(account)) return toDate(account.nextDueDate);
+  if (isRevolvingCredit(account)) return toDate(account.nextDueDate);
+  if (isBill(account)) return toDate(account.nextDueDate);
+  // Other accounts don't have nextDueDate
+  return undefined;
+}
+
+/**
+ * Helper to safely get the start date from any account type
+ */
+function getAccountStartDate(account: FinancialAccount): Date | undefined {
+  if (isInstallmentLoan(account)) return toDate(account.contractStartDate);
+  // For other accounts, we can use createdAt as a fallback for start date
+  return toDate(account.createdAt);
+}
 
 /**
  * Get the current period month in YYYY-MM format
@@ -45,10 +82,13 @@ export function hasPendingPaymentWithinDays(
     return false;
   }
 
+  const dueDate = getAccountNextDueDate(account);
+  if (!dueDate) return false;
+
   const nextDueDate =
-    account.nextDueDate instanceof Date
-      ? account.nextDueDate
-      : account.nextDueDate.toDate();
+    dueDate instanceof Date
+      ? dueDate
+      : (dueDate as { toDate: () => Date }).toDate();
 
   const daysRemaining = calculateDaysRemaining(nextDueDate);
 
@@ -234,20 +274,16 @@ export async function identifyPendingPayments(
 export async function identifyPendingPaymentsForAccount(
   account: FinancialAccount
 ): Promise<PeriodPaymentInfo[]> {
-  let startDate: Date | undefined;
-
-  // Use account's start date if available
-  if (account.startDate) {
-    startDate =
-      account.startDate instanceof Date
-        ? account.startDate
-        : account.startDate.toDate();
-  }
+  const startDate = getAccountStartDate(account);
 
   // Check if this is a bill account
   const isBill = account.accountType === 'bill';
 
-  return identifyPendingPayments(account.accountNumber, startDate, isBill);
+  return identifyPendingPayments(
+    account.accountNumber ?? '',
+    startDate,
+    isBill
+  );
 }
 
 /**
@@ -295,7 +331,7 @@ export async function hasPendingPaymentsFromPeriods(
   }
 
   // Get all payment periods
-  const periods = await getPaymentPeriods(account.accountNumber);
+  const periods = await getPaymentPeriods(account.accountNumber ?? '');
 
   if (periods.length === 0) {
     // If no periods exist, fall back to the old method
@@ -336,16 +372,14 @@ export async function hasPendingPaymentsFromPeriods(
 }
 
 /**
- * Overall payment status for an account
+ * Overall payment status for an account.
+ * Overdue = payments past their due date (already expired).
  */
-export type AccountPaymentStatus =
-  | 'no_pending'
-  | 'pending'
-  | 'delayed'
-  | 'overdue';
+export type AccountPaymentStatus = 'no_pending' | 'pending' | 'overdue';
 
 /**
- * Get the overall payment status for an account based on payment periods
+ * Get the overall payment status for an account based on payment periods.
+ * Overdue and delayed are the same: payments past their due date (already expired).
  *
  * @param paymentPeriods - Array of payment periods for the account
  * @returns The overall payment status
@@ -361,7 +395,6 @@ export function getAccountPaymentStatus(
   today.setHours(0, 0, 0, 0);
 
   let hasOverdue = false;
-  let hasDelayed = false;
   let hasPending = false;
   let allPaid = true;
 
@@ -371,32 +404,20 @@ export function getAccountPaymentStatus(
     const periodDate = new Date(dueDate);
     periodDate.setHours(0, 0, 0, 0);
 
-    const daysPastDue = Math.floor(
-      (today.getTime() - periodDate.getTime()) / (1000 * 60 * 60 * 24)
-    );
     const isOverdue = periodDate < today;
-    const isPaid = period.status === 'paid';
+    const amountDue = period.amount ?? 0;
+    const amountPaid = period.amountPaid ?? 0;
+    const isPaid = period.status === 'paid' || amountPaid >= amountDue;
 
     if (!isPaid) {
       allPaid = false;
     }
 
-    // Check for overdue status (explicitly marked or significantly past due)
-    if (period.status === 'overdue' || (isOverdue && daysPastDue > 30)) {
+    // Overdue = past due date and not fully paid (same as delayed; one concept)
+    if (!isPaid && isOverdue) {
       hasOverdue = true;
-    }
-    // Check for delayed status (past due but not too far)
-    else if (isOverdue && daysPastDue <= 30) {
-      hasDelayed = true;
-    }
-    // Check for pending status (not yet due)
-    else if (period.status === 'pending' || period.status === 'partial') {
-      if (isOverdue) {
-        // This shouldn't happen if logic is correct, but handle it
-        hasDelayed = true;
-      } else {
-        hasPending = true;
-      }
+    } else if (!isPaid && !isOverdue) {
+      hasPending = true;
     }
   }
 
@@ -408,14 +429,9 @@ export function getAccountPaymentStatus(
     return 'overdue';
   }
 
-  if (hasDelayed) {
-    return 'delayed';
-  }
-
   if (hasPending) {
     return 'pending';
   }
 
-  // Default to no pending if we can't determine
   return 'no_pending';
 }

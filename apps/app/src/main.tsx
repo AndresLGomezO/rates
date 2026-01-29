@@ -1,7 +1,12 @@
 // Cloud Build trigger entry point
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Outlet,
+  Navigate,
+} from 'react-router-dom';
 import './firebase'; // Initialize Firebase
 import './index.css';
 import Login from './pages/Login.tsx';
@@ -77,9 +82,7 @@ const router = createBrowserRouter([
         index: true,
         element: (
           <ProtectedRoute>
-            <PrivateLayout>
-              <Dashboard />
-            </PrivateLayout>
+            <Navigate to="/dashboard" replace />
           </ProtectedRoute>
         ),
       },

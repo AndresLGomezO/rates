@@ -18,12 +18,9 @@ const ACCOUNT_TYPES: Array<{
   label: string;
   icon: string;
 }> = [
-  { value: 'loan', label: 'Loans', icon: '💰' },
-  { value: 'credit_card', label: 'Credit Cards', icon: '💳' },
+  { value: 'installment_loan', label: 'Installment Loans', icon: '💰' },
+  { value: 'revolving_credit', label: 'Revolving Credit', icon: '💳' },
   { value: 'bill', label: 'Bills', icon: '📄' },
-  { value: 'mortgage', label: 'Mortgages', icon: '🏠' },
-  { value: 'personal_loan', label: 'Personal Loans', icon: '👤' },
-  { value: 'auto_loan', label: 'Auto Loans', icon: '🚗' },
   { value: 'other', label: 'Other', icon: '📋' },
 ];
 

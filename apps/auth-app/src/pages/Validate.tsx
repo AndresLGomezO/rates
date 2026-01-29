@@ -40,7 +40,7 @@ export default function Validate() {
     try {
       const result = await validateTokenAPI(token, user);
       setValidationResult(result);
-    } catch (error) {
+    } catch (error: unknown) {
       setValidationResult({
         valid: false,
         error: getFriendlyError(error),
@@ -64,7 +64,7 @@ export default function Validate() {
       const token = await user.getIdToken(false);
       const result = await validateTokenAPI(token, user);
       setValidationResult(result);
-    } catch (error) {
+    } catch (error: unknown) {
       setValidationResult({
         valid: false,
         error: getFriendlyError(error),
@@ -85,7 +85,7 @@ export default function Validate() {
         valid: false,
         error: 'Token revoked',
       });
-    } catch (error) {
+    } catch (error: unknown) {
       setValidationResult({
         valid: false,
         error: getFriendlyError(error),

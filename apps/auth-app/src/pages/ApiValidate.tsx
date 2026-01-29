@@ -45,7 +45,7 @@ export default function ApiValidate() {
 
         // Return JSON response
         document.documentElement.innerHTML = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Token Validation API</title></head><body><pre>${JSON.stringify(result, null, 2)}</pre></body></html>`;
-      } catch (error) {
+      } catch (error: unknown) {
         const errorResponse: ValidationResponse = {
           valid: false,
           error: error instanceof Error ? error.message : 'Validation failed',

@@ -10,6 +10,36 @@ import type {
 import type { Timestamp } from 'firebase/firestore';
 
 /**
+ * Format a number in compact form for charts and tight layouts (e.g. 1.000.000 → 1M, 600.000 → 600k).
+ */
+export function formatCompactNumber(value: number): string {
+  const { value: v, suffix: s } = formatCompactNumberParts(value);
+  return v + s;
+}
+
+/**
+ * Like formatCompactNumber but returns { value, suffix } so the suffix (M, k) can be styled smaller.
+ */
+export function formatCompactNumberParts(value: number): {
+  value: string;
+  suffix: string;
+} {
+  const abs = Math.abs(value);
+  const sign = value < 0 ? '-' : '';
+  if (abs >= 1e6) {
+    const n = abs / 1e6;
+    const v = n % 1 === 0 ? n.toString() : n.toFixed(1);
+    return { value: sign + v, suffix: 'M' };
+  }
+  if (abs >= 1e3) {
+    const n = abs / 1e3;
+    const v = n % 1 === 0 ? n.toString() : n.toFixed(1);
+    return { value: sign + v, suffix: 'k' };
+  }
+  return { value: sign + Math.round(abs).toString(), suffix: '' };
+}
+
+/**
  * Format a number as currency based on currency code
  */
 export function formatCurrency(amount: number, currency: CurrencyCode): string {
@@ -114,18 +144,17 @@ export function formatAccountStatus(status: AccountStatus): string {
 }
 
 /**
- * Get color for account payment status
+ * Get color for account payment status.
+ * Overdue = payments past their due date (same as delayed).
  */
 export function getAccountPaymentStatusColor(
-  status: 'no_pending' | 'pending' | 'delayed' | 'overdue'
+  status: 'no_pending' | 'pending' | 'overdue'
 ): string {
   switch (status) {
     case 'no_pending':
       return '#4caf50';
     case 'pending':
       return '#ff9800';
-    case 'delayed':
-      return '#ff5722';
     case 'overdue':
       return '#f44336';
     default:
@@ -134,18 +163,17 @@ export function getAccountPaymentStatusColor(
 }
 
 /**
- * Format account payment status for display
+ * Format account payment status for display.
+ * Overdue = payments past their due date (same as delayed).
  */
 export function formatAccountPaymentStatus(
-  status: 'no_pending' | 'pending' | 'delayed' | 'overdue'
+  status: 'no_pending' | 'pending' | 'overdue'
 ): string {
   switch (status) {
     case 'no_pending':
       return 'No Pending Payments';
     case 'pending':
       return 'Pending';
-    case 'delayed':
-      return 'Delayed';
     case 'overdue':
       return 'Overdue';
     default:

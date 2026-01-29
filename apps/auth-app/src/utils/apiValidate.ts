@@ -10,6 +10,7 @@ export type ValidationResponse = {
   error?: string;
   refreshedToken?: string;
   expiresAt?: number;
+  customToken?: string; // Custom token for Firebase Auth sign-in (client-side)
 };
 
 /**

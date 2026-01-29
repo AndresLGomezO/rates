@@ -33,7 +33,8 @@ const ACCOUNT_DESCRIPTIONS = [
   'Travel rewards credit card',
 ];
 
-const ACCOUNT_TYPES: AccountType[] = [
+// Old types used for mapping index to new types
+const MOCK_TYPES = [
   'personal_loan',
   'credit_card',
   'mortgage',
@@ -76,7 +77,7 @@ function generateDueDate(): Date {
  */
 function generatePaymentLog(
   accountCreatedAt: Date,
-  monthlyPayment: number,
+  paymentAmount: number,
   currency: string,
   numberOfPayments: number
 ): PaymentLogEntry[] {
@@ -94,14 +95,14 @@ function generatePaymentLog(
 
     // Add some randomness to payment amounts (±10%)
     const variance = randomNumber(-10, 10) / 100;
-    const paymentAmount = monthlyPayment * (1 + variance);
+    const amount = paymentAmount * (1 + variance);
 
     payments.push({
       monthPaid: `${paymentDate.getFullYear()}-${String(
         paymentDate.getMonth() + 1
       ).padStart(2, '0')}`,
       datePaid: paymentDate,
-      valuePaid: Math.round(paymentAmount),
+      valuePaid: Math.round(amount),
       currency,
       notes: `Payment ${i + 1}`,
       createdAt: paymentDate,
@@ -118,10 +119,26 @@ export function generateMockFinancialAccount(
   userId: string,
   index: number
 ): FinancialAccount {
-  const accountType = ACCOUNT_TYPES[index % ACCOUNT_TYPES.length];
+  const mockType = MOCK_TYPES[index % MOCK_TYPES.length];
   const accountName = ACCOUNT_NAMES[index % ACCOUNT_NAMES.length];
   const accountDescription =
     ACCOUNT_DESCRIPTIONS[index % ACCOUNT_DESCRIPTIONS.length];
+
+  // Map old types to new types
+  let accountType: AccountType;
+  switch (mockType) {
+    case 'mortgage':
+    case 'auto_loan':
+    case 'personal_loan':
+    case 'loan':
+      accountType = 'installment_loan';
+      break;
+    case 'credit_card':
+      accountType = 'revolving_credit';
+      break;
+    default:
+      accountType = 'installment_loan';
+  }
 
   // Generate account creation date (within last 2 years)
   const twoYearsAgo = new Date();
@@ -130,54 +147,35 @@ export function generateMockFinancialAccount(
 
   // Generate amounts based on account type
   let originalAmount: number;
-  let totalAmountRemaining: number;
-  let monthlyPayment: number;
+  let paymentAmount: number;
   let rate: number;
 
-  switch (accountType) {
+  switch (mockType) {
     case 'mortgage':
       originalAmount = randomNumber(200000000, 500000000); // 200M - 500M COP
-      totalAmountRemaining = randomNumber(
-        originalAmount * 0.3,
-        originalAmount * 0.8
-      );
-      monthlyPayment = randomNumber(2000000, 5000000); // 2M - 5M COP
+      paymentAmount = randomNumber(2000000, 5000000); // 2M - 5M COP
       rate = randomNumber(8, 12); // 8% - 12%
       break;
     case 'auto_loan':
       originalAmount = randomNumber(30000000, 80000000); // 30M - 80M COP
-      totalAmountRemaining = randomNumber(
-        originalAmount * 0.2,
-        originalAmount * 0.7
-      );
-      monthlyPayment = randomNumber(1500000, 3000000); // 1.5M - 3M COP
+      paymentAmount = randomNumber(1500000, 3000000); // 1.5M - 3M COP
       rate = randomNumber(10, 15); // 10% - 15%
       break;
     case 'credit_card':
       originalAmount = randomNumber(5000000, 20000000); // 5M - 20M COP
-      totalAmountRemaining = randomNumber(
-        originalAmount * 0.1,
-        originalAmount * 0.9
-      );
-      monthlyPayment = randomNumber(200000, 1000000); // 200K - 1M COP
+      paymentAmount = randomNumber(200000, 1000000); // 200K - 1M COP
       rate = randomNumber(18, 28); // 18% - 28%
       break;
-    case 'personal_loan':
-    case 'loan':
     default:
       originalAmount = randomNumber(10000000, 50000000); // 10M - 50M COP
-      totalAmountRemaining = randomNumber(
-        originalAmount * 0.2,
-        originalAmount * 0.8
-      );
-      monthlyPayment = randomNumber(500000, 2000000); // 500K - 2M COP
+      paymentAmount = randomNumber(500000, 2000000); // 500K - 2M COP
       rate = randomNumber(12, 20); // 12% - 20%
       break;
   }
 
   // Calculate USD equivalent (roughly 4000 COP = 1 USD)
-  const exchangeRate = 4000;
-  const usdAmount = Math.round(totalAmountRemaining / exchangeRate);
+  // Calculate USD equivalent (roughly 4000 COP = 1 USD)
+  // const usdAmount = Math.round(totalAmountRemaining / 4000); // Unused for now in new schema
 
   // Generate payment log (number of payments made)
   const monthsSinceCreation =
@@ -186,7 +184,7 @@ export function generateMockFinancialAccount(
   const numberOfPayments = Math.max(0, Math.floor(monthsSinceCreation) - 1);
   const paymentLog = generatePaymentLog(
     accountCreatedAt,
-    monthlyPayment,
+    paymentAmount,
     'COP',
     numberOfPayments
   );
@@ -213,37 +211,63 @@ export function generateMockFinancialAccount(
   // Generate next due date
   const nextDueDate = generateDueDate();
 
-  return {
+  const baseAccount = {
     accountNumber: `ACC-${String(index + 1).padStart(4, '0')}`,
     accountName,
     accountDescription,
-    accountType,
     status,
-    totalAmountRemaining: {
-      amount: adjustedTotalRemaining,
-      currency: 'COP',
-    },
-    monthlyPayment: {
-      amount: monthlyPayment,
-      currency: 'COP',
-    },
-    rate,
-    nextDueDate: nextDueDate,
+    currency: 'COP',
     paymentLog,
-    originalAmount: {
-      amount: originalAmount,
-      currency: 'COP',
-    },
-    additionalAmounts: [
-      {
-        amount: usdAmount,
-        currency: 'USD',
-      },
-    ],
-    startDate: accountCreatedAt,
     userId,
     createdAt: accountCreatedAt,
     updatedAt: new Date(),
+  };
+
+  if (accountType === 'installment_loan') {
+    return {
+      ...baseAccount,
+      accountType: 'installment_loan',
+      loanSubtype:
+        mockType === 'mortgage'
+          ? 'mortgage'
+          : mockType === 'auto_loan'
+            ? 'auto'
+            : 'personal',
+      originalPrincipal: { amount: originalAmount, currency: 'COP' },
+      currentPrincipal: { amount: adjustedTotalRemaining, currency: 'COP' },
+      annualInterestRate: rate,
+      paymentFrequency: 'monthly',
+      nextDueDate,
+      termInPayments: 60,
+      scheduledPayment: { amount: paymentAmount, currency: 'COP' },
+      contractStartDate: accountCreatedAt,
+    };
+  } else if (accountType === 'revolving_credit') {
+    return {
+      ...baseAccount,
+      accountType: 'revolving_credit',
+      creditSubtype: 'credit_card',
+      creditLimit: { amount: originalAmount, currency: 'COP' },
+      currentBalance: { amount: adjustedTotalRemaining, currency: 'COP' },
+      purchaseApr: rate,
+      currentMinimumPayment: { amount: paymentAmount, currency: 'COP' },
+      nextDueDate,
+    };
+  }
+
+  // Fallback
+  return {
+    ...baseAccount,
+    accountType: 'installment_loan',
+    loanSubtype: 'personal',
+    originalPrincipal: { amount: originalAmount, currency: 'COP' },
+    currentPrincipal: { amount: adjustedTotalRemaining, currency: 'COP' },
+    annualInterestRate: rate,
+    paymentFrequency: 'monthly',
+    nextDueDate,
+    termInPayments: 60,
+    scheduledPayment: { amount: paymentAmount, currency: 'COP' },
+    contractStartDate: accountCreatedAt,
   };
 }
 

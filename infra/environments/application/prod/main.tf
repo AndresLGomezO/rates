@@ -231,10 +231,12 @@ module "cloud_run_api" {
 
   # Non-sensitive environment variables
   environment_variables = {
-    NODE_ENV    = var.node_env
-    ENVIRONMENT = local.environment
-    PROJECT_ID  = var.project_id
-    REGION      = var.region
+    NODE_ENV                = var.node_env
+    ENVIRONMENT             = local.environment
+    PROJECT_ID              = var.project_id
+    REGION                  = var.region
+    FIREBASE_PROJECT_ID     = var.project_id
+    VITE_FIREBASE_PROJECT_ID = var.project_id
   }
 
   # Ingress Configuration
@@ -319,10 +321,12 @@ module "cloud_run_app" {
 
   # Non-sensitive environment variables
   environment_variables = {
-    NODE_ENV    = var.node_env
-    ENVIRONMENT = local.environment
-    PROJECT_ID  = var.project_id
-    REGION      = var.region
+    NODE_ENV                = var.node_env
+    ENVIRONMENT             = local.environment
+    PROJECT_ID              = var.project_id
+    REGION                  = var.region
+    FIREBASE_PROJECT_ID     = var.project_id
+    VITE_FIREBASE_PROJECT_ID = var.project_id
   }
 
   # Ingress Configuration

@@ -32,6 +32,24 @@ export default function Login() {
 
   const allowedRedirects = useMemo(deriveAllowedRedirects, []);
 
+  // DEBUG: Log config on mount
+  useEffect(() => {
+    console.log('[DEBUG] Login page - Config:', {
+      redirectTo,
+      allowedRedirects,
+      allowedRedirectsArray: Array.from(allowedRedirects),
+      defaultReturnUrl: authConfig.defaultReturnUrl,
+      authConfig,
+      envVars: {
+        VITE_ALLOWED_REDIRECTS: import.meta.env.VITE_ALLOWED_REDIRECTS,
+        VITE_DEFAULT_RETURN_URL: import.meta.env.VITE_DEFAULT_RETURN_URL,
+        VITE_FIREBASE_MODE: import.meta.env.VITE_FIREBASE_MODE,
+        VITE_USE_FIREBASE_EMULATOR: import.meta.env.VITE_USE_FIREBASE_EMULATOR,
+        PROD: import.meta.env.PROD,
+      },
+    });
+  }, [redirectTo, allowedRedirects]);
+
   // Validate nonce on mount
   useEffect(() => {
     void (async () => {
@@ -60,7 +78,7 @@ export default function Login() {
             enableCookie: authConfig.enableCookie,
             nonce,
           });
-        } catch (err) {
+        } catch (err: unknown) {
           setError(getFriendlyError(err));
           setRedirecting(false);
         }
@@ -85,7 +103,7 @@ export default function Login() {
         enableCookie: authConfig.enableCookie,
         nonce,
       });
-    } catch (err) {
+    } catch (err: unknown) {
       setError(getFriendlyError(err));
     } finally {
       setSubmitting(false);
@@ -134,6 +152,105 @@ export default function Login() {
             Cookie name: <strong>{authConfig.cookieName}</strong> · Max age:{' '}
             <strong>{authConfig.cookieMaxAgeSeconds}s</strong>
           </p>
+        </div>
+      </div>
+
+      {/* DEBUG PANEL */}
+      <div
+        className="grid"
+        style={{
+          marginTop: '2rem',
+          padding: '1rem',
+          backgroundColor: '#f0f0f0',
+          border: '2px solid #ff6b6b',
+          borderRadius: '8px',
+        }}
+      >
+        <div
+          className="badge"
+          style={{ backgroundColor: '#ff6b6b', color: 'white' }}
+        >
+          DEBUG INFO - Login Page
+        </div>
+        <div style={{ fontSize: '0.875rem', fontFamily: 'monospace' }}>
+          <div>
+            <strong>Environment Variables (at build time):</strong>
+          </div>
+          <div>
+            VITE_ALLOWED_REDIRECTS:{' '}
+            {import.meta.env.VITE_ALLOWED_REDIRECTS ?? 'NOT SET (undefined)'}
+          </div>
+          <div>
+            VITE_DEFAULT_RETURN_URL:{' '}
+            {import.meta.env.VITE_DEFAULT_RETURN_URL ?? 'NOT SET (undefined)'}
+          </div>
+          <div>
+            VITE_FIREBASE_MODE:{' '}
+            {import.meta.env.VITE_FIREBASE_MODE ?? 'NOT SET (undefined)'}
+          </div>
+          <div>
+            VITE_USE_FIREBASE_EMULATOR:{' '}
+            {import.meta.env.VITE_USE_FIREBASE_EMULATOR ??
+              'NOT SET (undefined)'}
+          </div>
+          <div>PROD: {String(import.meta.env.PROD)}</div>
+          <div style={{ marginTop: '0.5rem' }}>
+            <strong>Parsed Config:</strong>
+          </div>
+          <div>defaultReturnUrl: {authConfig.defaultReturnUrl}</div>
+          <div>
+            allowedRedirects (from config):{' '}
+            {JSON.stringify(authConfig.allowedRedirects)}
+          </div>
+          <div>
+            allowedRedirects (derived):{' '}
+            {JSON.stringify(Array.from(allowedRedirects))}
+          </div>
+          <div style={{ marginTop: '0.5rem' }}>
+            <strong>Current Request:</strong>
+          </div>
+          <div>redirectTo: {redirectTo ?? 'NOT PROVIDED'}</div>
+          {redirectTo &&
+            (() => {
+              try {
+                const redirectUrl = new URL(redirectTo);
+                const redirectOrigin = redirectUrl.origin;
+                const isAllowed = allowedRedirects.includes(redirectOrigin);
+                return (
+                  <>
+                    <div>redirectTo origin: {redirectOrigin}</div>
+                    <div>redirectTo path: {redirectUrl.pathname}</div>
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <strong>Validation:</strong>
+                    </div>
+                    <div>
+                      Allowed origins list:{' '}
+                      {JSON.stringify(Array.from(allowedRedirects))}
+                    </div>
+                    <div>
+                      {isAllowed ? (
+                        <span style={{ color: 'green' }}>
+                          ✓ redirectTo origin IS in allowedRedirects
+                        </span>
+                      ) : (
+                        <span style={{ color: 'red' }}>
+                          ✗ redirectTo origin NOT in allowedRedirects
+                        </span>
+                      )}
+                    </div>
+                  </>
+                );
+              } catch (e: unknown) {
+                return (
+                  <div style={{ color: 'red' }}>
+                    ✗ redirectTo is not a valid URL: {String(e)}
+                  </div>
+                );
+              }
+            })()}
+          <div style={{ marginTop: '0.5rem' }}>
+            <strong>Check browser console for detailed logs</strong>
+          </div>
         </div>
       </div>
 

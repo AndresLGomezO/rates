@@ -25,13 +25,35 @@ const normalize = (value?: string | null) =>
 function isAllowed(target: string, allowedOrigins: string[]) {
   try {
     const targetUrl = new URL(target);
-    return allowedOrigins.some((origin) => {
-      const normalizedOrigin = normalize(origin);
-      return (
-        normalizedOrigin.length > 0 && targetUrl.origin === normalizedOrigin
-      );
+    const targetOrigin = targetUrl.origin;
+
+    // DEBUG: Log validation attempt
+    console.log('[DEBUG] isAllowed check:', {
+      target,
+      targetOrigin,
+      allowedOrigins,
+      normalizedOrigins: allowedOrigins.map(normalize),
     });
-  } catch {
+
+    const result = allowedOrigins.some((origin) => {
+      const normalizedOrigin = normalize(origin);
+      const matches =
+        normalizedOrigin.length > 0 && targetOrigin === normalizedOrigin;
+
+      // DEBUG: Log each comparison
+      console.log('[DEBUG] Comparing:', {
+        normalizedOrigin,
+        targetOrigin,
+        matches,
+      });
+
+      return matches;
+    });
+
+    console.log('[DEBUG] isAllowed result:', result);
+    return result;
+  } catch (error) {
+    console.error('[DEBUG] isAllowed error:', error);
     return false;
   }
 }
@@ -41,13 +63,26 @@ export function resolveRedirect(
   allowed: string[],
   fallback: string
 ) {
+  // DEBUG: Log function call
+  console.log('[DEBUG] resolveRedirect called:', {
+    requested,
+    allowed,
+    fallback,
+  });
+
   // If requested URL is allowed, extract its origin to redirect to the main app
   // The full path will be preserved in redirectTo query param
   if (requested && isAllowed(requested, allowed)) {
     try {
       const requestedUrl = new URL(requested);
-      return requestedUrl.origin;
-    } catch {
+      const origin = requestedUrl.origin;
+      console.log('[DEBUG] resolveRedirect: Using requested origin:', origin);
+      return origin;
+    } catch (error) {
+      console.error(
+        '[DEBUG] resolveRedirect: Error parsing requested URL:',
+        error
+      );
       // Invalid URL, fall through to fallback
     }
   }
@@ -58,15 +93,30 @@ export function resolveRedirect(
     try {
       // Ensure fallback is treated as origin (remove path if present)
       const fallbackUrl = new URL(normalizedFallback);
-      return fallbackUrl.origin;
-    } catch {
+      const origin = fallbackUrl.origin;
+      console.log('[DEBUG] resolveRedirect: Using fallback origin:', origin);
+      return origin;
+    } catch (error) {
+      console.error(
+        '[DEBUG] resolveRedirect: Error parsing fallback URL:',
+        error
+      );
       // If fallback is not a valid URL, return as-is (might be just origin)
+      console.log(
+        '[DEBUG] resolveRedirect: Returning normalized fallback as-is:',
+        normalizedFallback
+      );
       return normalizedFallback;
     }
   }
 
   // Last resort: use current origin (shouldn't happen if config is correct)
-  return window.location.origin;
+  const currentOrigin = window.location.origin;
+  console.warn(
+    '[DEBUG] resolveRedirect: Using current origin as last resort:',
+    currentOrigin
+  );
+  return currentOrigin;
 }
 
 export function buildRedirectUrl(
@@ -105,6 +155,12 @@ export function setAuthCookie(token: string, config: RedirectConfig) {
 }
 
 export async function completeAuthRedirect(user: User, config: RedirectConfig) {
+  console.log('[DEBUG] completeAuthRedirect called with config:', {
+    redirectTo: config.redirectTo,
+    allowedRedirects: config.allowedRedirects,
+    defaultReturnUrl: config.defaultReturnUrl,
+  });
+
   const idToken = await user.getIdToken();
   const expiresIn = config.cookieMaxAgeSeconds;
   const originalRedirectTo = config.redirectTo ?? null;
@@ -114,10 +170,12 @@ export async function completeAuthRedirect(user: User, config: RedirectConfig) {
     config.defaultReturnUrl
   );
 
+  console.log('[DEBUG] completeAuthRedirect: Resolved target:', target);
+
   setAuthCookie(idToken, config);
 
   // Build redirect URL with token params and preserve original redirectTo
-  // The originalRedirectTo is the URL the user was trying to access
+  // The originalRedirectTo is the URL the user was originally trying to access
   const url = buildRedirectUrl(
     target,
     {
@@ -129,5 +187,6 @@ export async function completeAuthRedirect(user: User, config: RedirectConfig) {
     originalRedirectTo
   );
 
+  console.log('[DEBUG] completeAuthRedirect: Final redirect URL:', url);
   window.location.replace(url);
 }

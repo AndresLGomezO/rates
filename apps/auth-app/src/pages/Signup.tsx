@@ -64,7 +64,7 @@ export default function Signup() {
         enableCookie: authConfig.enableCookie,
         nonce,
       });
-    } catch (err) {
+    } catch (err: unknown) {
       setError(getFriendlyError(err));
     } finally {
       setSubmitting(false);

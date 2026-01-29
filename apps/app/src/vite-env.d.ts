@@ -16,6 +16,11 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_EMULATOR_FUNCTIONS_PORT?: string;
   readonly VITE_FIREBASE_MODE?: string;
   readonly DEV?: boolean;
+  readonly __BUILD_TIME__?: string;
+  readonly __BUILD_DATE__?: string;
+  readonly __BUILD_TIME_ONLY__?: string;
+  readonly __BUILD_NUMBER__?: string;
+  readonly VITE_SHOW_DEBUG_INDICATOR?: string;
 }
 
 interface ImportMeta {
