@@ -101,7 +101,7 @@ export function BatchPaymentModal({
     setError(null);
     try {
       const loadedPeriods = await getPaymentPeriods(
-        accountToLoad.accountNumber
+        accountToLoad.accountNumber ?? ''
       );
       setAllPeriods(loadedPeriods);
 
@@ -201,7 +201,7 @@ export function BatchPaymentModal({
       paymentDate?.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
 
       const results = await batchLogPaymentsToPeriods(
-        account.accountNumber,
+        account.accountNumber ?? '',
         startPeriod,
         endPeriod,
         paymentDate,
@@ -394,10 +394,7 @@ export function BatchPaymentModal({
                   <div className="mt-2">
                     Total amount:{' '}
                     <strong className="text-[#2563eb]">
-                      {formatCurrency(
-                        totalAmount,
-                        account.paymentAmount.currency
-                      )}
+                      {formatCurrency(totalAmount, account.currency)}
                     </strong>
                   </div>
                   <div className="mt-2 text-xs text-white/70">

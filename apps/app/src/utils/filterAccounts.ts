@@ -3,12 +3,42 @@ import type {
   AccountType,
   AccountStatus,
 } from '@rates/firebase-client';
+import {
+  isInstallmentLoan,
+  isRevolvingCredit,
+  isBill,
+} from '@rates/firebase-client';
 
 export interface FilterOptions {
   search?: string;
   status?: AccountStatus[];
   type?: AccountType[];
   currency?: string;
+}
+
+/**
+ * Get currency for an account
+ */
+function getAccountCurrency(account: FinancialAccount): string {
+  if (isInstallmentLoan(account)) {
+    return account.currentPrincipal?.currency ?? 'COP';
+  }
+  if (isRevolvingCredit(account)) {
+    return account.currentBalance.currency;
+  }
+  if (isBill(account)) {
+    return account.recurringAmount?.currency ?? 'COP';
+  }
+  if (account.accountType === 'other') {
+    // We already checked the type, so we can access the property safely if we cast or if we trust TS narrowing.
+    // If TS narrowing fails (which it seems to for 'other'), we cast.
+    // But better to use safety.
+    return (
+      (account as { currentAmount?: { currency: string } }).currentAmount
+        ?.currency ?? 'COP'
+    );
+  }
+  return 'COP';
 }
 
 /**
@@ -27,8 +57,8 @@ export function filterAccountsBySearch(
 
   return accounts.filter((account) => {
     const name = account.accountName.toLowerCase();
-    const number = account.accountNumber.toLowerCase();
-    const description = (account.accountDescription || '').toLowerCase();
+    const number = (account.accountNumber ?? '').toLowerCase();
+    const description = (account.accountDescription ?? '').toLowerCase();
 
     return (
       name.includes(query) ||
@@ -69,7 +99,7 @@ export function filterAccounts(
   // Apply currency filter
   if (filters.currency) {
     filtered = filtered.filter(
-      (account) => account.totalAmountRemaining.currency === filters.currency
+      (account) => getAccountCurrency(account) === filters.currency
     );
   }
 

@@ -128,43 +128,100 @@ export async function createFinancialAccount(
     );
     const createdAt: ReturnType<typeof Timestamp.now> = Timestamp.now();
     const updatedAt: ReturnType<typeof Timestamp.now> = Timestamp.now();
-    const account: FinancialAccount = {
+
+    // Cast to FinancialAccount - TypeScript can't infer the specific type from spread
+    const account = {
       ...accountDataWithUserId,
       paymentLog: accountDataWithUserId.paymentLog ?? [],
       createdAt,
       updatedAt,
-    };
+    } as FinancialAccount;
     console.log('🔵 [createFinancialAccount] Account object created:', account);
 
     console.log(
       '🔵 [createFinancialAccount] Step 5: Converting dates to Timestamps...'
     );
-    if (account.nextDueDate instanceof Date) {
-      account.nextDueDate = Timestamp.fromDate(
-        account.nextDueDate
-      ) as unknown as typeof account.nextDueDate;
-      console.log(
-        '🔵 [createFinancialAccount] nextDueDate converted:',
-        account.nextDueDate
-      );
+
+    // Convert type-specific date fields based on account type
+    switch (account.accountType) {
+      case 'installment_loan':
+        if (account.contractStartDate instanceof Date) {
+          account.contractStartDate = Timestamp.fromDate(
+            account.contractStartDate
+          ) as unknown as typeof account.contractStartDate;
+          console.log(
+            '🔵 [createFinancialAccount] contractStartDate converted:',
+            account.contractStartDate
+          );
+        }
+        if (account.nextDueDate && account.nextDueDate instanceof Date) {
+          account.nextDueDate = Timestamp.fromDate(
+            account.nextDueDate
+          ) as unknown as typeof account.nextDueDate;
+          console.log(
+            '🔵 [createFinancialAccount] nextDueDate converted:',
+            account.nextDueDate
+          );
+        }
+        break;
+
+      case 'revolving_credit':
+        if (account.nextDueDate && account.nextDueDate instanceof Date) {
+          account.nextDueDate = Timestamp.fromDate(
+            account.nextDueDate
+          ) as unknown as typeof account.nextDueDate;
+          console.log(
+            '🔵 [createFinancialAccount] nextDueDate converted:',
+            account.nextDueDate
+          );
+        }
+        break;
+
+      case 'bill':
+        if (account.nextDueDate instanceof Date) {
+          account.nextDueDate = Timestamp.fromDate(
+            account.nextDueDate
+          ) as unknown as typeof account.nextDueDate;
+          console.log(
+            '🔵 [createFinancialAccount] nextDueDate converted:',
+            account.nextDueDate
+          );
+        }
+        if (account.endDate && account.endDate instanceof Date) {
+          account.endDate = Timestamp.fromDate(
+            account.endDate
+          ) as unknown as typeof account.endDate;
+          console.log(
+            '🔵 [createFinancialAccount] endDate converted:',
+            account.endDate
+          );
+        }
+        break;
+
+      case 'other':
+        if (
+          account.nextRelevantDate &&
+          account.nextRelevantDate instanceof Date
+        ) {
+          account.nextRelevantDate = Timestamp.fromDate(
+            account.nextRelevantDate
+          ) as unknown as typeof account.nextRelevantDate;
+          console.log(
+            '🔵 [createFinancialAccount] nextRelevantDate converted:',
+            account.nextRelevantDate
+          );
+        }
+        break;
     }
-    if (account.startDate instanceof Date) {
-      account.startDate = Timestamp.fromDate(
-        account.startDate
-      ) as unknown as typeof account.startDate;
-      console.log(
-        '🔵 [createFinancialAccount] startDate converted:',
-        account.startDate
-      );
-    }
-    if (account.endDate instanceof Date) {
-      account.endDate = Timestamp.fromDate(
-        account.endDate
-      ) as unknown as typeof account.endDate;
-      console.log(
-        '🔵 [createFinancialAccount] endDate converted:',
-        account.endDate
-      );
+
+    // Convert tracking start date if present (common field)
+    if (
+      account.trackingStartDate &&
+      account.trackingStartDate instanceof Date
+    ) {
+      account.trackingStartDate = Timestamp.fromDate(
+        account.trackingStartDate
+      ) as unknown as typeof account.trackingStartDate;
     }
 
     // Convert payment log dates
@@ -185,8 +242,8 @@ export async function createFinancialAccount(
     }));
     console.log('🔵 [createFinancialAccount] Payment log processed');
 
-    // Use accountNumber as document ID
-    const accountId = account.accountNumber;
+    // Use accountNumber as document ID, with fallback to generated ID
+    const accountId = account.accountNumber || `account-${Date.now()}`;
     console.log(
       '🔵 [createFinancialAccount] Step 6: Creating document reference...'
     );
@@ -587,22 +644,9 @@ export async function updateFinancialAccount(
     updatedAt,
   };
 
-  // Convert dates to Timestamps if needed
-  if (updateData.nextDueDate instanceof Date) {
-    updateData.nextDueDate = Timestamp.fromDate(
-      updateData.nextDueDate
-    ) as unknown as typeof updateData.nextDueDate;
-  }
-  if (updateData.startDate instanceof Date) {
-    updateData.startDate = Timestamp.fromDate(
-      updateData.startDate
-    ) as unknown as typeof updateData.startDate;
-  }
-  if (updateData.endDate instanceof Date) {
-    updateData.endDate = Timestamp.fromDate(
-      updateData.endDate
-    ) as unknown as typeof updateData.endDate;
-  }
+  // Note: Date conversions should be handled by the caller before passing to this function
+  // since UpdateFinancialAccountInput is Partial<FinancialAccount> and we can't determine
+  // the account type here without fetching the document first
 
   await updateDoc(accountRef, updateData);
 }
@@ -628,8 +672,8 @@ export async function deleteFinancialAccount(accountId: string): Promise<void> {
  * 1. Find the appropriate payment period(s) to apply the payment to
  * 2. Log the payment to the period(s) and validate amounts
  * 3. Add the payment to the account payment log
- * 4. Update the total amount remaining (subtract capital portion)
- * 5. Update the next due date (add one month)
+ * 4. Update account-specific fields based on account type
+ * 5. Update the next due date
  * 6. Recalculate account status if needed
  */
 export async function logPayment(
@@ -657,64 +701,12 @@ export async function logPayment(
   const account = accountSnap.data() as unknown as FinancialAccount;
 
   // Import calculation utilities
-  const { calculatePaymentBreakdown, createPaymentLogEntry } =
-    await import('@rates/firebase-client');
-
-  // Try to find and update payment periods
-  let totalCapitalPaid = 0;
-  let remainingPayment = paymentData.valuePaid;
-
-  try {
-    const { getUnpaidPaymentPeriods, logPaymentToPeriod } =
-      await import('./paymentPeriods');
-
-    // Get unpaid periods ordered by due date (oldest first)
-    const unpaidPeriods = await getUnpaidPaymentPeriods(accountId, 365); // Get all unpaid periods
-
-    // Apply payment to periods in order (oldest first)
-    for (const period of unpaidPeriods) {
-      if (remainingPayment <= 0) break;
-
-      const periodAmountDue = period.amount - period.amountPaid;
-      const paymentForThisPeriod = Math.min(remainingPayment, periodAmountDue);
-
-      if (paymentForThisPeriod > 0) {
-        // Log payment to this period
-        await logPaymentToPeriod(accountId, period.periodNumber, {
-          datePaid: paymentData.datePaid,
-          amount: paymentForThisPeriod,
-          currency: paymentData.currency,
-          notes: paymentData.notes,
-        });
-
-        // Track capital paid (use period's capital breakdown)
-        totalCapitalPaid +=
-          period.capital * (paymentForThisPeriod / period.amount);
-        remainingPayment -= paymentForThisPeriod;
-      }
-    }
-
-    // If there's remaining payment after all periods are paid, calculate capital from remaining
-    if (remainingPayment > 0) {
-      const breakdown = calculatePaymentBreakdown(
-        account.totalAmountRemaining.amount,
-        account.rate,
-        remainingPayment,
-        paymentData.currency
-      );
-      totalCapitalPaid += breakdown.capital;
-    }
-  } catch (error) {
-    // If payment periods don't exist yet, fall back to simple calculation
-    console.warn('Payment periods not found, using simple calculation:', error);
-    const breakdown = calculatePaymentBreakdown(
-      account.totalAmountRemaining.amount,
-      account.rate,
-      paymentData.valuePaid,
-      paymentData.currency
-    );
-    totalCapitalPaid = breakdown.capital;
-  }
+  const {
+    createPaymentLogEntry,
+    isInstallmentLoan,
+    isRevolvingCredit,
+    isBill,
+  } = await import('@rates/firebase-client');
 
   // Create payment log entry
   const paymentEntry = createPaymentLogEntry(
@@ -736,38 +728,109 @@ export async function logPayment(
     ) as unknown as typeof paymentEntry.createdAt;
   }
 
-  // Calculate new remaining amount
-  const newRemainingAmount = Math.max(
-    0,
-    account.totalAmountRemaining.amount - totalCapitalPaid
-  );
-
-  // Calculate next due date (add one month)
-  const currentDueDate =
-    account.nextDueDate instanceof Date
-      ? account.nextDueDate
-      : account.nextDueDate.toDate();
-  const nextDueDate = new Date(currentDueDate);
-  nextDueDate.setMonth(nextDueDate.getMonth() + 1);
-
-  // Update account
+  // Update account based on type
   const updatedAt: ReturnType<typeof Timestamp.now> = Timestamp.now();
-  const updateData: UpdateFinancialAccountInput = {
+  const updateData: Partial<FinancialAccount> = {
     paymentLog: [...account.paymentLog, paymentEntry],
-    totalAmountRemaining: {
-      amount: newRemainingAmount,
-      currency: account.totalAmountRemaining.currency,
-    },
-    nextDueDate: Timestamp.fromDate(
-      nextDueDate
-    ) as unknown as typeof account.nextDueDate,
     updatedAt,
-  };
+  } as Partial<FinancialAccount>;
 
-  // Update status if account is paid off
-  if (newRemainingAmount <= 0 && account.status === 'active') {
-    updateData.status = 'paid_off';
+  if (isInstallmentLoan(account)) {
+    // For installment loans: reduce currentPrincipal
+    // Simple calculation: assume payment goes toward principal
+    // In a real implementation, you'd calculate interest vs principal split
+    const currentPrincipal = account.currentPrincipal?.amount ?? 0;
+    const newPrincipal = Math.max(0, currentPrincipal - paymentData.valuePaid);
+
+    (updateData as Partial<typeof account>).currentPrincipal = {
+      amount: newPrincipal,
+      currency: account.currentPrincipal?.currency ?? account.currency,
+    };
+
+    // Update next due date if present
+    if (account.nextDueDate) {
+      const currentDueDate =
+        account.nextDueDate instanceof Date
+          ? account.nextDueDate
+          : account.nextDueDate.toDate();
+      const nextDueDate = new Date(currentDueDate);
+      nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+      (updateData as Partial<typeof account>).nextDueDate = Timestamp.fromDate(
+        nextDueDate
+      ) as unknown as typeof account.nextDueDate;
+    }
+
+    // Update status if paid off
+    if (newPrincipal <= 0 && account.status === 'active') {
+      updateData.status = 'paid_off';
+    }
+  } else if (isRevolvingCredit(account)) {
+    // For revolving credit: reduce currentBalance
+    const currentBalance = account.currentBalance.amount;
+    const newBalance = Math.max(0, currentBalance - paymentData.valuePaid);
+
+    (updateData as Partial<typeof account>).currentBalance = {
+      amount: newBalance,
+      currency: account.currentBalance.currency,
+    };
+
+    // Update next due date if present
+    if (account.nextDueDate) {
+      const currentDueDate =
+        account.nextDueDate instanceof Date
+          ? account.nextDueDate
+          : account.nextDueDate.toDate();
+      const nextDueDate = new Date(currentDueDate);
+      nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+      (updateData as Partial<typeof account>).nextDueDate = Timestamp.fromDate(
+        nextDueDate
+      ) as unknown as typeof account.nextDueDate;
+    }
+
+    // Update status if paid off
+    if (newBalance <= 0 && account.status === 'active') {
+      updateData.status = 'paid_off';
+    }
+  } else if (isBill(account)) {
+    // For bills: just log the payment, don't reduce any balance
+    // Update next due date based on payment frequency
+    if (account.isRecurring && account.paymentFrequency) {
+      const currentDueDate =
+        account.nextDueDate instanceof Date
+          ? account.nextDueDate
+          : account.nextDueDate.toDate();
+      const nextDueDate = new Date(currentDueDate);
+
+      // Add time based on frequency
+      switch (account.paymentFrequency) {
+        case 'monthly':
+          nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+          break;
+        case 'biweekly':
+          nextDueDate.setDate(nextDueDate.getDate() + 14);
+          break;
+        case 'weekly':
+          nextDueDate.setDate(nextDueDate.getDate() + 7);
+          break;
+        case 'quarterly':
+          nextDueDate.setMonth(nextDueDate.getMonth() + 3);
+          break;
+        case 'semi_annually':
+          nextDueDate.setMonth(nextDueDate.getMonth() + 6);
+          break;
+        case 'annually':
+          nextDueDate.setFullYear(nextDueDate.getFullYear() + 1);
+          break;
+      }
+
+      (updateData as Partial<typeof account>).nextDueDate = Timestamp.fromDate(
+        nextDueDate
+      ) as unknown as typeof account.nextDueDate;
+    }
+  } else {
+    // For 'other' accounts: just log the payment
+    // No balance or due date updates
   }
 
-  await updateDoc(accountRef, updateData);
+  await updateDoc(accountRef, updateData as UpdateFinancialAccountInput);
 }

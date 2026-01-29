@@ -5,6 +5,12 @@ import type {
   AccountType,
   AccountStatus,
   CreateFinancialAccountInput,
+  UpdateFinancialAccountInput,
+} from '@rates/firebase-client';
+import {
+  isInstallmentLoan,
+  isRevolvingCredit,
+  isBill,
 } from '@rates/firebase-client';
 import { getAccountWithCalculated } from '@rates/firebase-client';
 import {
@@ -13,17 +19,61 @@ import {
   updateFinancialAccount,
   deleteFinancialAccount,
 } from '../services/financialAccounts';
+
+// Helper functions for type-specific field access
+function getAccountRemainingBalance(account: FinancialAccount): number {
+  if (isInstallmentLoan(account)) {
+    return account.currentPrincipal?.amount ?? 0;
+  } else if (isRevolvingCredit(account)) {
+    return account.currentBalance.amount;
+  }
+  return 0;
+}
+
+function getAccountPaymentAmount(account: FinancialAccount): number {
+  if (isInstallmentLoan(account)) {
+    return account.scheduledPayment?.amount ?? 0;
+  } else if (isRevolvingCredit(account)) {
+    return (
+      account.userPlannedPayment?.amount ??
+      account.currentMinimumPayment?.amount ??
+      0
+    );
+  } else if (isBill(account)) {
+    return account.recurringAmount?.amount ?? 0;
+  }
+  return 0;
+}
+
+function getAccountInterestRate(account: FinancialAccount): number {
+  if (isInstallmentLoan(account)) {
+    return account.annualInterestRate ?? 0;
+  } else if (isRevolvingCredit(account)) {
+    return account.purchaseApr ?? 0;
+  }
+  return 0;
+}
+
+function getAccountNextDueDate(account: FinancialAccount): Date | undefined {
+  if (
+    isInstallmentLoan(account) ||
+    isRevolvingCredit(account) ||
+    isBill(account)
+  ) {
+    const dueDate = account.nextDueDate;
+    if (!dueDate) return undefined;
+    return dueDate instanceof Date ? dueDate : dueDate.toDate();
+  }
+  return undefined;
+}
 import { filterAccounts } from '../utils/filterAccounts';
 import { Modal } from '../components/Modal';
 import { CreateAccountForm } from '../components/CreateAccountForm';
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
-  loan: 'Loans',
-  credit_card: 'Credit Cards',
+  installment_loan: 'Installment Loans',
+  revolving_credit: 'Revolving Credit',
   bill: 'Bills',
-  mortgage: 'Mortgages',
-  personal_loan: 'Personal Loans',
-  auto_loan: 'Auto Loans',
   other: 'Other Accounts',
 };
 
@@ -210,38 +260,15 @@ export default function AccountsByType() {
       setError(null);
       console.log('🟢 [handleCreateAccount] Saving state set to true');
 
-      // Convert to input format (userId will be added by the service)
-      const accountInput: Omit<CreateFinancialAccountInput, 'userId'> = {
-        accountNumber: accountData.accountNumber,
-        accountName: accountData.accountName,
-        accountDescription: accountData.accountDescription,
-        accountType: accountData.accountType,
-        status: accountData.status,
-        totalAmountRemaining: accountData.totalAmountRemaining,
-        paymentAmount: accountData.paymentAmount,
-        paymentFrequency: accountData.paymentFrequency,
-        rate: accountData.rate,
-        nextDueDate: accountData.nextDueDate,
-        paymentLog: [],
-        ...(accountData.originalAmount && {
-          originalAmount: accountData.originalAmount,
-        }),
-        ...(accountData.startDate && { startDate: accountData.startDate }),
-        ...(accountData.numberOfPayments && {
-          numberOfPayments: accountData.numberOfPayments,
-        }),
-        ...(accountData.additionalAmounts && {
-          additionalAmounts: accountData.additionalAmounts,
-        }),
-      };
+      // accountData is already correctly typed from CreateAccountForm
       console.log(
-        '🟢 [handleCreateAccount] Account input prepared:',
-        accountInput
+        '🟢 [handleCreateAccount] Account data from form:',
+        accountData
       );
 
       console.log('🟢 [handleCreateAccount] Calling createFinancialAccount...');
       // Save to Firestore (service will add userId automatically)
-      const accountId = await createFinancialAccount(accountInput);
+      const accountId = await createFinancialAccount(accountData);
       console.log(
         '🟢 [handleCreateAccount] Account created with ID:',
         accountId
@@ -285,26 +312,13 @@ export default function AccountsByType() {
       setSaving(true);
       setError(null);
 
-      const updateData = {
-        accountName: accountData.accountName,
-        accountDescription: accountData.accountDescription,
-        status: accountData.status,
-        totalAmountRemaining: accountData.totalAmountRemaining,
-        paymentAmount: accountData.paymentAmount,
-        paymentFrequency: accountData.paymentFrequency,
-        rate: accountData.rate,
-        nextDueDate: accountData.nextDueDate,
-        updatedAt: new Date(),
-        ...(accountData.originalAmount && {
-          originalAmount: accountData.originalAmount,
-        }),
-        ...(accountData.startDate && { startDate: accountData.startDate }),
-        ...(accountData.numberOfPayments !== undefined && {
-          numberOfPayments: accountData.numberOfPayments,
-        }),
-      };
+      // accountData is already correctly typed from CreateAccountForm
+      // Pass it directly to the update service
+      await updateFinancialAccount(
+        editingAccount.accountNumber ?? '',
+        accountData as unknown as UpdateFinancialAccountInput
+      );
 
-      await updateFinancialAccount(editingAccount.accountNumber, updateData);
       await loadAccounts();
       handleCloseModal();
     } catch (err) {
@@ -319,9 +333,8 @@ export default function AccountsByType() {
     if (!deletingAccount) return;
 
     try {
-      setSaving(true);
       setError(null);
-      await deleteFinancialAccount(deletingAccount.accountNumber);
+      await deleteFinancialAccount(deletingAccount.accountNumber ?? '');
       await loadAccounts();
       setDeletingAccount(null);
     } catch (err) {
@@ -586,7 +599,7 @@ export default function AccountsByType() {
               <p className="m-0 text-2xl font-bold text-white">
                 {formatCurrency(
                   filteredAccounts.reduce(
-                    (sum, a) => sum + a.totalAmountRemaining.amount,
+                    (sum, a) => sum + getAccountRemainingBalance(a),
                     0
                   ),
                   'COP'
@@ -755,20 +768,10 @@ export default function AccountsByType() {
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold text-white">
                           {formatCurrency(
-                            account.totalAmountRemaining.amount,
-                            account.totalAmountRemaining.currency
+                            getAccountRemainingBalance(account),
+                            account.currency
                           )}
                         </span>
-                        {account.additionalAmounts?.[0] && (
-                          <span className="text-xs text-white/50">
-                            (
-                            {formatCurrency(
-                              account.additionalAmounts[0].amount,
-                              account.additionalAmounts[0].currency
-                            )}
-                            )
-                          </span>
-                        )}
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
@@ -777,8 +780,8 @@ export default function AccountsByType() {
                       </span>
                       <span className="text-sm font-semibold text-white">
                         {formatCurrency(
-                          account.paymentAmount.amount,
-                          account.paymentAmount.currency
+                          getAccountPaymentAmount(account),
+                          account.currency
                         )}
                       </span>
                     </div>
@@ -787,7 +790,7 @@ export default function AccountsByType() {
                         Interest Rate:
                       </span>
                       <span className="text-sm font-semibold text-white">
-                        {account.rate}%
+                        {getAccountInterestRate(account)}%
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -819,8 +822,10 @@ export default function AccountsByType() {
                               : 'text-white'
                         }`}
                       >
-                        {formatDate(account.nextDueDate)} (
-                        {accountWithCalculated.nextDueDatePeriod})
+                        {getAccountNextDueDate(account)
+                          ? formatDate(getAccountNextDueDate(account)!)
+                          : 'N/A'}{' '}
+                        ({accountWithCalculated.nextDueDatePeriod})
                       </span>
                     </div>
                     <div className="flex items-center justify-between">

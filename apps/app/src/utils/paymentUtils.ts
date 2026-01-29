@@ -5,8 +5,45 @@
  */
 
 import type { FinancialAccount, PaymentPeriod } from '@rates/firebase-client';
-import { getMonthString } from '@rates/firebase-client';
+import {
+  getMonthString,
+  isInstallmentLoan,
+  isRevolvingCredit,
+  isBill,
+} from '@rates/firebase-client';
 import { getPaymentPeriods } from '../services/paymentPeriods';
+
+// Helper to safely convert Timestamp/Date to Date
+function toDate(
+  date: Date | { toDate: () => Date } | undefined | null
+): Date | undefined {
+  if (!date) return undefined;
+  if (date instanceof Date) return date;
+  if ('toDate' in date && typeof date.toDate === 'function') {
+    return date.toDate();
+  }
+  return undefined;
+}
+
+/**
+ * Helper to safely get the next due date from any account type
+ */
+function getAccountNextDueDate(account: FinancialAccount): Date | undefined {
+  if (isInstallmentLoan(account)) return toDate(account.nextDueDate);
+  if (isRevolvingCredit(account)) return toDate(account.nextDueDate);
+  if (isBill(account)) return toDate(account.nextDueDate);
+  // Other accounts don't have nextDueDate
+  return undefined;
+}
+
+/**
+ * Helper to safely get the start date from any account type
+ */
+function getAccountStartDate(account: FinancialAccount): Date | undefined {
+  if (isInstallmentLoan(account)) return toDate(account.contractStartDate);
+  // For other accounts, we can use createdAt as a fallback for start date
+  return toDate(account.createdAt);
+}
 
 /**
  * Get the current period month in YYYY-MM format
@@ -45,10 +82,13 @@ export function hasPendingPaymentWithinDays(
     return false;
   }
 
+  const dueDate = getAccountNextDueDate(account);
+  if (!dueDate) return false;
+
   const nextDueDate =
-    account.nextDueDate instanceof Date
-      ? account.nextDueDate
-      : account.nextDueDate.toDate();
+    dueDate instanceof Date
+      ? dueDate
+      : (dueDate as { toDate: () => Date }).toDate();
 
   const daysRemaining = calculateDaysRemaining(nextDueDate);
 
@@ -234,20 +274,16 @@ export async function identifyPendingPayments(
 export async function identifyPendingPaymentsForAccount(
   account: FinancialAccount
 ): Promise<PeriodPaymentInfo[]> {
-  let startDate: Date | undefined;
-
-  // Use account's start date if available
-  if (account.startDate) {
-    startDate =
-      account.startDate instanceof Date
-        ? account.startDate
-        : account.startDate.toDate();
-  }
+  const startDate = getAccountStartDate(account);
 
   // Check if this is a bill account
   const isBill = account.accountType === 'bill';
 
-  return identifyPendingPayments(account.accountNumber, startDate, isBill);
+  return identifyPendingPayments(
+    account.accountNumber ?? '',
+    startDate,
+    isBill
+  );
 }
 
 /**
@@ -295,7 +331,7 @@ export async function hasPendingPaymentsFromPeriods(
   }
 
   // Get all payment periods
-  const periods = await getPaymentPeriods(account.accountNumber);
+  const periods = await getPaymentPeriods(account.accountNumber ?? '');
 
   if (periods.length === 0) {
     // If no periods exist, fall back to the old method

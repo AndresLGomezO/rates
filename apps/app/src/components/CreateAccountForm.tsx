@@ -6,6 +6,11 @@ import type {
   FinancialAccount,
   PaymentFrequency,
 } from '@rates/firebase-client';
+import {
+  isInstallmentLoan,
+  isRevolvingCredit,
+  isBill,
+} from '@rates/firebase-client';
 import { Select } from './Select';
 
 interface CreateAccountFormProps {
@@ -53,45 +58,91 @@ export function CreateAccountForm({
     return d.toISOString().split('T')[0];
   };
 
-  const [formData, setFormData] = useState({
-    accountNumber: initialData?.accountNumber ?? '',
-    accountName: initialData?.accountName ?? '',
-    accountDescription: initialData?.accountDescription ?? '',
-    status: initialData?.status ?? 'active',
-    totalAmountRemaining:
-      initialData?.totalAmountRemaining.amount.toString() ?? '',
-    paymentAmount: initialData?.paymentAmount.amount.toString() ?? '',
-    paymentFrequency: initialData?.paymentFrequency ?? 'monthly',
-    rate: initialData?.rate.toString() ?? '',
-    nextDueDate: formatDateForInput(initialData?.nextDueDate) ?? '',
-    currency: (initialData?.totalAmountRemaining.currency ?? 'COP') as
-      | 'COP'
-      | 'USD',
-    originalAmount: initialData?.originalAmount?.amount.toString() ?? '',
-    startDate: formatDateForInput(initialData?.startDate) ?? '',
-    numberOfPayments: initialData?.numberOfPayments?.toString() ?? '',
-  });
+  // Helper to safely get field values from discriminated union
+  const getInitialValue = () => {
+    if (!initialData) {
+      return {
+        accountNumber: '',
+        accountName: '',
+        accountDescription: '',
+        status: 'active' as AccountStatus,
+        totalAmountRemaining: '',
+        paymentAmount: '',
+        paymentFrequency: 'monthly' as PaymentFrequency,
+        rate: '',
+        nextDueDate: '',
+        currency: 'COP' as 'COP' | 'USD',
+        originalAmount: '',
+        startDate: '',
+        numberOfPayments: '',
+      };
+    }
+
+    // Extract type-specific fields based on account type
+    let totalAmountRemaining = '';
+    let paymentAmount = '';
+    let rate = '';
+    let nextDueDate = '';
+    let currency: 'COP' | 'USD' = 'COP';
+    let originalAmount = '';
+    let startDate = '';
+    let numberOfPayments = '';
+    let paymentFrequency: PaymentFrequency = 'monthly';
+
+    if (isInstallmentLoan(initialData)) {
+      totalAmountRemaining =
+        initialData.currentPrincipal?.amount.toString() ?? '';
+      paymentAmount = initialData.scheduledPayment?.amount.toString() ?? '';
+      rate = initialData.annualInterestRate?.toString() ?? '';
+      nextDueDate = formatDateForInput(initialData.nextDueDate);
+      currency = (initialData.currentPrincipal?.currency ??
+        initialData.currency) as 'COP' | 'USD';
+      originalAmount = initialData.originalPrincipal?.amount.toString() ?? '';
+      startDate = formatDateForInput(initialData.contractStartDate);
+      numberOfPayments = initialData.termInPayments?.toString() ?? '';
+      paymentFrequency = initialData.paymentFrequency ?? 'monthly';
+    } else if (isRevolvingCredit(initialData)) {
+      totalAmountRemaining = initialData.currentBalance.amount.toString();
+      paymentAmount =
+        initialData.userPlannedPayment?.amount.toString() ??
+        initialData.currentMinimumPayment?.amount.toString() ??
+        '';
+      rate = initialData.purchaseApr?.toString() ?? '';
+      nextDueDate = formatDateForInput(initialData.nextDueDate);
+      currency = initialData.currentBalance.currency as 'COP' | 'USD';
+    } else if (isBill(initialData)) {
+      paymentAmount = initialData.recurringAmount?.amount.toString() ?? '';
+      nextDueDate = formatDateForInput(initialData.nextDueDate);
+      currency = (initialData.recurringAmount?.currency ??
+        initialData.currency) as 'COP' | 'USD';
+      paymentFrequency = initialData.paymentFrequency ?? 'monthly';
+    }
+
+    return {
+      accountNumber: initialData.accountNumber ?? '',
+      accountName: initialData.accountName,
+      accountDescription: initialData.accountDescription ?? '',
+      status: initialData.status,
+      totalAmountRemaining,
+      paymentAmount,
+      paymentFrequency,
+      rate,
+      nextDueDate,
+      currency,
+      originalAmount,
+      startDate,
+      numberOfPayments,
+    };
+  };
+
+  const [formData, setFormData] = useState(getInitialValue());
 
   // Update form data when initialData changes (for edit mode)
   useEffect(() => {
     if (initialData && mode === 'edit') {
-      setFormData({
-        accountNumber: initialData.accountNumber,
-        accountName: initialData.accountName,
-        accountDescription: initialData.accountDescription,
-        status: initialData.status,
-        totalAmountRemaining:
-          initialData.totalAmountRemaining.amount.toString(),
-        paymentAmount: initialData.paymentAmount.amount.toString(),
-        paymentFrequency: initialData.paymentFrequency,
-        rate: initialData.rate.toString(),
-        nextDueDate: formatDateForInput(initialData.nextDueDate),
-        currency: initialData.totalAmountRemaining.currency as 'COP' | 'USD',
-        originalAmount: initialData.originalAmount?.amount.toString() ?? '',
-        startDate: formatDateForInput(initialData.startDate),
-        numberOfPayments: initialData.numberOfPayments?.toString() ?? '',
-      });
+      setFormData(getInitialValue());
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, mode]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -174,41 +225,118 @@ export function CreateAccountForm({
       return;
     }
 
-    const account: Omit<CreateFinancialAccountInput, 'userId'> = {
+    // Build type-specific payload
+    const basePayload = {
       accountNumber: formData.accountNumber.trim(),
       accountName: formData.accountName.trim(),
       accountDescription: formData.accountDescription.trim(),
-      accountType,
       status: formData.status,
-      totalAmountRemaining: {
-        amount: parseFloat(formData.totalAmountRemaining),
-        currency: formData.currency,
-      },
-      paymentAmount: {
-        amount: parseFloat(formData.paymentAmount),
-        currency: formData.currency,
-      },
-      paymentFrequency: formData.paymentFrequency,
-      rate: parseFloat(formData.rate),
-      nextDueDate: new Date(formData.nextDueDate),
-      ...(formData.originalAmount && {
-        originalAmount: {
-          amount: parseFloat(formData.originalAmount),
-          currency: formData.currency,
-        },
-      }),
-      ...(formData.startDate && {
-        startDate: new Date(formData.startDate),
-      }),
-      ...(formData.numberOfPayments.trim() &&
-        (() => {
-          const numPayments = parseInt(formData.numberOfPayments.trim(), 10);
-          if (!isNaN(numPayments) && numPayments > 0) {
-            return { numberOfPayments: numPayments };
-          }
-          return {};
-        })()),
+      currency: formData.currency,
+      paymentLog: [],
     };
+
+    let account: Omit<CreateFinancialAccountInput, 'userId'>;
+
+    switch (accountType) {
+      case 'installment_loan':
+        account = {
+          ...basePayload,
+          accountType: 'installment_loan' as const,
+          loanSubtype: 'personal_loan' as const,
+          annualInterestRate: parseFloat(formData.rate),
+          paymentFrequency: formData.paymentFrequency,
+          currentPrincipal: {
+            amount: parseFloat(formData.totalAmountRemaining),
+            currency: formData.currency,
+          },
+          scheduledPayment: formData.paymentAmount
+            ? {
+                amount: parseFloat(formData.paymentAmount),
+                currency: formData.currency,
+              }
+            : undefined,
+          originalPrincipal: formData.originalAmount
+            ? {
+                amount: parseFloat(formData.originalAmount),
+                currency: formData.currency,
+              }
+            : undefined,
+          contractStartDate: formData.startDate
+            ? new Date(formData.startDate)
+            : new Date(),
+          termInPayments: formData.numberOfPayments
+            ? parseInt(formData.numberOfPayments, 10)
+            : undefined,
+          nextDueDate: formData.nextDueDate
+            ? new Date(formData.nextDueDate)
+            : undefined,
+        } as Omit<CreateFinancialAccountInput, 'userId'>;
+        break;
+
+      case 'revolving_credit':
+        account = {
+          ...basePayload,
+          accountType: 'revolving_credit' as const,
+          creditSubtype: 'credit_card' as const,
+          currentBalance: {
+            amount: parseFloat(formData.totalAmountRemaining),
+            currency: formData.currency,
+          },
+          purchaseApr: parseFloat(formData.rate),
+          userPlannedPayment: formData.paymentAmount
+            ? {
+                amount: parseFloat(formData.paymentAmount),
+                currency: formData.currency,
+              }
+            : undefined,
+          nextDueDate: formData.nextDueDate
+            ? new Date(formData.nextDueDate)
+            : undefined,
+        } as Omit<CreateFinancialAccountInput, 'userId'>;
+        break;
+
+      case 'bill':
+        account = {
+          ...basePayload,
+          accountType: 'bill' as const,
+          billSubtype: 'utility' as const,
+          isRecurring: true,
+          isAmountVariable: false,
+          nextDueDate: new Date(formData.nextDueDate),
+          recurringAmount: formData.paymentAmount
+            ? {
+                amount: parseFloat(formData.paymentAmount),
+                currency: formData.currency,
+              }
+            : undefined,
+          paymentFrequency: formData.paymentFrequency,
+          endDate: formData.numberOfPayments
+            ? (() => {
+                const start = new Date(formData.nextDueDate);
+                const months = parseInt(formData.numberOfPayments, 10);
+                const end = new Date(start);
+                end.setMonth(end.getMonth() + months);
+                return end;
+              })()
+            : undefined,
+        } as Omit<CreateFinancialAccountInput, 'userId'>;
+        break;
+
+      case 'other':
+        account = {
+          ...basePayload,
+          accountType: 'other' as const,
+          nextRelevantDate: formData.nextDueDate
+            ? new Date(formData.nextDueDate)
+            : undefined,
+        } as Omit<CreateFinancialAccountInput, 'userId'>;
+        break;
+
+      default: {
+        const _exhaustive: never = accountType;
+        throw new Error(`Unknown account type: ${_exhaustive}`);
+      }
+    }
 
     void onSubmit(account);
   };

@@ -7,7 +7,10 @@ import type {
   PaymentPeriod,
 } from '@rates/firebase-client';
 import { getUserFinancialAccounts } from '../services/financialAccounts';
-import { getPaymentPeriods } from '../services/paymentPeriods';
+import {
+  getPaymentPeriods,
+  getAccountPaymentDetails,
+} from '../services/paymentPeriods';
 import {
   formatCurrency,
   formatCompactNumberParts,
@@ -143,7 +146,9 @@ export default function Dashboard() {
         await Promise.all(
           accountsToLoad.map(async (account) => {
             try {
-              const periods = await getPaymentPeriods(account.accountNumber);
+              const periods = await getPaymentPeriods(
+                account.accountNumber ?? ''
+              );
               const isBill = account.accountType === 'bill';
 
               periods.forEach((period) => {
@@ -234,7 +239,7 @@ export default function Dashboard() {
       filtered = filtered.filter(
         (item) =>
           item.account.accountName.toLowerCase().includes(query) ||
-          item.account.accountNumber.toLowerCase().includes(query) ||
+          (item.account.accountNumber ?? '').toLowerCase().includes(query) ||
           item.account.accountDescription?.toLowerCase().includes(query)
       );
     }
@@ -432,11 +437,11 @@ export default function Dashboard() {
     filteredPeriods
       .filter((p) => p.periodInfo.status === 'paid')
       .forEach((item) => {
-        const key = item.account.accountNumber;
+        const key = item.account.accountNumber ?? '';
         if (!accountMap.has(key)) {
           accountMap.set(key, {
             accountName: item.account.accountName,
-            accountNumber: item.account.accountNumber,
+            accountNumber: key,
             totalInterest: 0,
             currency: item.period.currency,
           });
@@ -492,8 +497,7 @@ export default function Dashboard() {
 
   const primaryCurrency =
     filteredPeriods[0]?.period.currency ||
-    accounts[0]?.paymentAmount.currency ||
-    'COP';
+    (accounts[0] ? getAccountPaymentDetails(accounts[0]).currency : 'COP');
 
   // Get pending periods (not fully paid: pending, partial, or overdue), sorted by due date (oldest first)
   const pendingPeriods = useMemo(() => {

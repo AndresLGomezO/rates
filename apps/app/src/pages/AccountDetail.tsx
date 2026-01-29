@@ -6,6 +6,11 @@ import type {
   PaymentLogEntry,
   FinancialAccountCalculated,
 } from '@rates/firebase-client';
+import {
+  isInstallmentLoan,
+  isRevolvingCredit,
+  isBill,
+} from '@rates/firebase-client';
 import { getFinancialAccount } from '../services/financialAccounts';
 import {
   getPaymentPeriods,
@@ -37,6 +42,90 @@ import type {
 } from './AccountDetail.types';
 import * as rechartsModule from 'recharts';
 
+// Helper functions to safely extract type-specific fields
+function getAccountRemainingBalance(account: FinancialAccount): number {
+  if (isInstallmentLoan(account)) {
+    return account.currentPrincipal?.amount ?? 0;
+  } else if (isRevolvingCredit(account)) {
+    return account.currentBalance.amount;
+  }
+  return 0; // Bills and other don't have a remaining balance concept
+}
+
+function getAccountOriginalAmount(
+  account: FinancialAccount
+): number | undefined {
+  if (isInstallmentLoan(account)) {
+    return account.originalPrincipal?.amount;
+  }
+  return undefined;
+}
+
+function getAccountPaymentAmount(account: FinancialAccount): number {
+  if (isInstallmentLoan(account)) {
+    return account.scheduledPayment?.amount ?? 0;
+  } else if (isRevolvingCredit(account)) {
+    return (
+      account.userPlannedPayment?.amount ??
+      account.currentMinimumPayment?.amount ??
+      0
+    );
+  } else if (isBill(account)) {
+    return account.recurringAmount?.amount ?? 0;
+  }
+  return 0;
+}
+
+function getAccountInterestRate(account: FinancialAccount): number | undefined {
+  if (isInstallmentLoan(account)) {
+    return account.annualInterestRate;
+  } else if (isRevolvingCredit(account)) {
+    return account.purchaseApr;
+  }
+  return undefined;
+}
+
+function getAccountPaymentFrequency(
+  account: FinancialAccount
+): string | undefined {
+  if (isInstallmentLoan(account)) {
+    return account.paymentFrequency;
+  } else if (isBill(account) && account.isRecurring) {
+    return account.paymentFrequency;
+  }
+  return undefined;
+}
+
+function getAccountNextDueDate(account: FinancialAccount): Date | undefined {
+  if (
+    isInstallmentLoan(account) ||
+    isRevolvingCredit(account) ||
+    isBill(account)
+  ) {
+    const dueDate = account.nextDueDate;
+    if (!dueDate) return undefined;
+    return dueDate instanceof Date ? dueDate : dueDate.toDate();
+  }
+  return undefined;
+}
+
+function getAccountStartDate(account: FinancialAccount): Date | undefined {
+  if (isInstallmentLoan(account)) {
+    const startDate = account.contractStartDate;
+    if (!startDate) return undefined;
+    return startDate instanceof Date ? startDate : startDate.toDate();
+  }
+  return undefined;
+}
+
+function getAccountTermInPayments(
+  account: FinancialAccount
+): number | undefined {
+  if (isInstallmentLoan(account)) {
+    return account.termInPayments;
+  }
+  return undefined;
+}
 /**
  * Calculate account metrics from calculated account and payment periods
  */
@@ -80,7 +169,7 @@ function prepareChartData(
   const data: ChartDataPoint[] = [];
   // Use account's original amount or current remaining balance as starting point
   const startingBalance =
-    account.originalAmount?.amount ?? account.totalAmountRemaining.amount;
+    getAccountOriginalAmount(account) ?? getAccountRemainingBalance(account);
   let runningBalance = startingBalance;
 
   paymentPeriods.forEach((period) => {
@@ -319,7 +408,7 @@ export default function AccountDetail() {
     const isPeriodic =
       account.accountType === 'bill' &&
       (account.metadata?.isPeriodic === true ||
-        account.numberOfPayments === undefined);
+        getAccountTermInPayments(account) === undefined);
 
     setIsGeneratingPlan(true);
     setPlanError(null);
@@ -462,7 +551,7 @@ export default function AccountDetail() {
     );
   }
 
-  const currency = account.totalAmountRemaining.currency;
+  const currency = account.currency;
 
   // Extract recharts components
   const {
@@ -563,11 +652,12 @@ export default function AccountDetail() {
             Remaining Balance
           </div>
           <div className="mb-2 text-[1.75rem] font-bold text-primary-500">
-            {formatCurrency(account.totalAmountRemaining.amount, currency)}
+            {formatCurrency(getAccountRemainingBalance(account), currency)}
           </div>
-          {account.originalAmount && (
+          {getAccountOriginalAmount(account) !== undefined && (
             <div className="text-sm text-white/50">
-              {formatCurrency(account.originalAmount.amount, currency)} original
+              {formatCurrency(getAccountOriginalAmount(account)!, currency)}{' '}
+              original
             </div>
           )}
         </div>
@@ -587,10 +677,11 @@ export default function AccountDetail() {
             Payment Amount
           </div>
           <div className="mb-2 text-[1.75rem] font-bold text-white">
-            {formatCurrency(account.paymentAmount.amount, currency)}
+            {formatCurrency(getAccountPaymentAmount(account), currency)}
           </div>
           <div className="text-sm text-white/50">
-            {account.rate}% interest rate ({account.paymentFrequency})
+            {getAccountInterestRate(account) ?? 0}% interest rate (
+            {getAccountPaymentFrequency(account) ?? 'N/A'})
           </div>
         </div>
         <div className="ds-card-light p-6">
@@ -607,13 +698,13 @@ export default function AccountDetail() {
             ></div>
           </div>
         </div>
-        {account.nextDueDate && (
+        {getAccountNextDueDate(account) && (
           <div className="ds-card-light p-6">
             <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/70">
               Next Due Date
             </div>
             <div className="text-[1.75rem] font-bold text-white">
-              {formatDate(account.nextDueDate)}
+              {formatDate(getAccountNextDueDate(account)!)}
             </div>
           </div>
         )}
@@ -1025,8 +1116,9 @@ export default function AccountDetail() {
                 }}
                 disabled={
                   isGeneratingPlan ||
-                  !account?.startDate ||
-                  (account.accountType !== 'bill' && !account.numberOfPayments)
+                  !getAccountStartDate(account) ||
+                  (account.accountType !== 'bill' &&
+                    !getAccountTermInPayments(account))
                 }
                 style={{
                   padding: '0.625rem 1.25rem',
@@ -1037,16 +1129,16 @@ export default function AccountDetail() {
                   borderRadius: '6px',
                   cursor:
                     isGeneratingPlan ||
-                    !account?.startDate ||
+                    !getAccountStartDate(account) ||
                     (account.accountType !== 'bill' &&
-                      !account.numberOfPayments)
+                      !getAccountTermInPayments(account))
                       ? 'not-allowed'
                       : 'pointer',
                   opacity:
                     isGeneratingPlan ||
-                    !account?.startDate ||
+                    !getAccountStartDate(account) ||
                     (account.accountType !== 'bill' &&
-                      !account.numberOfPayments)
+                      !getAccountTermInPayments(account))
                       ? 0.6
                       : 1,
                   fontWeight: 600,
@@ -1055,8 +1147,9 @@ export default function AccountDetail() {
                 onMouseEnter={(e) => {
                   if (
                     !isGeneratingPlan &&
-                    account?.startDate &&
-                    (account.accountType === 'bill' || account.numberOfPayments)
+                    getAccountStartDate(account) &&
+                    (account.accountType === 'bill' ||
+                      getAccountTermInPayments(account))
                   ) {
                     e.currentTarget.style.transform = 'translateY(-2px)';
                     e.currentTarget.style.boxShadow =
