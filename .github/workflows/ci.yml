@@ -32,6 +32,7 @@ jobs:
       auth_app: ${{ steps.filter.outputs.auth_app }}
       firebase_client: ${{ steps.filter.outputs.firebase_client }}
       ui_theme: ${{ steps.filter.outputs.ui_theme }}
+      ai_processor: ${{ steps.filter.outputs.ai_processor }}
       any: ${{ steps.filter.outputs.any }}
     steps:
       - name: Checkout
@@ -69,6 +70,12 @@ jobs:
               - "pnpm-workspace.yaml"
             any:
               - "apps/**"
+              - "packages/**"
+              - "package.json"
+              - "pnpm-lock.yaml"
+              - "pnpm-workspace.yaml"
+            ai_processor:
+              - "apps/ai-processor/**"
               - "packages/**"
               - "package.json"
               - "pnpm-lock.yaml"
@@ -114,7 +121,7 @@ jobs:
     name: Build (affected apps only)
     runs-on: ubuntu-latest
     needs: [changes, validate]
-    if: needs.changes.outputs.app == 'true' || needs.changes.outputs.auth_app == 'true'
+    if: needs.changes.outputs.app == 'true' || needs.changes.outputs.auth_app == 'true' || needs.changes.outputs.ai_processor == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -123,6 +130,8 @@ jobs:
             enabled: ${{ needs.changes.outputs.app == 'true' }}
           - workspace: auth-app
             enabled: ${{ needs.changes.outputs.auth_app == 'true' }}
+          - workspace: ai-processor
+            enabled: ${{ needs.changes.outputs.ai_processor == 'true' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
