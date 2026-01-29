@@ -711,7 +711,7 @@ export async function migrateHistoricalPayments(
         accountId: accountData.id,
         paymentsLogged: accountData.payments.length,
       });
-    } catch (error) {
+    } catch {
       // Log error
     }
   }

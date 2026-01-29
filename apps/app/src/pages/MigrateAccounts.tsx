@@ -1003,16 +1003,16 @@ export default function MigrateAccounts() {
                             </span>
                             <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
                               {isInstallmentLoan(account) &&
-                                account.contractStartDate
+                              account.contractStartDate
                                 ? new Date(
-                                  account.contractStartDate instanceof Date
-                                    ? account.contractStartDate
-                                    : (
-                                      account.contractStartDate as {
-                                        toDate: () => Date;
-                                      }
-                                    ).toDate()
-                                ).toLocaleDateString()
+                                    account.contractStartDate instanceof Date
+                                      ? account.contractStartDate
+                                      : (
+                                          account.contractStartDate as {
+                                            toDate: () => Date;
+                                          }
+                                        ).toDate()
+                                  ).toLocaleDateString()
                                 : 'N/A'}
                             </span>
                           </div>

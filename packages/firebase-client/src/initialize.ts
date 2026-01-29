@@ -16,7 +16,7 @@ import type {
   FirebaseConfig,
   FirebaseEmulatorConfig,
   FirebaseMode,
-} from './types';
+} from './types.js';
 
 let firebaseApp: FirebaseApp | null = null;
 let initialized = false;

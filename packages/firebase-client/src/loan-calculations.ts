@@ -9,7 +9,7 @@ import type {
   InstallmentLoanAccount,
   CurrencyAmount,
   PaymentFrequency,
-} from './financial-accounts';
+} from './financial-accounts.js';
 import type { Timestamp } from 'firebase/firestore';
 
 /**

@@ -243,7 +243,7 @@ export async function createFinancialAccount(
     console.log('🔵 [createFinancialAccount] Payment log processed');
 
     // Use accountNumber as document ID, with fallback to generated ID
-    const accountId = account.accountNumber || `account-${Date.now()}`;
+    const accountId = account.accountNumber ?? `account-${Date.now()}`;
     console.log(
       '🔵 [createFinancialAccount] Step 6: Creating document reference...'
     );
@@ -794,7 +794,11 @@ export async function logPayment(
   } else if (isBill(account)) {
     // For bills: just log the payment, don't reduce any balance
     // Update next due date based on payment frequency
-    if (account.isRecurring && account.paymentFrequency) {
+    if (
+      account.isRecurring &&
+      account.paymentFrequency &&
+      account.nextDueDate
+    ) {
       const currentDueDate =
         account.nextDueDate instanceof Date
           ? account.nextDueDate

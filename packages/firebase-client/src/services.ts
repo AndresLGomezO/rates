@@ -9,7 +9,7 @@ import { getAuth as getFirebaseAuth } from 'firebase/auth';
 import { getFirestore as getFirebaseFirestore } from 'firebase/firestore';
 import { getStorage as getFirebaseStorage } from 'firebase/storage';
 import { getFunctions as getFirebaseFunctions } from 'firebase/functions';
-import { getFirebaseApp } from './initialize';
+import { getFirebaseApp } from './initialize.js';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
 import type { FirebaseStorage } from 'firebase/storage';

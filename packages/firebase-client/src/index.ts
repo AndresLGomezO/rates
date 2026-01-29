@@ -6,9 +6,9 @@
  * Cloud Build trigger entry point
  */
 
-export { initializeFirebase } from './initialize';
-export { getAuth, getFirestore, getStorage, getFunctions } from './services';
-export type { FirebaseConfig, FirebaseServices } from './types';
+export { initializeFirebase } from './initialize.js';
+export { getAuth, getFirestore, getStorage, getFunctions } from './services.js';
+export type { FirebaseConfig, FirebaseServices } from './types.js';
 
 // Financial Accounts Schema
 export type {
@@ -36,7 +36,7 @@ export type {
   CreateFinancialAccountInput,
   UpdateFinancialAccountInput,
   AddPaymentLogInput,
-} from './financial-accounts';
+} from './financial-accounts.js';
 
 // Type guards
 export {
@@ -44,7 +44,7 @@ export {
   isRevolvingCredit,
   isBill,
   isOther,
-} from './financial-accounts';
+} from './financial-accounts.js';
 
 export {
   calculatePaymentBreakdown,
@@ -55,7 +55,10 @@ export {
   validateFinancialAccount,
   createPaymentLogEntry,
   convertCurrency,
-} from './financial-accounts-utils';
+} from './financial-accounts-utils.js';
+
+// AI Task Schemas
+export * from './ai-tasks.js';
 
 // Payment Periods Schema
 export type {
@@ -65,30 +68,33 @@ export type {
   CreatePaymentPeriodInput,
   UpdatePaymentPeriodInput,
   LogPaymentToPeriodInput,
-} from './payment-periods';
+} from './payment-periods.js';
 
 // Amortization Plan Generator
 export {
   generateAmortizationPlan,
   calculateRemainingPrincipal,
-} from './amortization';
+} from './amortization.js';
 
 // Loan Calculations
-export type { AmortizationPayment, LoanProjection } from './loan-calculations';
+export type {
+  AmortizationPayment,
+  LoanProjection,
+} from './loan-calculations.js';
 
 export {
   calculateScheduledPayment,
   generateAmortizationSchedule,
   projectInstallmentLoan,
-} from './loan-calculations';
+} from './loan-calculations.js';
 
 // Credit Calculations
-export type { RevolvingPayoffProjection } from './credit-calculations';
+export type { RevolvingPayoffProjection } from './credit-calculations.js';
 
 export {
   projectRevolvingPayoff,
   suggestPaymentForTargetMonths,
-} from './credit-calculations';
+} from './credit-calculations.js';
 
 // Bill Calculations
-export { generateBillDueDates } from './bill-calculations';
+export { generateBillDueDates } from './bill-calculations.js';

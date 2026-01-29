@@ -4,9 +4,9 @@
  * Generates payment periods for installment loan accounts based on loan terms.
  */
 
-import type { InstallmentLoanAccount } from './financial-accounts';
-import type { CreatePaymentPeriodInput } from './payment-periods';
-import { calculatePaymentBreakdown } from './financial-accounts-utils';
+import type { InstallmentLoanAccount } from './financial-accounts.js';
+import type { CreatePaymentPeriodInput } from './payment-periods.js';
+import { calculatePaymentBreakdown } from './financial-accounts-utils.js';
 import { Timestamp } from 'firebase/firestore';
 
 /**

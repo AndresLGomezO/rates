@@ -8,7 +8,7 @@
 import type {
   RevolvingCreditAccount,
   CurrencyAmount,
-} from './financial-accounts';
+} from './financial-accounts.js';
 import type { Timestamp } from 'firebase/firestore';
 
 /**

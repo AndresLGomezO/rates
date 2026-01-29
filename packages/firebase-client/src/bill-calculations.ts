@@ -5,7 +5,7 @@
  * due date generation for recurring bills.
  */
 
-import type { BillAccount } from './financial-accounts';
+import type { BillAccount } from './financial-accounts.js';
 import type { Timestamp } from 'firebase/firestore';
 
 /**

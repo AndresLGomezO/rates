@@ -15,7 +15,7 @@ import type {
   PaymentBreakdown,
   CurrencyCode,
   FinancialAccountCalculated,
-} from './financial-accounts';
+} from './financial-accounts.js';
 
 /**
  * Calculate capital and interest split for a payment based on rate
