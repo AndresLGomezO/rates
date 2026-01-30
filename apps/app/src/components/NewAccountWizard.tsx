@@ -11,6 +11,7 @@ import type {
 } from '@rates/firebase-client';
 import { createFinancialAccount } from '../services/financialAccounts';
 import { InstallmentLoanFlow } from './InstallmentLoanFlow';
+import { RevolvingCreditFlow } from './RevolvingCreditFlow';
 import { Modal } from './Modal';
 import { Select } from './Select';
 import { formatCurrency } from '../utils/formatters';
@@ -23,7 +24,8 @@ type WizardStep =
   | 'financial'
   | 'review'
   | 'success'
-  | 'installment_flow';
+  | 'installment_flow'
+  | 'revolving_flow';
 
 interface NewAccountWizardProps {
   isOpen: boolean;
@@ -135,6 +137,7 @@ const BILL_SUBTYPE_HELP: Record<BillSubtype, string> = {
 function buildTitle(step: WizardStep, type: AccountType | null) {
   if (step === 'success') return 'Account created';
   if (step === 'installment_flow') return 'New Installment Loan';
+  if (step === 'revolving_flow') return 'New Revolving Account';
   if (step === 'type') return 'Create a new account';
   if (step === 'subtype') {
     if (type === 'installment_loan') return 'Select loan type';
@@ -333,6 +336,8 @@ export function NewAccountWizard({
       // Check if type needs subtype selection
       if (selectedType === 'installment_loan') {
         setStep('installment_flow');
+      } else if (selectedType === 'revolving_credit') {
+        setStep('revolving_flow');
       } else if (selectedType === 'other') {
         setStep('details');
       } else {
@@ -340,6 +345,8 @@ export function NewAccountWizard({
       }
     } else if (step === 'installment_flow') {
       // Handled internally by InstallmentLoanFlow
+    } else if (step === 'revolving_flow') {
+      // Handled internally by RevolvingCreditFlow
     } else if (step === 'subtype' && canContinueFromSubtype) {
       setStep('details');
     } else if (step === 'details') {
@@ -518,7 +525,7 @@ export function NewAccountWizard({
   };
 
   const renderFooter = () => {
-    if (step === 'installment_flow') return null;
+    if (step === 'installment_flow' || step === 'revolving_flow') return null;
     return (
       <div className="flex items-center gap-3">
         <>
@@ -654,6 +661,8 @@ export function NewAccountWizard({
                         setSelectedType(type);
                         if (type === 'installment_loan') {
                           setStep('installment_flow');
+                        } else if (type === 'revolving_credit') {
+                          setStep('revolving_flow');
                         } else if (type === 'other') {
                           setStep('details');
                         } else {
@@ -699,6 +708,30 @@ export function NewAccountWizard({
                   setError(null);
                   const accountId = await createFinancialAccount(data);
                   void onCreated?.(accountId, 'installment_loan');
+                  onClose();
+                  void navigate(`/account/${accountId}`);
+                } catch (e) {
+                  setError(
+                    e instanceof Error ? e.message : 'Failed to create account'
+                  );
+                } finally {
+                  setSaving(false);
+                }
+              })();
+            }}
+          />
+        )}
+
+        {step === 'revolving_flow' && (
+          <RevolvingCreditFlow
+            onBack={() => setStep('type')}
+            onComplete={(data) => {
+              void (async () => {
+                try {
+                  setSaving(true);
+                  setError(null);
+                  const accountId = await createFinancialAccount(data);
+                  void onCreated?.(accountId, 'revolving_credit');
                   onClose();
                   void navigate(`/account/${accountId}`);
                 } catch (e) {

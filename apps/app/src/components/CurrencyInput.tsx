@@ -5,6 +5,7 @@ interface CurrencyInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export function CurrencyInput({
@@ -12,6 +13,7 @@ export function CurrencyInput({
   onChange,
   placeholder = '$0.00',
   className = '',
+  disabled,
 }: CurrencyInputProps) {
   // Format raw value for display
   const formatDisplayValue = (val: string) => {
@@ -89,6 +91,7 @@ export function CurrencyInput({
       onChange={handleChange}
       placeholder={placeholder}
       className={className}
+      disabled={disabled}
     />
   );
 }
