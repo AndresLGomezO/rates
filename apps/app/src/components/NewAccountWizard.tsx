@@ -13,6 +13,7 @@ import { createFinancialAccount } from '../services/financialAccounts';
 import { InstallmentLoanFlow } from './InstallmentLoanFlow';
 import { RevolvingCreditFlow } from './RevolvingCreditFlow';
 import { BillFlow } from './BillFlow';
+import { OtherAccountFlow } from './OtherAccountFlow';
 import { Modal } from './Modal';
 import { Select } from './Select';
 import { formatCurrency } from '../utils/formatters';
@@ -27,7 +28,8 @@ type WizardStep =
   | 'success'
   | 'installment_flow'
   | 'revolving_flow'
-  | 'bill_flow';
+  | 'bill_flow'
+  | 'other_flow';
 
 interface NewAccountWizardProps {
   isOpen: boolean;
@@ -141,6 +143,7 @@ function buildTitle(step: WizardStep, type: AccountType | null) {
   if (step === 'installment_flow') return 'New Installment Loan';
   if (step === 'revolving_flow') return 'New Revolving Account';
   if (step === 'bill_flow') return 'New Bill';
+  if (step === 'other_flow') return 'Track New Obligation';
   if (step === 'type') return 'Create a new account';
   if (step === 'subtype') {
     if (type === 'installment_loan') return 'Select loan type';
@@ -344,7 +347,7 @@ export function NewAccountWizard({
       } else if (selectedType === 'bill') {
         setStep('bill_flow');
       } else if (selectedType === 'other') {
-        setStep('details');
+        setStep('other_flow');
       } else {
         setStep('subtype');
       }
@@ -535,7 +538,8 @@ export function NewAccountWizard({
     if (
       step === 'installment_flow' ||
       step === 'revolving_flow' ||
-      step === 'bill_flow'
+      step === 'bill_flow' ||
+      step === 'other_flow'
     )
       return null;
     return (
@@ -678,7 +682,7 @@ export function NewAccountWizard({
                         } else if (type === 'bill') {
                           setStep('bill_flow');
                         } else if (type === 'other') {
-                          setStep('details');
+                          setStep('other_flow');
                         } else {
                           setStep('subtype');
                         }
@@ -770,6 +774,30 @@ export function NewAccountWizard({
                   setError(null);
                   const accountId = await createFinancialAccount(data);
                   void onCreated?.(accountId, 'bill');
+                  onClose();
+                  void navigate(`/account/${accountId}`);
+                } catch (e) {
+                  setError(
+                    e instanceof Error ? e.message : 'Failed to create account'
+                  );
+                } finally {
+                  setSaving(false);
+                }
+              })();
+            }}
+          />
+        )}
+
+        {step === 'other_flow' && (
+          <OtherAccountFlow
+            onBack={() => setStep('type')}
+            onComplete={(data) => {
+              void (async () => {
+                try {
+                  setSaving(true);
+                  setError(null);
+                  const accountId = await createFinancialAccount(data);
+                  void onCreated?.(accountId, 'other');
                   onClose();
                   void navigate(`/account/${accountId}`);
                 } catch (e) {
