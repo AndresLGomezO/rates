@@ -4,7 +4,7 @@
 project_id          = "rates-production"
 region              = "us-central1"
 environment         = "dev"
-container_image_tag = "dev-1769782647"
+container_image_tag = "dev-1769791860"
 node_env            = "development"
 use_fallback_image = false  # Set to false after building/pushing the actual image to Artifact Registry
 include_secrets = true # Set to true after creating secret values (see manual_steps_required output)

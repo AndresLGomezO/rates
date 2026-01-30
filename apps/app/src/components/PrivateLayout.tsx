@@ -4,14 +4,50 @@ import { useAuth } from '../contexts/AuthContext';
 import { DebugIndicator } from './DebugIndicator';
 import { SearchBar } from './SearchBar';
 
-const ACCOUNT_TYPES = [
-  { type: 'loan', label: 'Loans', icon: '💰' },
-  { type: 'credit_card', label: 'Credit Cards', icon: '💳' },
-  { type: 'bill', label: 'Bills', icon: '📄' },
-  { type: 'mortgage', label: 'Mortgages', icon: '🏠' },
-  { type: 'personal_loan', label: 'Personal Loans', icon: '👤' },
-  { type: 'auto_loan', label: 'Auto Loans', icon: '🚗' },
-  { type: 'other', label: 'Other', icon: '📋' },
+const ACCOUNT_CATEGORIES = [
+  {
+    type: 'installment_loan',
+    label: 'Installment Loans',
+    icon: '🏦',
+    subcategories: [
+      { type: 'mortgage', label: 'Mortgages', icon: '🏠' },
+      { type: 'auto', label: 'Auto Loans', icon: '🚗' },
+      { type: 'personal', label: 'Personal Loans', icon: '👤' },
+      { type: 'student', label: 'Student Loans', icon: '🎓' },
+      { type: 'other', label: 'Other', icon: '📋' },
+    ],
+  },
+  {
+    type: 'revolving_credit',
+    label: 'Revolving Credit',
+    icon: '💳',
+    subcategories: [
+      { type: 'credit_card', label: 'Credit Cards', icon: '💳' },
+      { type: 'line_of_credit', label: 'Lines of Credit', icon: '💰' },
+      { type: 'store_card', label: 'Store Cards', icon: '🏪' },
+      { type: 'overdraft', label: 'Overdraft', icon: '🔄' },
+      { type: 'other', label: 'Other', icon: '📋' },
+    ],
+  },
+  {
+    type: 'bill',
+    label: 'Bills',
+    icon: '📄',
+    subcategories: [
+      { type: 'subscription', label: 'Subscriptions', icon: '📱' },
+      { type: 'utility', label: 'Utilities', icon: '💡' },
+      { type: 'rent', label: 'Rent', icon: '🏘️' },
+      { type: 'insurance', label: 'Insurance', icon: '🛡️' },
+      { type: 'tax', label: 'Taxes', icon: '🧾' },
+      { type: 'other', label: 'Other', icon: '📋' },
+    ],
+  },
+  {
+    type: 'other',
+    label: 'Other Accounts',
+    icon: '📋',
+    subcategories: [],
+  },
 ] as const;
 
 export function PrivateLayout({ children }: PropsWithChildren) {
@@ -22,6 +58,9 @@ export function PrivateLayout({ children }: PropsWithChildren) {
 
   const isAccountsRoute = location.pathname.startsWith('/accounts/');
   const [accountsMenuOpen, setAccountsMenuOpen] = useState(isAccountsRoute);
+  const [expandedCategories, setExpandedCategories] = useState<
+    Record<string, boolean>
+  >({});
 
   // Auto-open accounts menu when on accounts route
   useEffect(() => {
@@ -49,6 +88,13 @@ export function PrivateLayout({ children }: PropsWithChildren) {
 
   const toggleAccountsMenu = () => {
     setAccountsMenuOpen(!accountsMenuOpen);
+  };
+
+  const toggleCategory = (categoryType: string) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [categoryType]: !prev[categoryType],
+    }));
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -156,24 +202,79 @@ export function PrivateLayout({ children }: PropsWithChildren) {
                   )}
                 </button>
                 {(sidebarExpanded || isMobileMenuOpen) && accountsMenuOpen && (
-                  <ul className="mt-2 animate-slideDown list-none p-0 pl-10">
-                    {ACCOUNT_TYPES.map((accountType) => (
-                      <li key={accountType.type} className="my-1 p-0">
-                        <Link
-                          to={`/accounts/${accountType.type}`}
-                          onClick={handleMobileLinkClick}
-                          className={`before:ease relative flex items-center gap-3 overflow-hidden rounded-md px-4 py-3 text-sm font-medium text-white/70 no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-br before:from-white/10 before:to-white/5 before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:translate-x-1 hover:text-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:before:opacity-100 ${
-                            isActive(`/accounts/${accountType.type}`)
-                              ? 'bg-white/15 text-white shadow-[0_2px_8px_rgba(10,14,26,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] before:opacity-100'
-                              : ''
-                          }`}
-                          title={accountType.label}
-                        >
-                          <span className="flex min-w-6 items-center justify-center text-base">
-                            {accountType.icon}
-                          </span>
-                          <span>{accountType.label}</span>
-                        </Link>
+                  <ul className="mt-2 animate-slideDown list-none p-0 pl-6">
+                    {ACCOUNT_CATEGORIES.map((category) => (
+                      <li key={category.type} className="my-1 p-0">
+                        {category.subcategories.length > 0 ? (
+                          <>
+                            <button
+                              className={`before:ease relative flex w-full cursor-pointer items-center gap-3 overflow-hidden rounded-md border-0 bg-transparent px-4 py-3 text-left text-sm font-medium text-white/70 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-br before:from-white/10 before:to-white/5 before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:translate-x-1 hover:text-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:before:opacity-100 ${
+                                location.pathname.includes(
+                                  `/accounts/${category.type}`
+                                )
+                                  ? 'bg-white/15 text-white shadow-[0_2px_8px_rgba(10,14,26,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] before:opacity-100'
+                                  : ''
+                              }`}
+                              onClick={() => toggleCategory(category.type)}
+                              title={category.label}
+                            >
+                              <span className="flex min-w-6 items-center justify-center text-base">
+                                {category.icon}
+                              </span>
+                              <span className="flex-1">{category.label}</span>
+                              <span
+                                className={`text-xs opacity-70 transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                                  expandedCategories[category.type]
+                                    ? 'rotate-180'
+                                    : ''
+                                }`}
+                              >
+                                ▼
+                              </span>
+                            </button>
+                            {expandedCategories[category.type] && (
+                              <ul className="mt-1 animate-slideDown list-none p-0 pl-8">
+                                {category.subcategories.map((subcat) => (
+                                  <li key={subcat.type} className="my-1 p-0">
+                                    <Link
+                                      to={`/accounts/${category.type}/${subcat.type}`}
+                                      onClick={handleMobileLinkClick}
+                                      className={`before:ease relative flex items-center gap-3 overflow-hidden rounded-md px-4 py-2.5 text-xs font-medium text-white/60 no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-br before:from-white/10 before:to-white/5 before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:translate-x-1 hover:text-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:before:opacity-100 ${
+                                        isActive(
+                                          `/accounts/${category.type}/${subcat.type}`
+                                        )
+                                          ? 'bg-white/10 text-white shadow-[0_2px_8px_rgba(10,14,26,0.3),inset_0_1px_0_rgba(255,255,255,0.1)] before:opacity-100'
+                                          : ''
+                                      }`}
+                                      title={subcat.label}
+                                    >
+                                      <span className="flex min-w-5 items-center justify-center text-sm">
+                                        {subcat.icon}
+                                      </span>
+                                      <span>{subcat.label}</span>
+                                    </Link>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </>
+                        ) : (
+                          <Link
+                            to={`/accounts/${category.type}`}
+                            onClick={handleMobileLinkClick}
+                            className={`before:ease relative flex items-center gap-3 overflow-hidden rounded-md px-4 py-3 text-sm font-medium text-white/70 no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-br before:from-white/10 before:to-white/5 before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:translate-x-1 hover:text-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:before:opacity-100 ${
+                              isActive(`/accounts/${category.type}`)
+                                ? 'bg-white/15 text-white shadow-[0_2px_8px_rgba(10,14,26,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] before:opacity-100'
+                                : ''
+                            }`}
+                            title={category.label}
+                          >
+                            <span className="flex min-w-6 items-center justify-center text-base">
+                              {category.icon}
+                            </span>
+                            <span>{category.label}</span>
+                          </Link>
+                        )}
                       </li>
                     ))}
                   </ul>

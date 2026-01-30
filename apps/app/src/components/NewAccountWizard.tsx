@@ -656,7 +656,7 @@ export function NewAccountWizard({
             </p>
 
             <div
-              className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:gap-2.5"
+              className="mt-5 grid grid-cols-2 gap-2 sm:mt-4 sm:gap-2.5"
               role="list"
             >
               {(Object.keys(ACCOUNT_TYPE_LABELS) as AccountType[]).map(
@@ -667,7 +667,7 @@ export function NewAccountWizard({
                       key={type}
                       type="button"
                       role="listitem"
-                      className={`flex min-h-[72px] cursor-pointer flex-col justify-center rounded-md border p-2.5 pt-0 text-left text-white transition-all duration-200 ease-out active:scale-[0.98] sm:min-h-[80px] sm:p-3 ${
+                      className={`flex min-h-[72px] cursor-pointer flex-col justify-center rounded-md border px-4 py-3 text-left text-white transition-all duration-200 ease-out active:scale-[0.98] sm:min-h-[80px] sm:p-3 ${
                         isSelected
                           ? 'border-primary-500/80 bg-primary-500/20 shadow-[0_0_0_2px_rgba(59,130,246,0.35),0_4px_14px_rgba(30,64,175,0.3)]'
                           : 'border-neutral-700/40 bg-white/[0.07] backdrop-blur-[10px] hover:border-neutral-600/50 hover:bg-white/10 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]'

@@ -262,12 +262,9 @@ export function OtherAccountFlow({
       <div className="min-h-0 flex-1 overflow-y-auto pb-4 pr-2">
         {step === 'category' && (
           <div className="animate-fadeIn">
-            <h2 className="mb-4 text-xl font-bold">
+            <h2 className="mb-3 text-xl font-bold">
               What would you like to track?
             </h2>
-            <p className="mb-4 text-sm text-white/60">
-              Here are some common examples:
-            </p>
             <div className="grid grid-cols-2 gap-3">
               {(Object.keys(CATEGORY_LABELS) as CategoryType[]).map((key) => (
                 <button
@@ -280,14 +277,14 @@ export function OtherAccountFlow({
                       : 'border-white/10 bg-white/5 hover:bg-white/10'
                   }`}
                 >
-                  <span className="text-3xl">{CATEGORY_ICONS[key]}</span>
-                  <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-3xl">{CATEGORY_ICONS[key]}</span>
                     <div className="text-sm font-semibold">
                       {CATEGORY_LABELS[key]}
                     </div>
-                    <div className="mt-1 text-xs text-white/60">
-                      {CATEGORY_DESCRIPTIONS[key]}
-                    </div>
+                  </div>
+                  <div className="mt-1 text-xs text-white/60">
+                    {CATEGORY_DESCRIPTIONS[key]}
                   </div>
                 </button>
               ))}

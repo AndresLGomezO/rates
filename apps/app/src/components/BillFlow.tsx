@@ -183,6 +183,7 @@ export function BillFlow({ onBack, onComplete, initialData }: BillFlowProps) {
       accountNumber: accountNumber || crypto.randomUUID(),
       currency,
       status: 'active',
+      paymentLog: [],
       isRecurring,
       isAmountVariable: isRecurring ? isAmountVariable : false,
       paymentFrequency: isRecurring ? frequency : undefined,

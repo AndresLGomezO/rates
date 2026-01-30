@@ -49,7 +49,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: 'accounts/:type',
+        path: 'accounts/:type/:subtype?',
         element: (
           <ProtectedRoute>
             <PrivateLayout>
