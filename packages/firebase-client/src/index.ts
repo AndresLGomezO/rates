@@ -98,3 +98,6 @@ export {
 
 // Bill Calculations
 export { generateBillDueDates } from './bill-calculations.js';
+
+// Financial Insights
+export * from './financial-insights.js';

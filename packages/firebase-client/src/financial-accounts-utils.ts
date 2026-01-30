@@ -16,6 +16,7 @@ import type {
   CurrencyCode,
   FinancialAccountCalculated,
 } from './financial-accounts.js';
+import { calculateLoanTerm } from './amortization.js';
 
 /**
  * Calculate capital and interest split for a payment based on rate
@@ -248,12 +249,17 @@ export function calculateAccountFields(
   if (account.accountType === 'installment_loan' && nextDueDate) {
     const payment = account.scheduledPayment?.amount ?? 0;
     const currentAmount = account.currentPrincipal?.amount ?? 0;
+    const rate = account.annualInterestRate;
+
     if (payment > 0 && currentAmount > 0) {
-      const monthsRemaining = Math.ceil(currentAmount / payment);
-      estimatedPayoffDate = new Date(nextDueDate);
-      estimatedPayoffDate.setMonth(
-        estimatedPayoffDate.getMonth() + monthsRemaining
-      );
+      const monthsRemaining = calculateLoanTerm(currentAmount, rate, payment);
+
+      if (monthsRemaining !== Infinity) {
+        estimatedPayoffDate = new Date(nextDueDate);
+        estimatedPayoffDate.setMonth(
+          estimatedPayoffDate.getMonth() + monthsRemaining
+        );
+      }
     }
   } else if (account.accountType === 'revolving_credit' && nextDueDate) {
     const payment =
@@ -261,13 +267,17 @@ export function calculateAccountFields(
       account.currentMinimumPayment?.amount ??
       0;
     const balance = account.currentBalance.amount;
+    const rate = account.purchaseApr;
+
     if (payment > 0 && balance > 0) {
-      // Simplified estimate (doesn't account for interest)
-      const monthsRemaining = Math.ceil(balance / payment);
-      estimatedPayoffDate = new Date(nextDueDate);
-      estimatedPayoffDate.setMonth(
-        estimatedPayoffDate.getMonth() + monthsRemaining
-      );
+      const monthsRemaining = calculateLoanTerm(balance, rate, payment);
+
+      if (monthsRemaining !== Infinity) {
+        estimatedPayoffDate = new Date(nextDueDate);
+        estimatedPayoffDate.setMonth(
+          estimatedPayoffDate.getMonth() + monthsRemaining
+        );
+      }
     }
   }
 

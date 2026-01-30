@@ -192,7 +192,7 @@ export function PrivateLayout({ children }: PropsWithChildren) {
                     <>
                       <span>Accounts</span>
                       <span
-                        className={`ml-auto text-xs opacity-70 transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                        className={`ml-auto text-sm opacity-70 transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                           accountsMenuOpen ? 'rotate-180' : ''
                         }`}
                       >
@@ -207,31 +207,46 @@ export function PrivateLayout({ children }: PropsWithChildren) {
                       <li key={category.type} className="my-1 p-0">
                         {category.subcategories.length > 0 ? (
                           <>
-                            <button
-                              className={`before:ease relative flex w-full cursor-pointer items-center gap-3 overflow-hidden rounded-md border-0 bg-transparent px-4 py-3 text-left text-sm font-medium text-white/70 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-br before:from-white/10 before:to-white/5 before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:translate-x-1 hover:text-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:before:opacity-100 ${
+                            <div
+                              className={`before:ease relative flex w-full items-center overflow-hidden rounded-md border-0 bg-transparent text-left text-sm font-medium text-white/70 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-br before:from-white/10 before:to-white/5 before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:translate-x-1 hover:text-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:before:opacity-100 ${
                                 location.pathname.includes(
                                   `/accounts/${category.type}`
                                 )
                                   ? 'bg-white/15 text-white shadow-[0_2px_8px_rgba(10,14,26,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] before:opacity-100'
                                   : ''
                               }`}
-                              onClick={() => toggleCategory(category.type)}
                               title={category.label}
                             >
-                              <span className="flex min-w-6 items-center justify-center text-base">
-                                {category.icon}
-                              </span>
-                              <span className="flex-1">{category.label}</span>
-                              <span
-                                className={`text-xs opacity-70 transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                                  expandedCategories[category.type]
-                                    ? 'rotate-180'
-                                    : ''
-                                }`}
+                              <Link
+                                to={`/accounts/${category.type}`}
+                                onClick={handleMobileLinkClick}
+                                className="relative z-10 flex flex-1 items-center gap-3 py-3 pl-4 text-inherit no-underline"
                               >
-                                ▼
-                              </span>
-                            </button>
+                                <span className="flex min-w-6 items-center justify-center text-base">
+                                  {category.icon}
+                                </span>
+                                <span className="flex-1">{category.label}</span>
+                              </Link>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  toggleCategory(category.type);
+                                }}
+                                className="relative z-10 flex h-full cursor-pointer items-center justify-center px-4 py-3 hover:text-white"
+                                aria-label="Toggle subcategories"
+                              >
+                                <span
+                                  className={`text-sm opacity-70 transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                                    expandedCategories[category.type]
+                                      ? 'rotate-180'
+                                      : ''
+                                  }`}
+                                >
+                                  ▼
+                                </span>
+                              </button>
+                            </div>
                             {expandedCategories[category.type] && (
                               <ul className="mt-1 animate-slideDown list-none p-0 pl-8">
                                 {category.subcategories.map((subcat) => (

@@ -129,3 +129,63 @@ export function calculateRemainingPrincipal(
 
   return remaining;
 }
+
+/**
+ * Calculate the monthly payment required to pay off a loan in a specific number of months
+ * (PMT formula)
+ *
+ * @param principal - Loan principal amount
+ * @param annualRate - Annual interest rate (percentage, e.g. 5.5)
+ * @param months - Number of months to pay off
+ * @returns Monthly payment amount
+ */
+export function calculateMonthlyPayment(
+  principal: number,
+  annualRate: number,
+  months: number
+): number {
+  if (months <= 0) return principal;
+  if (annualRate === 0) return principal / months;
+
+  const monthlyRate = annualRate / 12 / 100;
+
+  // A = P * (r * (1 + r)^N) / ((1 + r)^N - 1)
+  const numerator = monthlyRate * Math.pow(1 + monthlyRate, months);
+  const denominator = Math.pow(1 + monthlyRate, months) - 1;
+  return principal * (numerator / denominator);
+}
+
+/**
+ * Calculate the number of months required to pay off a loan with a fixed payment
+ * (NPER formula)
+ *
+ * @param principal - Current principal amount
+ * @param annualRate - Annual interest rate (percentage, e.g. 5.5)
+ * @param monthlyPayment - Monthly payment amount
+ * @returns Number of months (rounded up), or Infinity if payment covers interest only/less
+ */
+export function calculateLoanTerm(
+  principal: number,
+  annualRate: number,
+  monthlyPayment: number
+): number {
+  if (principal <= 0) return 0;
+  if (annualRate === 0) {
+    if (monthlyPayment <= 0) return Infinity;
+    return Math.ceil(principal / monthlyPayment);
+  }
+
+  const monthlyRate = annualRate / 12 / 100;
+
+  // Check if payment covers interest
+  const monthlyInterest = principal * monthlyRate;
+  if (monthlyPayment <= monthlyInterest) {
+    return Infinity;
+  }
+
+  // N = -log(1 - (r * P) / A) / log(1 + r)
+  const numerator = Math.log(1 - (monthlyRate * principal) / monthlyPayment);
+  const denominator = Math.log(1 + monthlyRate);
+
+  return Math.ceil(-numerator / denominator);
+}

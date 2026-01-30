@@ -69,6 +69,12 @@ function getAccountNextDueDate(account: FinancialAccount): Date | undefined {
 import { filterAccounts } from '../utils/filterAccounts';
 import { Modal } from '../components/Modal';
 import { CreateAccountForm } from '../components/CreateAccountForm';
+import { InstallmentLoanCard } from '../components/InstallmentLoanCard';
+import { AggregateLoanPayoffWidget } from '../components/InstallmentLoanInsights/AggregateLoanPayoffWidget';
+
+// ... existing imports
+
+// Inside the component rendering loop:
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   installment_loan: 'Installment Loans',
@@ -425,8 +431,8 @@ export default function AccountsByType() {
   }
 
   return (
-    <div className="m-0 box-border flex w-full max-w-full animate-fadeIn-slow flex-col gap-8 overflow-x-hidden p-0">
-      <div className="relative mb-10 flex items-center justify-between pb-6 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:content-['']">
+    <div className="m-0 box-border flex w-full max-w-full animate-fadeIn-slow flex-col gap-6 overflow-x-hidden p-4">
+      <div className="relative mb-6 flex items-center justify-between pb-6 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:content-['']">
         <h2 className="m-0 bg-gradient-to-br from-white to-white/80 bg-clip-text text-xl font-bold -tracking-[0.5px] text-transparent text-white drop-shadow-[0_2px_20px_rgba(255,255,255,0.1)] md:text-4xl">
           {getPageTitle(type, subtype)}
         </h2>
@@ -625,41 +631,55 @@ export default function AccountsByType() {
         </div>
       ) : (
         <>
-          <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div className="ds-card-light p-6">
-              <h3 className="m-0 mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
-                Total Accounts
-              </h3>
-              <p className="m-0 text-2xl font-bold text-white">
-                {filteredAccounts.length}
-              </p>
+          {type === 'installment_loan' ? (
+            <AggregateLoanPayoffWidget accounts={filteredAccounts} />
+          ) : (
+            <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div className="ds-card-light p-6">
+                <h3 className="m-0 mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
+                  Total Accounts
+                </h3>
+                <p className="m-0 text-2xl font-bold text-white">
+                  {filteredAccounts.length}
+                </p>
+              </div>
+              <div className="ds-card-light p-6">
+                <h3 className="m-0 mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
+                  Active Accounts
+                </h3>
+                <p className="m-0 text-2xl font-bold text-white">
+                  {filteredAccounts.filter((a) => a.status === 'active').length}
+                </p>
+              </div>
+              <div className="ds-card-light p-6">
+                <h3 className="m-0 mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
+                  Total Remaining
+                </h3>
+                <p className="m-0 text-2xl font-bold text-white">
+                  {formatCurrency(
+                    filteredAccounts.reduce(
+                      (sum, a) => sum + getAccountRemainingBalance(a),
+                      0
+                    ),
+                    'COP'
+                  )}
+                </p>
+              </div>
             </div>
-            <div className="ds-card-light p-6">
-              <h3 className="m-0 mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
-                Active Accounts
-              </h3>
-              <p className="m-0 text-2xl font-bold text-white">
-                {filteredAccounts.filter((a) => a.status === 'active').length}
-              </p>
-            </div>
-            <div className="ds-card-light p-6">
-              <h3 className="m-0 mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
-                Total Remaining
-              </h3>
-              <p className="m-0 text-2xl font-bold text-white">
-                {formatCurrency(
-                  filteredAccounts.reduce(
-                    (sum, a) => sum + getAccountRemainingBalance(a),
-                    0
-                  ),
-                  'COP'
-                )}
-              </p>
-            </div>
-          </div>
+          )}
 
           <div className="flex flex-col gap-6">
             {filteredAccounts.map((account) => {
+              if (isInstallmentLoan(account) && type === 'installment_loan') {
+                return (
+                  <InstallmentLoanCard
+                    key={account.accountNumber}
+                    account={account}
+                    getStatusColor={getStatusColor}
+                  />
+                );
+              }
+
               const accountWithCalculated = getAccountWithCalculated(account);
               const daysRemaining =
                 accountWithCalculated.daysRemainingToDueDate;
