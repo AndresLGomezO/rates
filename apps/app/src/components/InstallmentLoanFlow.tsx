@@ -337,43 +337,39 @@ export function InstallmentLoanFlow({
       ? parseFloat(currentBalance)
       : finalPrincipal; // Fallback
 
-    const payload: Omit<CreateFinancialAccountInput, 'userId'> = {
-      accountType: 'installment_loan',
+    // Construct payload with strict types and spread for optional fields
+    const payload = {
+      accountType: 'installment_loan' as const,
       loanSubtype: subtype,
       accountName: nickname,
       accountDescription: notes || `${LOAN_SUBTYPE_LABELS[subtype]} Loan`,
       accountNumber: accountNumber || crypto.randomUUID(), // Autogenerate if empty
       currency,
-      status: 'active',
+      status: 'active' as const,
       annualInterestRate: finalRate,
       paymentFrequency: frequency,
       currentPrincipal: {
         amount: finalBalance,
         currency,
       },
-      scheduledPayment:
-        finalPayment > 0
-          ? {
-              amount: finalPayment,
-              currency,
-            }
-          : undefined,
-      originalPrincipal:
-        finalPrincipal > 0
-          ? {
-              amount: finalPrincipal,
-              currency,
-            }
-          : undefined,
-      termInPayments: finalTerm > 0 ? finalTerm : undefined,
-      contractStartDate: isStartDateUnknown
-        ? undefined
-        : startDate
-          ? new Date(startDate)
-          : new Date(),
-      nextDueDate: nextDueDate ? new Date(nextDueDate) : undefined,
       paymentLog: [],
-    } as unknown as Omit<CreateFinancialAccountInput, 'userId'>;
+      ...(finalPayment > 0
+        ? { scheduledPayment: { amount: finalPayment, currency } }
+        : {}),
+      ...(finalPrincipal > 0
+        ? { originalPrincipal: { amount: finalPrincipal, currency } }
+        : {}),
+      ...(finalTerm > 0 ? { termInPayments: finalTerm } : {}),
+      ...(!isStartDateUnknown || !isNewLoan
+        ? {
+            contractStartDate:
+              !isStartDateUnknown && startDate
+                ? new Date(startDate)
+                : new Date(),
+          }
+        : {}),
+      ...(nextDueDate ? { nextDueDate: new Date(nextDueDate) } : {}),
+    };
 
     onComplete(payload);
   };

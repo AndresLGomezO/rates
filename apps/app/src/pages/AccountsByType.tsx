@@ -71,6 +71,8 @@ import { Modal } from '../components/Modal';
 import { CreateAccountForm } from '../components/CreateAccountForm';
 import { InstallmentLoanCard } from '../components/InstallmentLoanCard';
 import { AggregateLoanPayoffWidget } from '../components/InstallmentLoanInsights/AggregateLoanPayoffWidget';
+import { RevolvingCreditCard } from '../components/RevolvingCreditCard';
+import { AggregateRevolvingCreditWidget } from '../components/RevolvingCreditInsights/AggregateRevolvingCreditWidget';
 
 // ... existing imports
 
@@ -633,6 +635,8 @@ export default function AccountsByType() {
         <>
           {type === 'installment_loan' ? (
             <AggregateLoanPayoffWidget accounts={filteredAccounts} />
+          ) : type === 'revolving_credit' ? (
+            <AggregateRevolvingCreditWidget accounts={filteredAccounts} />
           ) : (
             <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
               <div className="ds-card-light p-6">
@@ -673,6 +677,17 @@ export default function AccountsByType() {
               if (isInstallmentLoan(account) && type === 'installment_loan') {
                 return (
                   <InstallmentLoanCard
+                    key={account.accountNumber}
+                    account={account}
+                    getStatusColor={getStatusColor}
+                  />
+                );
+              } else if (
+                isRevolvingCredit(account) &&
+                type === 'revolving_credit'
+              ) {
+                return (
+                  <RevolvingCreditCard
                     key={account.accountNumber}
                     account={account}
                     getStatusColor={getStatusColor}

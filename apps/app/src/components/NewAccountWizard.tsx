@@ -409,7 +409,7 @@ export function NewAccountWizard({
     // Build type-specific payload
     switch (selectedType) {
       case 'installment_loan': {
-        return {
+        const payload = {
           ...basePayload,
           accountType: 'installment_loan' as const,
           loanSubtype:
@@ -420,32 +420,34 @@ export function NewAccountWizard({
             amount: parseFloat(formData.totalAmountRemaining),
             currency: formData.currency,
           },
-          scheduledPayment: formData.paymentAmount
-            ? {
-                amount: parseFloat(formData.paymentAmount),
-                currency: formData.currency,
-              }
-            : undefined,
-          originalPrincipal: formData.originalAmount
-            ? {
-                amount: parseFloat(formData.originalAmount),
-                currency: formData.currency,
-              }
-            : undefined,
           contractStartDate: formData.startDate
             ? new Date(formData.startDate)
             : new Date(),
-          termInPayments: formData.numberOfPayments
-            ? parseInt(formData.numberOfPayments, 10)
-            : undefined,
-          nextDueDate: formData.nextDueDate
-            ? new Date(formData.nextDueDate)
-            : undefined,
-        } as Omit<CreateFinancialAccountInput, 'userId'>;
+          ...(formData.paymentAmount && {
+            scheduledPayment: {
+              amount: parseFloat(formData.paymentAmount),
+              currency: formData.currency,
+            },
+          }),
+          ...(formData.originalAmount && {
+            originalPrincipal: {
+              amount: parseFloat(formData.originalAmount),
+              currency: formData.currency,
+            },
+          }),
+          ...(formData.numberOfPayments && {
+            termInPayments: parseInt(formData.numberOfPayments, 10),
+          }),
+          ...(formData.nextDueDate && {
+            nextDueDate: new Date(formData.nextDueDate),
+          }),
+        };
+
+        return payload as Omit<CreateFinancialAccountInput, 'userId'>;
       }
 
       case 'revolving_credit': {
-        return {
+        const payload = {
           ...basePayload,
           accountType: 'revolving_credit' as const,
           creditSubtype:
@@ -455,57 +457,61 @@ export function NewAccountWizard({
             currency: formData.currency,
           },
           purchaseApr: parseFloat(formData.rate),
-          minimumPayment: formData.paymentAmount
-            ? {
-                amount: parseFloat(formData.paymentAmount),
-                currency: formData.currency,
-              }
-            : undefined,
-          nextDueDate: formData.nextDueDate
-            ? new Date(formData.nextDueDate)
-            : undefined,
-        } as Omit<CreateFinancialAccountInput, 'userId'>;
+          ...(formData.paymentAmount && {
+            minimumPayment: {
+              amount: parseFloat(formData.paymentAmount),
+              currency: formData.currency,
+            },
+          }),
+          ...(formData.nextDueDate && {
+            nextDueDate: new Date(formData.nextDueDate),
+          }),
+        };
+
+        return payload as Omit<CreateFinancialAccountInput, 'userId'>;
       }
 
       case 'bill': {
         const isRecurring = !!formData.paymentFrequency;
-        return {
+        const payload = {
           ...basePayload,
           accountType: 'bill' as const,
           billSubtype: (selectedSubtype as BillSubtype) || 'utility',
           isRecurring,
           isAmountVariable: false, // Assume fixed amount for now
           nextDueDate: new Date(formData.nextDueDate || getDefaultDueDate()),
-          recurringAmount: formData.paymentAmount
-            ? {
-                amount: parseFloat(formData.paymentAmount),
-                currency: formData.currency,
-              }
-            : undefined,
-          paymentFrequency: isRecurring ? formData.paymentFrequency : undefined,
-          endDate: formData.numberOfPayments
-            ? (() => {
-                // Calculate end date based on number of payments
-                const start = new Date(
-                  formData.nextDueDate || getDefaultDueDate()
-                );
-                const months = parseInt(formData.numberOfPayments, 10);
-                const end = new Date(start);
-                end.setMonth(end.getMonth() + months);
-                return end;
-              })()
-            : undefined,
-        } as Omit<CreateFinancialAccountInput, 'userId'>;
+          ...(formData.paymentAmount && {
+            recurringAmount: {
+              amount: parseFloat(formData.paymentAmount),
+              currency: formData.currency,
+            },
+          }),
+          ...(isRecurring && { paymentFrequency: formData.paymentFrequency }),
+          ...(formData.numberOfPayments && {
+            endDate: (() => {
+              const start = new Date(
+                formData.nextDueDate || getDefaultDueDate()
+              );
+              const months = parseInt(formData.numberOfPayments, 10);
+              const end = new Date(start);
+              end.setMonth(end.getMonth() + months);
+              return end;
+            })(),
+          }),
+        };
+
+        return payload as Omit<CreateFinancialAccountInput, 'userId'>;
       }
 
       case 'other': {
-        return {
+        const payload = {
           ...basePayload,
           accountType: 'other' as const,
-          nextRelevantDate: formData.nextDueDate
-            ? new Date(formData.nextDueDate)
-            : undefined,
-        } as Omit<CreateFinancialAccountInput, 'userId'>;
+          ...(formData.nextDueDate && {
+            nextRelevantDate: new Date(formData.nextDueDate),
+          }),
+        };
+        return payload as Omit<CreateFinancialAccountInput, 'userId'>;
       }
 
       default: {

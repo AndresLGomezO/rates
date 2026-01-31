@@ -15,6 +15,13 @@ import {
   generateAmortizationSchedule,
   AmortizationPayment,
 } from './loan-calculations.js';
+import {
+  calculateUtilizationMetrics,
+  simulateDecliningPaymentPayoff,
+  projectRevolvingPayoff,
+  DecliningPayoffProjection,
+} from './credit-calculations.js';
+import { isRevolvingCredit } from './financial-accounts.js';
 
 // ==========================================
 // Insight Types
@@ -33,6 +40,16 @@ export interface LoanPayoffInsight {
   remainingPayments: number;
   /** Original loan amount (inferred or explicit) */
   originalPrincipal: CurrencyAmount;
+}
+
+export interface CreditUtilizationInsight {
+  currentUtilization: number;
+  utilizationZone: 'excellent' | 'good' | 'high' | 'very_high' | 'critical';
+  availableCredit: CurrencyAmount;
+  amountToReachZone: {
+    good: number | null;
+    excellent: number | null;
+  };
 }
 
 // ==========================================
@@ -112,6 +129,17 @@ export function getLoanPayoffInsight(
   };
 }
 
+/**
+ * Generate Credit Utilization Insight
+ * Answers: "How bad is it?"
+ */
+export function getCreditUtilizationInsight(
+  account: FinancialAccount
+): CreditUtilizationInsight | null {
+  if (!isRevolvingCredit(account)) return null;
+  return calculateUtilizationMetrics(account);
+}
+
 export interface PaymentAnatomyInsight {
   /** The current monthly payment amount */
   monthlyPayment: CurrencyAmount;
@@ -137,6 +165,18 @@ export interface PaymentAnatomyInsight {
     interestTotal: number;
     principalPercentage: number;
   }>;
+}
+
+export interface RevolvingCostInsight {
+  currentMinPayment: CurrencyAmount;
+  currentInterestCharged: CurrencyAmount;
+  currentPrincipalPaid: CurrencyAmount;
+
+  /** True if the minimum payment barely covers interest (or doesn't) */
+  isTreadingWater: boolean;
+
+  /** Projection if only minimum payment is made */
+  minPayoffProjection: DecliningPayoffProjection;
 }
 
 /**
@@ -223,6 +263,53 @@ export function getPaymentAnatomyInsight(
   };
 }
 
+/**
+ * Generate Revolving Cost Insight (The "Trap")
+ * Answers: "What's this costing me?"
+ */
+export function getRevolvingCostInsight(
+  account: FinancialAccount
+): RevolvingCostInsight | null {
+  if (!isRevolvingCredit(account)) return null;
+
+  const balance = account.currentBalance.amount;
+  const currency = account.currency;
+  const monthlyRate = account.purchaseApr / 100 / 12;
+
+  // 1. Current Month Snapshot
+  const interestCharged = balance * monthlyRate;
+
+  // Estimate current minimum payment if not provided
+  // We use the same heuristic as the simulation or the user value
+  let minPaymentAmount = account.currentMinimumPayment?.amount;
+  if (!minPaymentAmount || minPaymentAmount === 0) {
+    // Heuristic: Max($25, Balance * 2%)
+    minPaymentAmount = Math.max(25, balance * 0.02);
+  }
+
+  const principalPaid = Math.max(0, minPaymentAmount - interestCharged);
+
+  // Treading water check: is principal component very small (< 10% of payment)?
+  const isTreadingWater = principalPaid < minPaymentAmount * 0.1;
+
+  // 2. Payoff Trajectory (The "Trap" simulation)
+  let minPaymentPercentage = 0.02; // default
+  if (minPaymentAmount > 0 && balance > 0) {
+    minPaymentPercentage = minPaymentAmount / balance;
+  }
+  const minPayoffProjection = simulateDecliningPaymentPayoff(account, {
+    minPaymentPercentage,
+  });
+
+  return {
+    currentMinPayment: { amount: minPaymentAmount, currency },
+    currentInterestCharged: { amount: interestCharged, currency },
+    currentPrincipalPaid: { amount: principalPaid, currency },
+    isTreadingWater,
+    minPayoffProjection,
+  };
+}
+
 export interface PayoffAcceleratorScenario {
   extraPaymentAmount: number;
   payoffDate: Date;
@@ -235,6 +322,22 @@ export interface PayoffAcceleratorInsight {
   currentPayoffDate: Date;
   currentFutureInterest: number;
   scenarios: PayoffAcceleratorScenario[];
+}
+
+export interface RevolvingPayoffPath {
+  paymentAmount: number;
+  payoffDate: Date;
+  totalInterest: number;
+  totalPaid: number;
+  monthsToPayoff: number; // Duration of this scenario
+  savingsVsMinimum: number; // Interest saved vs minimum path
+  monthsFaster: number; // Months saved vs minimum path
+}
+
+export interface RevolvingPayoffAcceleratorInsight {
+  currentBalance: CurrencyAmount;
+  minPayoffPath: DecliningPayoffProjection;
+  scenarios: RevolvingPayoffPath[];
 }
 
 /**
@@ -346,5 +449,98 @@ export function getPayoffAcceleratorInsight(
     currentPayoffDate: baselineDate,
     currentFutureInterest: baselineInterest,
     scenarios: results,
+  };
+}
+
+/**
+ * Generate Revolving Payoff Accelerator Insight
+ * Answers: "How do I escape?"
+ */
+export function getRevolvingPayoffAcceleratorInsight(
+  account: FinancialAccount,
+  customAmounts?: number[]
+): RevolvingPayoffAcceleratorInsight | null {
+  if (!isRevolvingCredit(account)) return null;
+
+  // 1. Baseline: Minimum Payment Path
+  let minPaymentPercentage = 0.02; // default
+  if (
+    account.currentMinimumPayment?.amount &&
+    account.currentBalance.amount > 0
+  ) {
+    minPaymentPercentage =
+      account.currentMinimumPayment.amount / account.currentBalance.amount;
+  }
+  const minPath = simulateDecliningPaymentPayoff(account, {
+    minPaymentPercentage,
+  });
+
+  // 2. Scenarios: Fixed Payments
+  // Generate smart default options
+  // - Moderate: 3 year payoff?
+  // - Aggressive: 1.5 year payoff?
+  // - 10% Rule: 10% of balance
+  // - Round numbers: $50, $100, $200, $500 depending on balance
+
+  const balance = account.currentBalance.amount;
+  const currency = account.currency;
+
+  let amountsToTest = customAmounts;
+  if (!amountsToTest || amountsToTest.length === 0) {
+    // Heuristics
+    amountsToTest = [
+      Math.max(50, Math.ceil(balance / 36)), // ~3 years
+      Math.max(100, Math.ceil(balance / 18)), // ~1.5 years
+      Math.ceil(balance * 0.1), // 10% rule
+    ];
+
+    // Add round numbers
+    if (balance > 1000) amountsToTest.push(200, 300, 500);
+    if (balance > 5000) amountsToTest.push(800, 1000);
+
+    // Dedupe, sort, and ensure > minPayment
+    const minPaymentEst = Math.max(25, balance * 0.02);
+    amountsToTest = [...new Set(amountsToTest)]
+      .filter((a) => a > minPaymentEst + 5) // Must be meaningfully more than min
+      .sort((a, b) => a - b);
+  }
+
+  const scenarios: RevolvingPayoffPath[] = [];
+
+  for (const amt of amountsToTest) {
+    const proj = projectRevolvingPayoff(account, { amount: amt, currency });
+    if (
+      !proj.willPayoff ||
+      !proj.totalInterestPaid ||
+      !proj.monthsToPayoff ||
+      !proj.projectedPayoffDate
+    )
+      continue;
+
+    const totalPaid = balance + proj.totalInterestPaid.amount;
+    const savings = Math.max(
+      0,
+      minPath.totalInterestPaid.amount - proj.totalInterestPaid.amount
+    );
+    const timeSaved = Math.max(0, minPath.monthsToPayoff - proj.monthsToPayoff);
+
+    scenarios.push({
+      paymentAmount: amt,
+      payoffDate:
+        proj.projectedPayoffDate instanceof Date
+          ? proj.projectedPayoffDate
+          : proj.projectedPayoffDate.toDate(),
+      totalInterest: proj.totalInterestPaid.amount,
+      totalPaid,
+      monthsToPayoff: proj.monthsToPayoff,
+      savingsVsMinimum: savings,
+      monthsFaster: timeSaved,
+    });
+  }
+
+  return {
+    currentBalance: account.currentBalance,
+    minPayoffPath: minPath,
+    scenarios,
   };
 }

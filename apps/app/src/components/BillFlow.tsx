@@ -175,35 +175,29 @@ export function BillFlow({ onBack, onComplete, initialData }: BillFlowProps) {
       !isDueDateUnknown && nextDueDate ? new Date(nextDueDate) : undefined;
     const finalEndDate = hasEndDate && endDate ? new Date(endDate) : undefined;
 
-    const payload: Omit<CreateFinancialAccountInput, 'userId'> = {
-      accountType: 'bill',
+    // Construct payload with strict types and spread for optional fields
+    const payload = {
+      accountType: 'bill' as const,
       billSubtype: subtype,
       accountName: nickname,
       accountDescription: notes || `${BILL_SUBTYPE_LABELS[subtype]} Account`,
       accountNumber: accountNumber || crypto.randomUUID(),
       currency,
-      status: 'active',
-      paymentLog: [],
+      status: 'active' as const,
       isRecurring,
       isAmountVariable: isRecurring ? isAmountVariable : false,
-      paymentFrequency: isRecurring ? frequency : undefined,
-      recurringAmount:
-        isRecurring && finalAmount > 0
-          ? { amount: finalAmount, currency }
-          : undefined,
-      nextDueDate: finalNextDueDate,
-      endDate: finalEndDate,
-      // Metadata fields (payee, logic for amount if not recurring -> just store in notes or ignoring for now as per schema minimal reqs)
-      // Actually schema says "For one-time bills... Q7c: How much is this payment?"
-      // The Type definition for CreateFinancialAccountInput might need to support one-time amount better,
-      // or we use `recurringAmount` as just "amount" or put it in `nextPaymentAmount` if that existed.
-      // For now, looking at existing `CreateFinancialAccountInput` in NewAccountWizard, it has `scheduledPayment` maybe?
-      // Re-checking NewAccountWizard.tsx for Bill payload...
-      // It sets `recurringAmount` and `paymentFrequency`.
-      // If it's one-time, maybe we don't set frequency? But `recurringAmount` implies recurring.
-      // We'll stick to `recurringAmount` for now or just generic if the API supports it.
-      // Note: Re-using `recurringAmount` for one-time amount is a bit hacky but if `isRecurring` is false, it's just "Amount".
-    } as unknown as Omit<CreateFinancialAccountInput, 'userId'>;
+      paymentLog: [],
+      ...(isRecurring
+        ? {
+            paymentFrequency: frequency,
+            ...(finalAmount > 0
+              ? { recurringAmount: { amount: finalAmount, currency } }
+              : {}),
+            ...(finalEndDate ? { endDate: finalEndDate } : {}),
+          }
+        : {}),
+      ...(finalNextDueDate ? { nextDueDate: finalNextDueDate } : {}),
+    };
 
     onComplete(payload);
   };

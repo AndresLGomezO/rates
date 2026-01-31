@@ -39,6 +39,9 @@ import * as rechartsModule from 'recharts';
 import { LoanPayoffWidget } from '../components/InstallmentLoanInsights/LoanPayoffWidget';
 import { PaymentAnatomyWidget } from '../components/InstallmentLoanInsights/PaymentAnatomyWidget';
 import { PayoffAcceleratorWidget } from '../components/InstallmentLoanInsights/PayoffAcceleratorWidget';
+import { CreditUtilizationWidget } from '../components/RevolvingCreditInsights/CreditUtilizationWidget';
+import { RevolvingCostWidget } from '../components/RevolvingCreditInsights/RevolvingCostWidget';
+import { RevolvingPayoffAcceleratorWidget } from '../components/RevolvingCreditInsights/RevolvingPayoffAcceleratorWidget';
 
 // Helper functions to safely extract type-specific fields
 function getAccountRemainingBalance(account: FinancialAccount): number {
@@ -562,6 +565,15 @@ export default function AccountDetail() {
           <LoanPayoffWidget account={account} />
           <PaymentAnatomyWidget account={account} />
           <PayoffAcceleratorWidget account={account} />
+        </div>
+      ) : isRevolvingCredit(account) ? (
+        <div className="mb-12 flex w-full flex-col gap-8">
+          <h2 className="col-span-full w-full border-b border-neutral-700/30 pb-4 text-[1.75rem] font-bold text-white">
+            Revolving Credit Insights
+          </h2>
+          <CreditUtilizationWidget account={account} />
+          <RevolvingCostWidget account={account} />
+          <RevolvingPayoffAcceleratorWidget account={account} />
         </div>
       ) : (
         <div className="mb-12 flex w-full flex-col">
