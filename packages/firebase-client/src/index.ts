@@ -115,3 +115,18 @@ export * from './other-account-utils.js';
 
 // Other Accounts Insights
 export * from './insights/other-accounts.js';
+
+// Financial Profile
+export * from './financial-profile.js';
+
+// Dashboard Insights
+export { DashboardInsightsService } from './logic/dashboard-insights.js';
+export type {
+  FinancialHealthScore,
+  DashboardView,
+  AttentionItem,
+  MonthlyMoneyFlow,
+  TotalFinancialPicture,
+  ProgressMetrics,
+  QuickAction,
+} from './logic/dashboard-insights.js';

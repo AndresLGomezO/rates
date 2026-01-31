@@ -41,9 +41,8 @@ export const OtherAccountDetail: React.FC<OtherAccountDetailProps> = ({
           if (direction === 'liability') {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return (
-              <ObligationsOverviewWidget insight={insights.obligations} />
-            ) as // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            any;
+              <ObligationsOverviewWidget insight={insights.obligations} /> // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ) as any;
           }
           return null;
         })()}
