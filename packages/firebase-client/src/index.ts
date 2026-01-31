@@ -101,3 +101,11 @@ export { generateBillDueDates } from './bill-calculations.js';
 
 // Financial Insights
 export * from './financial-insights.js';
+
+// Bill Insights Logic
+export { BillInsightsService } from './logic/bill-insights.js';
+export type {
+  MonthlyCalendarView,
+  AnnualCostView,
+  VariableBillTrend,
+} from './logic/bill-insights.js';

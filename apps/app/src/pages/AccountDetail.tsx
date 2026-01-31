@@ -42,6 +42,10 @@ import { PayoffAcceleratorWidget } from '../components/InstallmentLoanInsights/P
 import { CreditUtilizationWidget } from '../components/RevolvingCreditInsights/CreditUtilizationWidget';
 import { RevolvingCostWidget } from '../components/RevolvingCreditInsights/RevolvingCostWidget';
 import { RevolvingPayoffAcceleratorWidget } from '../components/RevolvingCreditInsights/RevolvingPayoffAcceleratorWidget';
+import { BillHistoryWidget } from '../components/BillInsights/BillHistoryWidget';
+import { BillStatsWidget } from '../components/BillInsights/BillStatsWidget';
+import { BillTrendAnalysisWidget } from '../components/BillInsights/BillTrendAnalysisWidget';
+import { isBill } from '@rates/firebase-client';
 
 // Helper functions to safely extract type-specific fields
 function getAccountRemainingBalance(account: FinancialAccount): number {
@@ -574,6 +578,17 @@ export default function AccountDetail() {
           <CreditUtilizationWidget account={account} />
           <RevolvingCostWidget account={account} />
           <RevolvingPayoffAcceleratorWidget account={account} />
+        </div>
+      ) : isBill(account) ? (
+        <div className="mb-12 flex w-full flex-col gap-8">
+          <h2 className="col-span-full w-full border-b border-neutral-700/30 pb-4 text-[1.75rem] font-bold text-white">
+            Bill Insights
+          </h2>
+          <BillStatsWidget account={account} />
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            <BillHistoryWidget account={account} />
+            <BillTrendAnalysisWidget account={account} />
+          </div>
         </div>
       ) : (
         <div className="mb-12 flex w-full flex-col">

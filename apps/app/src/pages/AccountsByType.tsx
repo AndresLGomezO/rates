@@ -73,6 +73,8 @@ import { InstallmentLoanCard } from '../components/InstallmentLoanCard';
 import { AggregateLoanPayoffWidget } from '../components/InstallmentLoanInsights/AggregateLoanPayoffWidget';
 import { RevolvingCreditCard } from '../components/RevolvingCreditCard';
 import { AggregateRevolvingCreditWidget } from '../components/RevolvingCreditInsights/AggregateRevolvingCreditWidget';
+import { BillsDashboard } from '../components/BillInsights/BillsDashboard';
+import { BillCard } from '../components/BillInsights/BillCard';
 
 // ... existing imports
 
@@ -637,6 +639,8 @@ export default function AccountsByType() {
             <AggregateLoanPayoffWidget accounts={filteredAccounts} />
           ) : type === 'revolving_credit' ? (
             <AggregateRevolvingCreditWidget accounts={filteredAccounts} />
+          ) : type === 'bill' ? (
+            <BillsDashboard accounts={filteredAccounts} />
           ) : (
             <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
               <div className="ds-card-light p-6">
@@ -688,6 +692,14 @@ export default function AccountsByType() {
               ) {
                 return (
                   <RevolvingCreditCard
+                    key={account.accountNumber}
+                    account={account}
+                    getStatusColor={getStatusColor}
+                  />
+                );
+              } else if (isBill(account) && type === 'bill') {
+                return (
+                  <BillCard
                     key={account.accountNumber}
                     account={account}
                     getStatusColor={getStatusColor}
