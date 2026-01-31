@@ -109,3 +109,9 @@ export type {
   AnnualCostView,
   VariableBillTrend,
 } from './logic/bill-insights.js';
+
+// Other Accounts Utilities
+export * from './other-account-utils.js';
+
+// Other Accounts Insights
+export * from './insights/other-accounts.js';

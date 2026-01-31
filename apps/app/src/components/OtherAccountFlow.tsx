@@ -189,7 +189,7 @@ export function OtherAccountFlow({
       hasAmount === 'yes' && amount ? parseFloat(amount) : undefined;
     const finalDate = hasDate && date ? new Date(date) : undefined;
 
-    const payload: Omit<CreateFinancialAccountInput, 'userId'> = {
+    const rawPayload: Omit<CreateFinancialAccountInput, 'userId'> = {
       accountType: 'other',
       accountName: nickname,
       accountDescription: notes || `${CATEGORY_LABELS[category]}`,
@@ -219,7 +219,23 @@ export function OtherAccountFlow({
       paymentLog: [],
     } as unknown as Omit<CreateFinancialAccountInput, 'userId'>;
 
-    onComplete(payload);
+    // Helper to recursively remove undefined values
+    const removeUndefined = <T,>(obj: T): T => {
+      if (obj === null || typeof obj !== 'object') return obj;
+      if (obj instanceof Date) return obj;
+
+      const result = (Array.isArray(obj) ? [] : {}) as T;
+
+      Object.keys(obj).forEach((key) => {
+        const value = (obj as Record<string, unknown>)[key];
+        if (value !== undefined) {
+          (result as Record<string, unknown>)[key] = removeUndefined(value);
+        }
+      });
+      return result;
+    };
+
+    onComplete(removeUndefined(rawPayload));
   };
 
   const stepsList: OtherAccountWizardStep[] = [

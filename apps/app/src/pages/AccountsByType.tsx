@@ -11,8 +11,9 @@ import {
   isInstallmentLoan,
   isRevolvingCredit,
   isBill,
+  isOther,
+  getAccountWithCalculated,
 } from '@rates/firebase-client';
-import { getAccountWithCalculated } from '@rates/firebase-client';
 import {
   createFinancialAccount,
   getUserFinancialAccounts,
@@ -75,6 +76,8 @@ import { RevolvingCreditCard } from '../components/RevolvingCreditCard';
 import { AggregateRevolvingCreditWidget } from '../components/RevolvingCreditInsights/AggregateRevolvingCreditWidget';
 import { BillsDashboard } from '../components/BillInsights/BillsDashboard';
 import { BillCard } from '../components/BillInsights/BillCard';
+import { OtherInsightsContainer } from '../components/OtherAccountInsights';
+import { OtherAccountCard } from '../components/OtherAccountCard';
 
 // ... existing imports
 
@@ -641,40 +644,9 @@ export default function AccountsByType() {
             <AggregateRevolvingCreditWidget accounts={filteredAccounts} />
           ) : type === 'bill' ? (
             <BillsDashboard accounts={filteredAccounts} />
-          ) : (
-            <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-              <div className="ds-card-light p-6">
-                <h3 className="m-0 mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
-                  Total Accounts
-                </h3>
-                <p className="m-0 text-2xl font-bold text-white">
-                  {filteredAccounts.length}
-                </p>
-              </div>
-              <div className="ds-card-light p-6">
-                <h3 className="m-0 mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
-                  Active Accounts
-                </h3>
-                <p className="m-0 text-2xl font-bold text-white">
-                  {filteredAccounts.filter((a) => a.status === 'active').length}
-                </p>
-              </div>
-              <div className="ds-card-light p-6">
-                <h3 className="m-0 mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
-                  Total Remaining
-                </h3>
-                <p className="m-0 text-2xl font-bold text-white">
-                  {formatCurrency(
-                    filteredAccounts.reduce(
-                      (sum, a) => sum + getAccountRemainingBalance(a),
-                      0
-                    ),
-                    'COP'
-                  )}
-                </p>
-              </div>
-            </div>
-          )}
+          ) : type === 'other' ? (
+            <OtherInsightsContainer accounts={filteredAccounts} />
+          ) : null}
 
           <div className="flex flex-col gap-6">
             {filteredAccounts.map((account) => {
@@ -703,6 +675,13 @@ export default function AccountsByType() {
                     key={account.accountNumber}
                     account={account}
                     getStatusColor={getStatusColor}
+                  />
+                );
+              } else if (isOther(account)) {
+                return (
+                  <OtherAccountCard
+                    key={account.accountNumber}
+                    account={account} // Type guard guarantees OtherAccount
                   />
                 );
               }

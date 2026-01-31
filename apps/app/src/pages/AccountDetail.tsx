@@ -45,7 +45,8 @@ import { RevolvingPayoffAcceleratorWidget } from '../components/RevolvingCreditI
 import { BillHistoryWidget } from '../components/BillInsights/BillHistoryWidget';
 import { BillStatsWidget } from '../components/BillInsights/BillStatsWidget';
 import { BillTrendAnalysisWidget } from '../components/BillInsights/BillTrendAnalysisWidget';
-import { isBill } from '@rates/firebase-client';
+import { isBill, isOther } from '@rates/firebase-client';
+import { OtherAccountDetail } from '../components/OtherAccountInsights/OtherAccountDetail';
 
 // Helper functions to safely extract type-specific fields
 function getAccountRemainingBalance(account: FinancialAccount): number {
@@ -590,6 +591,8 @@ export default function AccountDetail() {
             <BillTrendAnalysisWidget account={account} />
           </div>
         </div>
+      ) : isOther(account) ? (
+        <OtherAccountDetail account={account} />
       ) : (
         <div className="mb-12 flex w-full flex-col">
           <h2 className="col-span-full mb-8 w-full border-b border-neutral-700/30 pb-4 text-[1.75rem] font-bold text-white">
