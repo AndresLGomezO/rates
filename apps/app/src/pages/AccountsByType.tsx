@@ -353,10 +353,10 @@ export default function AccountsByType() {
       console.error('🔴 [handleCreateAccount] Error type:', typeof err);
       console.error('🔴 [handleCreateAccount] Error details:', {
         name: err instanceof Error ? err.name : 'Unknown',
-        message: err instanceof Error ? err.message : String(err),
+        message: err instanceof Error ? err.message : 'Unknown',
         stack: err instanceof Error ? err.stack : 'No stack trace',
         ...(err && typeof err === 'object' && 'code' in err
-          ? { code: err.code }
+          ? { code: String((err as { code: string | number | boolean }).code) }
           : {}),
       });
       setError(err instanceof Error ? err.message : 'Failed to create account');
@@ -898,9 +898,10 @@ export default function AccountsByType() {
                               : 'text-white'
                         }`}
                       >
-                        {getAccountNextDueDate(account)
-                          ? formatDate(getAccountNextDueDate(account)!)
-                          : 'N/A'}{' '}
+                        {(() => {
+                          const nextDue = getAccountNextDueDate(account);
+                          return nextDue ? formatDate(nextDue) : 'N/A';
+                        })()}{' '}
                         ({accountWithCalculated.nextDueDatePeriod})
                       </span>
                     </div>

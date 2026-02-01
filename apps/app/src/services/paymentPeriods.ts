@@ -276,7 +276,7 @@ export async function createPaymentPeriod(
     console.error(
       '🔴 [createPaymentPeriod] Error code:',
       error && typeof error === 'object' && 'code' in error
-        ? error.code
+        ? String((error as { code: string | number | boolean }).code)
         : 'unknown'
     );
     console.error(

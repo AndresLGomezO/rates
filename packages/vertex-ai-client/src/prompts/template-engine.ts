@@ -71,7 +71,11 @@ export class TemplateEngine {
       // For now, strict replacement.
       result = result.replace(
         new RegExp(this.escapeRegExp(placeholder), 'g'),
-        String(value)
+        typeof value === 'string' ||
+          typeof value === 'number' ||
+          typeof value === 'boolean'
+          ? String(value)
+          : JSON.stringify(value)
       );
     }
 
@@ -130,7 +134,7 @@ export class TemplateEngine {
    * Extract variable placeholders from template string
    */
   static extractVariables(templateString: string): string[] {
-    const matches = templateString.match(/\{\{(\w+)\}\}/g) ?? [];
+    const matches: string[] = templateString.match(/\{\{(\w+)\}\}/g) ?? [];
     return matches.map((m) => m.slice(2, -2));
   }
 

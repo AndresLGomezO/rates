@@ -66,7 +66,13 @@ export const BillTrendAnalysisWidget: React.FC<
     return '─';
   };
 
-  const insights = [];
+  const insights: Array<{
+    label: string;
+    value: string;
+    color: string;
+    icon: string;
+    desc: string;
+  }> = [];
 
   // Insight 1: Month over Month
   if (Math.abs(monthOverMonthChange) > 1) {
@@ -92,9 +98,9 @@ export const BillTrendAnalysisWidget: React.FC<
   });
 
   // Insight 3: Year over Year
-  if (yearOverYearChange !== null) {
+  if (yearOverYearChange !== null && sameMonthLastYear) {
     insights.push({
-      label: `vs Same Month Last Year (${formatCurrency(sameMonthLastYear!.valuePaid, account.currency)})`,
+      label: `vs Same Month Last Year (${formatCurrency(sameMonthLastYear.valuePaid, account.currency)})`,
       value: `${yearOverYearChange > 0 ? '+' : ''}${yearOverYearChange.toFixed(1)}%`,
       color: getChangeColor(yearOverYearChange),
       icon: getChangeIcon(yearOverYearChange),

@@ -87,12 +87,12 @@ export class EmbeddingClient {
     const batchSize = request.batchSize ?? 50;
     const startTime = Date.now();
 
-    const chunks = [];
+    const chunks: (typeof request.items)[] = [];
     for (let i = 0; i < request.items.length; i += batchSize) {
       chunks.push(request.items.slice(i, i + batchSize));
     }
 
-    let results: BatchEmbeddingResult[] = [];
+    const results: BatchEmbeddingResult[] = [];
     let successCount = 0;
     let failureCount = 0;
     let totalProcessed = 0;
@@ -113,7 +113,7 @@ export class EmbeddingClient {
           };
         } catch (error: unknown) {
           const message =
-            error instanceof Error ? error.message : String(error);
+            error instanceof Error ? error.message : 'Unknown error';
           if (request.continueOnError) {
             return {
               id: item.id,
@@ -126,7 +126,7 @@ export class EmbeddingClient {
       });
 
       const chunkResults = await Promise.all(chunkPromises);
-      results = [...results, ...chunkResults];
+      results.push(...chunkResults);
 
       const chunkSuccess = chunkResults.filter((r) => r.vector !== null).length;
       const chunkFail = chunkResults.length - chunkSuccess;

@@ -349,7 +349,8 @@ export function validateFinancialAccount(
   }
 
   // Type-specific validation
-  switch (account.accountType) {
+  const accountType = account.accountType;
+  switch (accountType) {
     case 'installment_loan': {
       const loan = account as Partial<InstallmentLoanAccount>;
 
@@ -443,7 +444,7 @@ export function validateFinancialAccount(
       }
 
       if (typeof bill.isRecurring !== 'boolean') {
-        errors.push('isRecurring must be a boolean for bills');
+        errors.push('isRecurring is required for bills');
       }
 
       if (!bill.nextDueDate) {
@@ -478,8 +479,8 @@ export function validateFinancialAccount(
 
     default: {
       // Exhaustive check
-      const _exhaustiveCheck: never = account.accountType;
-      errors.push(`Unknown account type: ${_exhaustiveCheck}`);
+      const _exhaustiveCheck: never = accountType;
+      errors.push(`Unknown account type: ${String(_exhaustiveCheck)}`);
     }
   }
 

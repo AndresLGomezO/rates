@@ -462,7 +462,7 @@ export class DashboardInsightsService {
     // We can sum 'totalCapitalPaid' calculated field
     let debtPaidSinceStart = 0;
     let accountsPaidOff = 0;
-    let nextMilestone = null;
+    let nextMilestone: ProgressMetrics['nextMilestone'] = null;
 
     let minRemaining = Infinity;
 

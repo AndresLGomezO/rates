@@ -83,16 +83,18 @@ export function filterAccounts(
   }
 
   // Apply status filter
-  if (filters.status && filters.status.length > 0) {
+  const statusFilters = filters.status;
+  if (statusFilters && statusFilters.length > 0) {
     filtered = filtered.filter((account) =>
-      filters.status!.includes(account.status)
+      statusFilters.includes(account.status)
     );
   }
 
   // Apply type filter
-  if (filters.type && filters.type.length > 0) {
+  const typeFilters = filters.type;
+  if (typeFilters && typeFilters.length > 0) {
     filtered = filtered.filter((account) =>
-      filters.type!.includes(account.accountType)
+      typeFilters.includes(account.accountType)
     );
   }
 

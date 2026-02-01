@@ -4,7 +4,18 @@ import { useAuth } from '../contexts/AuthContext';
 import { DebugIndicator } from './DebugIndicator';
 import { SearchBar } from './SearchBar';
 
-const ACCOUNT_CATEGORIES = [
+interface Category {
+  readonly type: string;
+  readonly label: string;
+  readonly icon: string;
+  readonly subcategories: readonly {
+    readonly type: string;
+    readonly label: string;
+    readonly icon: string;
+  }[];
+}
+
+const ACCOUNT_CATEGORIES: readonly Category[] = [
   {
     type: 'installment_loan',
     label: 'Installment Loans',
