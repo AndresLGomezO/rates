@@ -13,10 +13,18 @@ const isDev =
   !process.env.ENV;
 
 if (isDev) {
+  // Capture shell variable to prevent overwrite
+  const shellVertexMock = process.env.VERTEX_AI_MOCK;
+
   dotenv.config({
     path: path.resolve(process.cwd(), '.env.development'),
     override: true,
   });
+
+  // Restore shell variable if it was set
+  if (shellVertexMock !== undefined) {
+    process.env.VERTEX_AI_MOCK = shellVertexMock;
+  }
 }
 
 const envSchema = z.object({
@@ -53,8 +61,8 @@ export const config = {
   vertexAI: {
     useMock:
       env.VERTEX_AI_MOCK === 'true' ||
-      env.ENV === 'dev' ||
-      env.ENV === 'development',
+      ((env.ENV === 'dev' || env.ENV === 'development') &&
+        env.VERTEX_AI_MOCK !== 'false'),
     mockDelay: parseInt(env.VERTEX_AI_MOCK_DELAY || '500', 10),
   },
   firestore: {

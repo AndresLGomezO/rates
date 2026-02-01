@@ -7,9 +7,11 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "dev:hybrid": "VERTEX_AI_MOCK=false tsx watch src/index.ts",
     "build": "tsup",
     "start": "node dist/index.js",
     "test:local": "tsx scripts/run-local.ts",
+    "test:hybrid": "VERTEX_AI_MOCK=false tsx scripts/run-local.ts",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",

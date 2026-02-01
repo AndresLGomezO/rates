@@ -4,6 +4,7 @@ import {
   ModelId,
   EmbeddingModelId,
   createClientConfig,
+  MockVertexAIClient,
 } from '@rates/vertex-ai-client';
 import { config } from '../config/index.js';
 import { logger } from '../utils/logger.js';
@@ -25,23 +26,26 @@ export class VertexAIService {
   private client: VertexAIClient;
 
   constructor() {
-    logger.info(
-      { location: config.VERTEX_AI_LOCATION },
-      'Initializing Vertex AI Client'
-    );
-    this.client = new VertexAIClient(
-      createClientConfig({
-        projectId: config.GCP_PROJECT_ID,
-        location: config.VERTEX_AI_LOCATION,
-        retry: {
-          maxRetries: 3,
-          initialDelayMs: 1000,
-          maxDelayMs: 10000,
-          backoffMultiplier: 2,
-          jitterFactor: 0.1,
-        },
-      })
-    );
+    const useMock =
+      config.VERTEX_AI_MOCK === 'true' ||
+      ((config.ENV === 'dev' || config.ENV === 'local') &&
+        config.VERTEX_AI_MOCK !== 'false');
+
+    if (useMock) {
+      logger.warn('🔶 Using MOCK Vertex AI client');
+      // @ts-expect-error - MockVertexAIClient implements Partial<VertexAIClient> but used as VertexAIClient
+      this.client = new MockVertexAIClient({
+        delay: parseInt(config.VERTEX_AI_MOCK_DELAY || '500', 10),
+      });
+    } else {
+      logger.info('🟢 Using REAL Vertex AI client');
+      this.client = new VertexAIClient(
+        createClientConfig({
+          projectId: config.GCP_PROJECT_ID,
+          location: config.VERTEX_AI_LOCATION,
+        })
+      );
+    }
   }
 
   async generateContent(request: VertexRequest): Promise<VertexResponse> {
