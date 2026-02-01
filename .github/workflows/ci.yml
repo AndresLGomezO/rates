@@ -162,6 +162,9 @@ jobs:
       - name: Install dependencies (workspace)
         run: pnpm install --frozen-lockfile
 
+      - name: Build packages
+        run: pnpm --filter "./packages/**" build
+
       - name: Build ${{ matrix.workspace }}
         if: matrix.enabled
         run: pnpm --filter ${{ matrix.workspace }} build
