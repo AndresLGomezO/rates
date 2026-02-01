@@ -3,6 +3,10 @@ import { logger } from './utils/logger.js';
 import { authMiddleware } from './middleware/auth.middleware.js';
 import { rateLimitMiddleware } from './middleware/rate-limit.middleware.js';
 import { errorHandler } from './middleware/error.middleware.js';
+import {
+  serializerCompiler,
+  validatorCompiler,
+} from 'fastify-type-provider-zod';
 import { registerRoutes } from './routes/index.js';
 
 export async function createServer() {
@@ -10,6 +14,9 @@ export async function createServer() {
     logger: true,
     disableRequestLogging: true,
   });
+
+  fastify.setValidatorCompiler(validatorCompiler);
+  fastify.setSerializerCompiler(serializerCompiler);
 
   // 1. Error Handler
   fastify.setErrorHandler(errorHandler);

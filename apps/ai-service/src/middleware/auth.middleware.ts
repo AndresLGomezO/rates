@@ -27,7 +27,7 @@ export async function authMiddleware(
 
   try {
     const user = await authService.verifyToken(token);
-    (request as AuthenticatedRequest).user = user;
+    (request as unknown as AuthenticatedRequest).user = user;
   } catch {
     throw new UnauthorizedError('Invalid or expired token');
   }

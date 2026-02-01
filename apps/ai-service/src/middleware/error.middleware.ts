@@ -28,10 +28,12 @@ export function errorHandler(
     code = 'VALIDATION_ERROR';
     message = 'Request validation failed';
     details = error.errors;
-  } else if (error.code === 'FST_ERR_VALIDATION') {
+  } else if (
+    (error as { code?: string; message?: string }).code === 'FST_ERR_VALIDATION'
+  ) {
     statusCode = 400;
     code = 'VALIDATION_ERROR';
-    message = error.message;
+    message = (error as { message: string }).message;
   }
 
   reply.status(statusCode).send({

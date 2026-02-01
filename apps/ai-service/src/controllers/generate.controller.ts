@@ -8,10 +8,11 @@ import {
   cacheService,
   usageService,
 } from '../services/index.js';
+import { GenerateResponse } from '../types/index.js';
 
 export class GenerateController {
   async generate(request: FastifyRequest, reply: FastifyReply) {
-    const userRequest = request as AuthenticatedRequest;
+    const userRequest = request as unknown as AuthenticatedRequest;
     const body = request.body as GenerateRequest;
     const userId = userRequest.user.uid;
     const requestId = request.id as string;
@@ -27,7 +28,7 @@ export class GenerateController {
         // Track cache hit
         await usageService.trackUsage(userId, { cacheHits: 1 });
         reply.header('x-cache-hit', 'true');
-        return cached;
+        return cached as unknown as GenerateResponse;
       }
     }
 
@@ -40,15 +41,16 @@ export class GenerateController {
 
     // 3. Process Response
     // The result is already simplified by the client
-    const content = result.content;
-    const finishReason = result.finishReason;
-
-    const response = {
+    const response: GenerateResponse = {
       requestId,
-      content,
+      content: result.content,
       model: result.model || body.model || 'gemini-2.0-flash-001',
-      finishReason,
-      usage: result.usage,
+      finishReason: result.finishReason || 'STOP',
+      usage: {
+        inputTokens: result.usage.inputTokens,
+        outputTokens: result.usage.outputTokens,
+        totalTokens: result.usage.totalTokens,
+      },
       cached: false,
       latencyMs: result.latencyMs || latencyMs, // Prefer client measured latency
     };

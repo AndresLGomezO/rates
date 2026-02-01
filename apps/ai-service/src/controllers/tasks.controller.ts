@@ -9,7 +9,7 @@ import { NotFoundError } from '../utils/errors.js';
 
 export class TaskController {
   async createTask(request: FastifyRequest, reply: FastifyReply) {
-    const userRequest = request as AuthenticatedRequest;
+    const userRequest = request as unknown as AuthenticatedRequest;
     const body = request.body as CreateTaskRequest;
     const taskId = randomUUID();
     const userId = userRequest.user.uid;
@@ -45,7 +45,7 @@ export class TaskController {
   }
 
   async getTask(request: FastifyRequest, _reply: FastifyReply) {
-    const userRequest = request as AuthenticatedRequest;
+    const userRequest = request as unknown as AuthenticatedRequest;
     const { taskId } = request.params as { taskId: string };
     const userId = userRequest.user.uid;
 
@@ -64,7 +64,7 @@ export class TaskController {
   }
 
   async cancelTask(request: FastifyRequest, reply: FastifyReply) {
-    const userRequest = request as AuthenticatedRequest;
+    const userRequest = request as unknown as AuthenticatedRequest;
     const { taskId } = request.params as { taskId: string };
     const userId = userRequest.user.uid;
 

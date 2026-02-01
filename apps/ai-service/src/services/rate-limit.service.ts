@@ -22,7 +22,10 @@ export class RateLimitService {
 
     // 2. Check Daily Token Quota (approximate check based on previous usage)
     const usage = await this.usageRepo.getUserUsage(userId);
-    const totalTokens = (usage.tokenInput || 0) + (usage.tokenOutput || 0);
+    const totalTokens = usage
+      ? ((usage.tokenInput as number) || 0) +
+        ((usage.tokenOutput as number) || 0)
+      : 0;
 
     if (totalTokens >= limitsConfig.tokensPerDay) {
       throw new QuotaError(

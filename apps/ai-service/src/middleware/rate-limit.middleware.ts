@@ -17,7 +17,7 @@ export async function rateLimitMiddleware(
     return;
   }
 
-  const userRequest = request as AuthenticatedRequest;
+  const userRequest = request as unknown as AuthenticatedRequest;
   if (!userRequest.user || !userRequest.user.uid) {
     // This should not happen if auth middleware is running, but good safeguard
     return;

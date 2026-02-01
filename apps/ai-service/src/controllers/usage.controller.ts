@@ -4,7 +4,7 @@ import { usageService } from '../services/index.js';
 
 export class UsageController {
   async getUserUsage(request: FastifyRequest, _reply: FastifyReply) {
-    const userRequest = request as AuthenticatedRequest;
+    const userRequest = request as unknown as AuthenticatedRequest;
     const userId = userRequest.user.uid;
 
     const usage = await usageService.getUserUsage(userId);

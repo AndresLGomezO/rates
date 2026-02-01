@@ -29,7 +29,13 @@ export class UsageService {
     return {
       userId,
       period: 'today',
-      usage: stats,
+      usage: (stats as UsageStatsResponse['usage']) || {
+        requestCount: 0,
+        tokenInput: 0,
+        tokenOutput: 0,
+        tasksCreated: 0,
+        cacheHits: 0,
+      },
       limits: {
         requestsPerMinute: limitsConfig.requestsPerMinute,
         tokensPerDay: limitsConfig.tokensPerDay,

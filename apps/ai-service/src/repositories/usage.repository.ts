@@ -47,7 +47,7 @@ export class UsageRepository {
     );
   }
 
-  async getUsage(userId: string): Promise<Record<string, unknown> | null> {
+  async getUserUsage(userId: string): Promise<Record<string, unknown> | null> {
     const doc = await db
       .collection(COLLECTION)
       .doc(this.getDocId(userId))
