@@ -104,13 +104,11 @@ fastify.register(fastifyStatic, {
 fastify.setNotFoundHandler((request, reply) => {
   if (request.url.startsWith('/api')) {
     console.warn(`[404] API Not Found: ${request.method} ${request.url}`);
-    return reply
-      .code(404)
-      .send({
-        error: 'API endpoint not found',
-        url: request.url,
-        method: request.method,
-      });
+    return reply.code(404).send({
+      error: 'API endpoint not found',
+      url: request.url,
+      method: request.method,
+    });
   }
   return reply.sendFile('index.html');
 });

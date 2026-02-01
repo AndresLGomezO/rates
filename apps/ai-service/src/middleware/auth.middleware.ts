@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { AuthService } from '../services/auth.service.js';
 import { UnauthorizedError } from '../utils/errors.js';
 import { AuthenticatedRequest } from '../types/request.types.js';
+import { config } from '../config/index.js';
 
 const authService = new AuthService();
 
@@ -15,6 +16,16 @@ export async function authMiddleware(
     request.url.startsWith('/health') ||
     request.url.startsWith('/ready')
   ) {
+    return;
+  }
+  // Check if we should skip validation (local dev)
+  if (config.auth.skipValidation) {
+    // Always inject mock user for development when validation is skipped
+    // This allows the frontend to send a dummy token while still working locally
+    (request as unknown as AuthenticatedRequest).user = {
+      uid: 'dev-user-123',
+      email: 'dev@example.com',
+    };
     return;
   }
 

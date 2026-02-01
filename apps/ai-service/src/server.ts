@@ -5,6 +5,7 @@ import Long from 'long';
 // Fix for "util.Long.fromValue is not a function"
 // This ensures that protobufjs correctly utilizes the long library
 // for 64-bit integer support in Google Cloud libraries.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (protobuf.util as any).Long = Long;
 protobuf.configure();
 import { logger } from './utils/logger.js';
