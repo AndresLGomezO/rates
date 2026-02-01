@@ -12,6 +12,10 @@ const envSchema = z.object({
   VERTEX_AI_LOCATION: z.string().default('us-central1'),
   FIRESTORE_COLLECTION_PREFIX: z.string().default('dev'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+  FIREBASE_AUTH_EMULATOR_HOST: z.string().optional(),
+  FIRESTORE_EMULATOR_HOST: z.string().optional(),
+  RATE_LIMIT_REQUESTS_PER_MIN: z.string().optional(),
+  RATE_LIMIT_TOKENS_PER_DAY: z.string().optional(),
 });
 
 const env = envSchema.parse(process.env);

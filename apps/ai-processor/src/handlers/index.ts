@@ -5,6 +5,7 @@ import { BatchEmbeddingHandler } from './batch-embedding.handler.js';
 import { DocumentQAHandler } from './document-qa.handler.js';
 import { BatchClassificationHandler } from './batch-classification.handler.js';
 import { MultiStepPipelineHandler } from './multi-step-pipeline.handler.js';
+import { DocumentScanPipelineHandler } from './document-scan-pipeline.handler.js';
 
 export const handlers: HandlerRegistry = {
   TEXT_GENERATION: TextGenerationHandler,
@@ -13,4 +14,5 @@ export const handlers: HandlerRegistry = {
   DOCUMENT_QA: DocumentQAHandler,
   BATCH_CLASSIFICATION: BatchClassificationHandler,
   MULTI_STEP_PIPELINE: MultiStepPipelineHandler,
+  DOCUMENT_SCAN_PIPELINE: DocumentScanPipelineHandler,
 };

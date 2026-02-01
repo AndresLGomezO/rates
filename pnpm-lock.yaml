@@ -47,6 +47,9 @@ importers:
       firebase-admin:
         specifier: ^13.0.1
         version: 13.6.0(encoding@0.1.13)
+      long:
+        specifier: ^5.2.3
+        version: 5.3.2
       pino:
         specifier: ^9.1.0
         version: 9.14.0
@@ -117,12 +120,18 @@ importers:
       firebase-admin:
         specifier: ^12.0.0
         version: 12.7.0(encoding@0.1.13)
+      long:
+        specifier: ^5.2.3
+        version: 5.3.2
       pino:
         specifier: ^9.6.0
         version: 9.14.0
       pino-pretty:
         specifier: ^11.0.0
         version: 11.3.0
+      protobufjs:
+        specifier: ^7.5.4
+        version: 7.5.4
       tiktoken:
         specifier: ^1.0.14
         version: 1.0.22
@@ -130,6 +139,9 @@ importers:
         specifier: ^3.22.4
         version: 3.25.76
     devDependencies:
+      '@types/long':
+        specifier: ^4.0.2
+        version: 4.0.2
       '@types/node':
         specifier: ^20.11.30
         version: 20.19.30

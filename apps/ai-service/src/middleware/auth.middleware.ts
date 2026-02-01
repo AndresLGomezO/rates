@@ -9,8 +9,12 @@ export async function authMiddleware(
   request: FastifyRequest,
   _reply: FastifyReply
 ) {
-  // Skip auth for health checks
-  if (request.url.startsWith('/health') || request.url.startsWith('/ready')) {
+  // Skip auth for health checks and OPTIONS (preflight) requests
+  if (
+    request.method === 'OPTIONS' ||
+    request.url.startsWith('/health') ||
+    request.url.startsWith('/ready')
+  ) {
     return;
   }
 

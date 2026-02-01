@@ -6,9 +6,11 @@ export const commonSchemas = {
     limit: z.number().int().min(1).max(100).default(20),
   }),
   headers: z.object({
-    authorization: z.string().describe('IAM Identity Token'),
+    authorization: z.string().describe('IAM Identity Token').optional(),
     'x-forwarded-authorization': z.string().describe('Firebase User ID Token'),
     'x-request-id': z.string().uuid().optional(),
+    'x-correlation-id': z.string().optional(),
+    'x-user-id': z.string().optional(),
     'x-skip-cache': z.string().optional(),
   }),
 };

@@ -14,6 +14,8 @@ import { InstallmentLoanFlow } from './InstallmentLoanFlow';
 import { RevolvingCreditFlow } from './RevolvingCreditFlow';
 import { BillFlow } from './BillFlow';
 import { OtherAccountFlow } from './OtherAccountFlow';
+import { DocumentScanner } from './ai/DocumentScanner';
+import { SmartFormAssist } from './ai/SmartFormAssist';
 import { Modal } from './Modal';
 import { Select } from './Select';
 import { formatCurrency } from '../utils/formatters';
@@ -29,7 +31,8 @@ type WizardStep =
   | 'installment_flow'
   | 'revolving_flow'
   | 'bill_flow'
-  | 'other_flow';
+  | 'other_flow'
+  | 'scan';
 
 interface NewAccountWizardProps {
   isOpen: boolean;
@@ -139,6 +142,7 @@ const BILL_SUBTYPE_HELP: Record<BillSubtype, string> = {
 };
 
 function buildTitle(step: WizardStep, type: AccountType | null) {
+  if (step === 'scan') return 'Scan Document';
   if (step === 'success') return 'Account created';
   if (step === 'installment_flow') return 'New Installment Loan';
   if (step === 'revolving_flow') return 'New Revolving Account';
@@ -657,9 +661,17 @@ export function NewAccountWizard({
 
         {step === 'type' && (
           <div>
-            <p className="mb-3 text-[0.85rem] opacity-75 sm:mb-4 sm:text-[0.9rem]">
-              Pick the category that best describes this account.
-            </p>
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-[0.85rem] opacity-75 sm:text-[0.9rem]">
+                Pick the category that best describes this account.
+              </p>
+              <button
+                onClick={() => setStep('scan')}
+                className="flex items-center gap-1.5 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[0.75rem] font-bold text-blue-400 transition-all hover:bg-blue-500/20 hover:text-blue-300"
+              >
+                <span>✨</span> Scan with AI
+              </button>
+            </div>
 
             <div
               className="mt-5 grid grid-cols-2 gap-2 sm:mt-4 sm:gap-2.5"
@@ -719,6 +731,18 @@ export function NewAccountWizard({
                 }
               )}
             </div>
+          </div>
+        )}
+
+        {step === 'scan' && (
+          <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+            <DocumentScanner />
+            <button
+              onClick={() => setStep('type')}
+              className="mt-4 w-full text-sm text-white/40 transition-colors hover:text-white/60"
+            >
+              Back to manual entry
+            </button>
           </div>
         )}
 
@@ -998,6 +1022,13 @@ export function NewAccountWizard({
                       : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)]'
                   }`}
                   autoFocus
+                />
+                <SmartFormAssist
+                  fieldName="Account Name"
+                  value={formData.accountName}
+                  onSuggestion={(val) =>
+                    setFormData((p) => ({ ...p, accountName: val }))
+                  }
                 />
                 {detailsAttempted && detailsErrors.accountName && (
                   <div className="mt-1.5 text-[0.88rem] text-[#ffb3b3]">

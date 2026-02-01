@@ -21,6 +21,7 @@
     "@rates/firebase-client": "workspace:*",
     "dotenv": "^16.4.5",
     "firebase-admin": "^13.0.1",
+    "long": "^5.2.3",
     "pino": "^9.1.0",
     "zod": "^3.23.8"
   },

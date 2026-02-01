@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { DebugIndicator } from './DebugIndicator';
 import { SearchBar } from './SearchBar';
+import { AIAssistant } from './ai/AIAssistant';
+import { SmartNotifications } from './ai/SmartNotifications';
 
 interface Category {
   readonly type: string;
@@ -387,18 +389,23 @@ export function PrivateLayout({ children }: PropsWithChildren) {
             <h1 className="m-0 flex-1 overflow-hidden whitespace-nowrap bg-gradient-to-br from-white to-white/80 bg-clip-text text-xl font-bold tracking-[-0.5px] text-transparent">
               Rates
             </h1>
-            <div className="flex-shrink-0">
+            <div className="flex flex-shrink-0 items-center gap-2">
+              <SmartNotifications />
               <SearchBar showMobileCompact={true} />
             </div>
           </div>
         </div>
         {/* Desktop search bar */}
-        <div className="hidden md:block">
-          <SearchBar />
+        <div className="hidden items-center justify-between pr-6 md:flex">
+          <div className="flex-1">
+            <SearchBar />
+          </div>
+          <SmartNotifications />
         </div>
         <div className="main-scrollbar mx-auto box-border min-h-0 w-full min-w-0 max-w-full flex-1 overflow-y-auto overflow-x-hidden px-6 py-5 md:p-6">
           {children}
         </div>
+        <AIAssistant />
       </main>
     </div>
   );

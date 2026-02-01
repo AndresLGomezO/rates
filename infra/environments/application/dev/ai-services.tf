@@ -66,6 +66,17 @@ module "cloud_run_ai_service" {
   # Fallback image (hello-app) uses /, real app uses /health
   probe_path = var.use_fallback_image ? "/" : "/health"
 
+  # Environment Variables
+  environment_variables = {
+    GCP_PROJECT_ID              = var.project_id
+    VERTEX_AI_LOCATION          = var.region
+    FIRESTORE_COLLECTION_PREFIX = var.environment
+    ENV                         = var.environment
+    LOG_LEVEL                   = "info"
+    RATE_LIMIT_REQUESTS_PER_MIN = "60"
+    RATE_LIMIT_TOKENS_PER_DAY   = "100000"
+  }
+
   # VPC Configuration
   vpc_connector_name = module.ai_vpc_connector.connector_id
   vpc_egress         = "all-traffic"
@@ -110,6 +121,25 @@ resource "google_cloud_run_v2_job" "ai_processor" {
           }
         }
 
+        # Static Environment Variables
+        env {
+          name  = "GCP_PROJECT_ID"
+          value = var.project_id
+        }
+        env {
+          name  = "VERTEX_AI_LOCATION"
+          value = var.region
+        }
+        env {
+          name  = "FIRESTORE_COLLECTION_PREFIX"
+          value = var.environment
+        }
+        env {
+          name  = "ENV"
+          value = var.environment
+        }
+
+        # Secret Environment Variables
         dynamic "env" {
           for_each = var.include_secrets ? [1] : []
           content {

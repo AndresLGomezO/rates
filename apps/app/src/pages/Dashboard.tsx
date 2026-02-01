@@ -12,6 +12,7 @@ import { QuickActionsWidget } from '../components/Dashboard/QuickActionsWidget';
 // Keeping the imports to not break the build if we want to render charts below
 // But for this step focusing on the top section
 import { NewAccountWizard } from '../components/NewAccountWizard';
+import { InlineInsights } from '../components/ai/InlineInsights';
 
 export default function Dashboard() {
   const [accounts, setAccounts] = useState<FinancialAccount[]>([]);
@@ -80,6 +81,11 @@ export default function Dashboard() {
         >
           + New Account
         </button>
+      </div>
+
+      {/* AI Inline Insights */}
+      <div className="mb-10">
+        <InlineInsights context="Dashboard" />
       </div>
 
       {/* Top Row: Health & Attention */}

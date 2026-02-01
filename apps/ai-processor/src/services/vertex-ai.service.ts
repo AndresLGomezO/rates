@@ -3,6 +3,7 @@ import {
   VertexAIError,
   ModelId,
   EmbeddingModelId,
+  createClientConfig,
 } from '@rates/vertex-ai-client';
 import { config } from '../config/index.js';
 import { logger } from '../utils/logger.js';
@@ -28,17 +29,19 @@ export class VertexAIService {
       { location: config.VERTEX_AI_LOCATION },
       'Initializing Vertex AI Client'
     );
-    this.client = new VertexAIClient({
-      projectId: config.GCP_PROJECT_ID,
-      location: config.VERTEX_AI_LOCATION,
-      retry: {
-        maxRetries: 3,
-        initialDelayMs: 1000,
-        maxDelayMs: 10000,
-        backoffMultiplier: 2,
-        jitterFactor: 0.1,
-      },
-    });
+    this.client = new VertexAIClient(
+      createClientConfig({
+        projectId: config.GCP_PROJECT_ID,
+        location: config.VERTEX_AI_LOCATION,
+        retry: {
+          maxRetries: 3,
+          initialDelayMs: 1000,
+          maxDelayMs: 10000,
+          backoffMultiplier: 2,
+          jitterFactor: 0.1,
+        },
+      })
+    );
   }
 
   async generateContent(request: VertexRequest): Promise<VertexResponse> {
