@@ -18,7 +18,10 @@ export async function authMiddleware(
     return;
   }
 
-  const authHeader = request.headers['x-forwarded-authorization'] as string;
+  const authHeader =
+    (request.headers['x-forwarded-authorization'] as string) ||
+    (request.headers['authorization'] as string);
+
   if (!authHeader) {
     throw new UnauthorizedError('Missing authentication header');
   }

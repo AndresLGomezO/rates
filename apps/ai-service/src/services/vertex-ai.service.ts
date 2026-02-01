@@ -15,7 +15,7 @@ import {
 
 export class VertexAIService {
   async generateContent(request: GenerateRequest): Promise<GenerateResponse> {
-    if (config.gcp.projectId === 'demo-project' || config.env === 'dev') {
+    if (config.gcp.projectId === 'demo-project') {
       logger.info(
         { prompt: request.prompt },
         'Mocking Vertex AI Response for Local Development'

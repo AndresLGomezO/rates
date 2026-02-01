@@ -193,10 +193,30 @@ build_and_push_images() {
     else
         print_warning "Could not retrieve auth app URL"
     fi
+
+    # Get AI Service URL
+    local cloud_run_ai_service_name="rates-${env}-ai-service-${region}"
+    local ai_service_url=""
+    
+    # Construct URL using project number if available
+    if [[ -n "${project_number}" ]]; then
+        ai_service_url="https://${cloud_run_ai_service_name}-${project_number}.${region}.run.app"
+        print_success "Constructed AI service URL: ${ai_service_url}"
+    else
+        # Fallback to fetching if project number is missing
+        if ai_service_url=$(gcloud run services describe "${cloud_run_ai_service_name}" \
+            --region="${region}" \
+            --project="${project_id}" \
+            --format="value(status.url)" 2>/dev/null); then
+            print_success "Retrieved AI service URL: ${ai_service_url}"
+        else
+            print_warning "Could not retrieve AI service URL"
+        fi
+    fi
     
     # Build app static files
     if ! build_app_assets "${PROJECT_ROOT}" "${env}" "${firebase_config_json}" \
-        "${nonce_secret}" "${auth_app_url}" "${LOG_FILE}"; then
+        "${nonce_secret}" "${auth_app_url}" "${ai_service_url}" "${LOG_FILE}"; then  
         return 1
     fi
     

@@ -28,32 +28,31 @@ build_app_image() {
         return 1
     fi
     
-    # Create temporary Dockerfile for app
+    # Create temporary Dockerfile for app (BFF Node Server)
     local app_dockerfile="${project_root}/.Dockerfile.app"
     cat > "${app_dockerfile}" <<'EOF'
-FROM nginx:alpine
-COPY apps/app/dist /usr/share/nginx/html
-RUN rm /etc/nginx/conf.d/default.conf
-COPY <<'NGINX_CONF' /etc/nginx/conf.d/default.conf
-server {
-    listen 8080;
-    server_name _;
-    root /usr/share/nginx/html;
-    index index.html;
-    
-    location / {
-        try_files $uri $uri/ /index.html =404;
-    }
-    
-    location /health {
-        access_log off;
-        return 200 "healthy\n";
-        add_header Content-Type text/plain;
-    }
-}
-NGINX_CONF
+FROM node:20-slim
+
+WORKDIR /app
+
+# Initialize a package.json to install valid dependencies
+RUN echo '{"type":"module"}' > package.json
+
+# Install minimal server dependencies
+RUN npm install fastify @fastify/static
+
+# Copy Server Code
+COPY apps/app/server.js /app/server.js
+
+# Copy Static Assets (Built React App)
+COPY apps/app/dist /app/public
+
+ENV NODE_ENV=production
+ENV PORT=8080
+
 EXPOSE 8080
-CMD ["nginx", "-g", "daemon off;"]
+
+CMD ["node", "server.js"]
 EOF
     
     # Build app image

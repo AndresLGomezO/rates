@@ -1,7 +1,7 @@
 import { getAuthToken } from '../utils/auth';
 
-const AI_SERVICE_URL =
-  (import.meta.env.VITE_AI_SERVICE_URL as string) || 'http://localhost:8080';
+// BFF Proxy URL (Same Origin)
+const AI_PROXY_URL = '/api/ai';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -33,11 +33,11 @@ export async function sendMessage(
     throw new Error('No authentication token available');
   }
 
-  const response = await fetch(`${AI_SERVICE_URL}/v1/generate`, {
+  const response = await fetch(`${AI_PROXY_URL}/generate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Forwarded-Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       'X-Request-ID': crypto.randomUUID(),
     },
     body: JSON.stringify({

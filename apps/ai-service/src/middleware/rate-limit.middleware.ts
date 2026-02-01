@@ -12,8 +12,12 @@ export async function rateLimitMiddleware(
   request: FastifyRequest,
   _reply: FastifyReply
 ) {
-  // Skip rate limit for health checks
-  if (request.url.startsWith('/health') || request.url.startsWith('/ready')) {
+  // Skip rate limit for health checks and OPTIONS
+  if (
+    request.method === 'OPTIONS' ||
+    request.url.startsWith('/health') ||
+    request.url.startsWith('/ready')
+  ) {
     return;
   }
 

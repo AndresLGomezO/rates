@@ -59,7 +59,7 @@ module "cloud_run_ai_service" {
   service_account_email = local.ai_service_sa
   container_image       = local.ai_service_image
   
-  # Internal Ingress Only
+  # Internal Ingress Only (Critical Security Requirement)
   ingress = "internal"
   allow_unauthenticated = false
 
@@ -94,6 +94,15 @@ module "cloud_run_ai_service" {
     data.terraform_remote_state.foundation,
     module.ai_vpc_connector
   ]
+}
+
+# Allow Main App to invoke AI Service (Service-to-Service IAM)
+resource "google_cloud_run_v2_service_iam_member" "main_app_invoker" {
+  project  = var.project_id
+  location = var.region
+  name     = module.cloud_run_ai_service.service_name
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${data.terraform_remote_state.foundation.outputs.dev_cloud_run_sa_email}"
 }
 
 # ----------------------------------------------------------------------------

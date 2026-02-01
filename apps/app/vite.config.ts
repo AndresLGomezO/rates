@@ -21,5 +21,12 @@ export default defineConfig({
     host: '127.0.0.1',
     port: 5174,
     strictPort: false,
+    proxy: {
+      '/api/ai': {
+        target: 'http://localhost:5051/v1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/ai/, ''),
+      },
+    },
   },
 });

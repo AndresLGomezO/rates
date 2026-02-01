@@ -20,7 +20,8 @@ build_app_assets() {
     local firebase_config="$3"      # JSON string
     local nonce_secret="$4"
     local auth_app_url="$5"
-    local log_file="$6"
+    local ai_service_url="$6"
+    local log_file="$7"
     
     print_step "Building app static files..."
     
@@ -58,6 +59,12 @@ build_app_assets() {
         print_error "Cannot build app: Firebase config is missing"
         return 1
     fi
+
+    # Validate AI Service URL
+    if [[ -z "${ai_service_url}" ]]; then
+        print_error "Cannot build app: AI Service URL is missing"
+        return 1
+    fi
     
     # Remove existing dist to force fresh build
     if [[ -d "${project_root}/apps/app/dist" ]]; then
@@ -79,6 +86,7 @@ build_app_assets() {
         VITE_USE_FIREBASE_EMULATOR="false" \
         VITE_NONCE_SECRET="${nonce_secret}" \
         VITE_AUTH_APP_URL="${auth_app_url}" \
+        VITE_AI_SERVICE_URL="${ai_service_url}" \
         NODE_ENV="production" \
         VITE_ENVIRONMENT="${env}" \
         pnpm --filter=app build >> "${log_file}" 2>&1); then
