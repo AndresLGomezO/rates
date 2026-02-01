@@ -33,6 +33,7 @@ const envSchema = z.object({
   K_REVISION: z.string().optional(),
   ENV: z.enum(['dev', 'development', 'prod', 'production']).default('dev'),
   GCP_PROJECT_ID: z.string().default('rates-dev'), // Default for local dev
+  VERTEX_AI_PROJECT_ID: z.string().optional(), // Specific for Vertex AI if different
   VERTEX_AI_LOCATION: z.string().default('us-central1'),
   FIRESTORE_COLLECTION_PREFIX: z.string().default('dev'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
@@ -59,6 +60,7 @@ export const config = {
     location: env.VERTEX_AI_LOCATION,
   },
   vertexAI: {
+    projectId: env.VERTEX_AI_PROJECT_ID || env.GCP_PROJECT_ID, // Use specific ID or fall back to main project ID
     useMock:
       env.VERTEX_AI_MOCK === 'true' ||
       ((env.ENV === 'dev' || env.ENV === 'development') &&

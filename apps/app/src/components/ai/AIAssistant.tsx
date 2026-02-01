@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
-import { sendMessage, type ChatMessage } from '../../services/ai';
+import { sendChatMessage } from '../../services/chat.service';
+import type { ChatMessage } from '../../services/ai'; // Re-use type or import from chat.service if unified
 
 export const AIAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState<string | undefined>(undefined);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const location = useLocation();
+  // useLocation removed as context is now backend-driven
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -28,10 +29,13 @@ export const AIAssistant: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Add context based on current path
-      const context = `The user is currently on the ${location.pathname} screen. Provide helpful financial assistance related to this context if appropriate.`;
+      // Backend handles context building now
+      const response = await sendChatMessage(inputValue, sessionId);
 
-      const response = await sendMessage(inputValue, context);
+      // Save session ID for continuity
+      if (response.sessionId && !sessionId) {
+        setSessionId(response.sessionId);
+      }
 
       const assistantMessage: ChatMessage = {
         role: 'assistant',

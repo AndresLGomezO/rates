@@ -4,6 +4,7 @@ import { RateLimitService } from './rate-limit.service.js';
 import { CacheService } from './cache.service.js';
 import { UsageService } from './usage.service.js';
 import { AuthService } from './auth.service.js';
+export * from './context-builder.service.js';
 
 import { TaskRepository } from '../repositories/task.repository.js';
 import { UsageRepository } from '../repositories/usage.repository.js';
