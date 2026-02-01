@@ -1,4 +1,10 @@
-import { GenerativeModel, VertexAI } from '@google-cloud/vertexai';
+import {
+  GenerativeModel,
+  VertexAI,
+  HarmCategory,
+  HarmBlockThreshold,
+  SafetySetting,
+} from '@google-cloud/vertexai';
 import {
   GenerationRequest,
   GenerationResponse,
@@ -22,10 +28,7 @@ interface ValidationResult {
   errors: string[];
 }
 
-interface VertexSafetySetting {
-  category: string;
-  threshold: string;
-}
+// Redundant interface removed in favor of library types
 
 export class GenerationClient {
   private streamingClient: StreamingClient;
@@ -145,28 +148,28 @@ export class GenerationClient {
 
   private mapSafetySettings(
     settings?: SafetySettings
-  ): VertexSafetySetting[] | undefined {
+  ): SafetySetting[] | undefined {
     if (!settings) return undefined;
-    const mapped: VertexSafetySetting[] = [];
+    const mapped: SafetySetting[] = [];
     if (settings.harassmentThreshold)
       mapped.push({
-        category: 'HARM_CATEGORY_HARASSMENT',
-        threshold: settings.harassmentThreshold,
+        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+        threshold: settings.harassmentThreshold as HarmBlockThreshold,
       });
     if (settings.hateSpeechThreshold)
       mapped.push({
-        category: 'HARM_CATEGORY_HATE_SPEECH',
-        threshold: settings.hateSpeechThreshold,
+        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        threshold: settings.hateSpeechThreshold as HarmBlockThreshold,
       });
     if (settings.sexuallyExplicitThreshold)
       mapped.push({
-        category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-        threshold: settings.sexuallyExplicitThreshold,
+        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        threshold: settings.sexuallyExplicitThreshold as HarmBlockThreshold,
       });
     if (settings.dangerousContentThreshold)
       mapped.push({
-        category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-        threshold: settings.dangerousContentThreshold,
+        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        threshold: settings.dangerousContentThreshold as HarmBlockThreshold,
       });
     return mapped;
   }
