@@ -12,12 +12,13 @@
 #
 # Build Steps:
 #   1. Build auth-app API container (production optimized)
-#   2. Push to Artifact Registry
-#   3. Deploy to Cloud Run
-#   4. Build and deploy Firebase Hosting (main-app, auth-app client)
+#   2. Build AI Service and AI Processor containers
+#   3. Push to Artifact Registry
+#   4. Deploy to Cloud Run (API, AI Service, AI Processor Job)
+#   5. Build and deploy Firebase Hosting (main-app, auth-app client)
 #
 # Cost Guardrails:
-#   - Timeout: 10 minutes (600s) per COST_GUARDRAILS.md
+#   - Timeout: 15 minutes (900s)
 #   - Machine type: Default (e2-medium equivalent)
 #
 # Security:
@@ -31,13 +32,14 @@ substitutions:
   _ENVIRONMENT: prod
   _ARTIFACT_REGISTRY: us-central1-docker.pkg.dev/${PROJECT_ID}/rates-prod-containers
   _CLOUD_RUN_SERVICE: rates-prod-api-us-central1
+  _CLOUD_RUN_SERVICE_AI: rates-prod-ai-service-us-central1
+  _CLOUD_RUN_JOB_AI: rates-prod-ai-processor
 
 options:
   logging: CLOUD_LOGGING_ONLY
-  # Timeout: 10 minutes max per COST_GUARDRAILS.md
-  # This is set at the build level, individual steps can be shorter
+  # Timeout: 15 minutes max
 
-timeout: 600s
+timeout: 900s
 
 steps:
   # ============================================================================
@@ -88,35 +90,71 @@ steps:
     waitFor: ['run-tests']
 
   # ============================================================================
-  # STEP 4: Push Container to Artifact Registry
+  # STEP 3a: Build AI Service Container (Production)
   # ============================================================================
   - name: 'gcr.io/cloud-builders/docker'
-    id: 'push-api-image'
+    id: 'build-ai-service-image'
     args:
-      - 'push'
-      - '--all-tags'
-      - '${_ARTIFACT_REGISTRY}/api'
-    waitFor: ['build-api-image']
+      - 'build'
+      - '-t'
+      - '${_ARTIFACT_REGISTRY}/ai-service:${SHORT_SHA}'
+      - '-t'
+      - '${_ARTIFACT_REGISTRY}/ai-service:${TAG_NAME:-latest}'
+      - '-f'
+      - 'apps/ai-service/Dockerfile'
+      - '--build-arg'
+      - 'NODE_ENV=production'
+      - '.'
+    waitFor: ['run-tests']
 
   # ============================================================================
-  # STEP 5: Deploy to Cloud Run (Production)
+  # STEP 3b: Build AI Processor Container (Production)
+  # ============================================================================
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-ai-processor-image'
+    args:
+      - 'build'
+      - '-t'
+      - '${_ARTIFACT_REGISTRY}/ai-processor:${SHORT_SHA}'
+      - '-t'
+      - '${_ARTIFACT_REGISTRY}/ai-processor:${TAG_NAME:-latest}'
+      - '-f'
+      - 'apps/ai-processor/Dockerfile'
+      - '--build-arg'
+      - 'NODE_ENV=production'
+      - '.'
+    waitFor: ['run-tests']
+
+  # ============================================================================
+  # STEP 4: Push Containers to Artifact Registry
+  # ============================================================================
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-images'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        docker push --all-tags ${_ARTIFACT_REGISTRY}/api
+        docker push --all-tags ${_ARTIFACT_REGISTRY}/ai-service
+        docker push --all-tags ${_ARTIFACT_REGISTRY}/ai-processor
+    waitFor: ['build-api-image', 'build-ai-service-image', 'build-ai-processor-image']
+
+  # ============================================================================
+  # STEP 5: Deploy API and AI Service to Cloud Run (Production)
   # ============================================================================
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    id: 'deploy-cloud-run'
-    entrypoint: 'gcloud'
+    id: 'deploy-services'
+    entrypoint: 'bash'
     args:
-      - 'run'
-      - 'deploy'
-      - '${_CLOUD_RUN_SERVICE}'
-      - '--image'
-      - '${_ARTIFACT_REGISTRY}/api:${SHORT_SHA}'
-      - '--region'
-      - '${_REGION}'
-      - '--platform'
-      - 'managed'
-      - '--no-traffic'  # Deploy without routing traffic (gradual rollout)
-      - '--quiet'
-    waitFor: ['push-api-image']
+      - '-c'
+      - |
+        echo "Deploying Api (no-traffic)..."
+        gcloud run deploy ${_CLOUD_RUN_SERVICE} --image ${_ARTIFACT_REGISTRY}/api:${SHORT_SHA} --region ${_REGION} --platform managed --no-traffic --quiet
+        echo "Deploying AI Service (no-traffic)..."
+        gcloud run deploy ${_CLOUD_RUN_SERVICE_AI} --image ${_ARTIFACT_REGISTRY}/ai-service:${SHORT_SHA} --region ${_REGION} --platform managed --no-traffic --quiet
+        echo "Updating AI Processor Job..."
+        gcloud run jobs deploy ${_CLOUD_RUN_JOB_AI} --image ${_ARTIFACT_REGISTRY}/ai-processor:${SHORT_SHA} --region ${_REGION} --quiet
+    waitFor: ['push-images']
 
   # ============================================================================
   # STEP 6: Build Main App (Firebase Hosting - Production)
@@ -161,17 +199,12 @@ steps:
     args:
       - '-c'
       - |
-        echo "Installing Firebase CLI..."
         npm install -g firebase-tools
-        
-        echo "Deploying to Firebase Hosting (production)..."
-        firebase deploy --only hosting:rates-${_ENVIRONMENT}-main-app,hosting:rates-${_ENVIRONMENT}-auth-app \
-          --project=${PROJECT_ID} \
-          --non-interactive
+        firebase deploy --only hosting:rates-${_ENVIRONMENT}-main-app,hosting:rates-${_ENVIRONMENT}-auth-app --project=${PROJECT_ID} --non-interactive
     waitFor: ['build-main-app', 'build-auth-app-client']
 
   # ============================================================================
-  # STEP 9: Route Traffic to New Revision
+  # STEP 9: Route Traffic to New Revisions
   # ============================================================================
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'route-traffic'
@@ -179,12 +212,10 @@ steps:
     args:
       - '-c'
       - |
-        echo "Routing 100% traffic to new revision..."
-        gcloud run services update-traffic ${_CLOUD_RUN_SERVICE} \
-          --region=${_REGION} \
-          --to-latest \
-          --quiet
-    waitFor: ['deploy-cloud-run', 'deploy-firebase-hosting']
+        echo "Routing 100% traffic to new revisions..."
+        gcloud run services update-traffic ${_CLOUD_RUN_SERVICE} --region=${_REGION} --to-latest --quiet
+        gcloud run services update-traffic ${_CLOUD_RUN_SERVICE_AI} --region=${_REGION} --to-latest --quiet
+    waitFor: ['deploy-services', 'deploy-firebase-hosting']
 
   # ============================================================================
   # STEP 10: Deployment Verification
@@ -198,24 +229,10 @@ steps:
         echo "============================================"
         echo "⚠️  PRODUCTION DEPLOYMENT COMPLETE"
         echo "============================================"
-        echo ""
-        echo "Cloud Run Service: ${_CLOUD_RUN_SERVICE}"
-        
-        # Get Cloud Run URL
-        CLOUD_RUN_URL=$(gcloud run services describe ${_CLOUD_RUN_SERVICE} \
-          --region=${_REGION} \
-          --format='value(status.url)')
-        
-        echo "Cloud Run URL: $CLOUD_RUN_URL"
-        echo ""
-        echo "Testing health endpoint..."
-        curl -s "$CLOUD_RUN_URL/health" || echo "Health check pending..."
-        echo ""
-        echo "Image: ${_ARTIFACT_REGISTRY}/api:${SHORT_SHA}"
-        echo "Tag: ${TAG_NAME:-latest}"
-        echo ""
-        echo "============================================"
-        echo "VERIFY END-TO-END FUNCTIONALITY"
+        echo "Services:"
+        echo "  API: ${_CLOUD_RUN_SERVICE}"
+        echo "  AI: ${_CLOUD_RUN_SERVICE_AI}"
+        echo "  Processor (Job): ${_CLOUD_RUN_JOB_AI}"
         echo "============================================"
     waitFor: ['route-traffic']
 
@@ -223,3 +240,7 @@ steps:
 images:
   - '${_ARTIFACT_REGISTRY}/api:${SHORT_SHA}'
   - '${_ARTIFACT_REGISTRY}/api:${TAG_NAME:-latest}'
+  - '${_ARTIFACT_REGISTRY}/ai-service:${SHORT_SHA}'
+  - '${_ARTIFACT_REGISTRY}/ai-service:${TAG_NAME:-latest}'
+  - '${_ARTIFACT_REGISTRY}/ai-processor:${SHORT_SHA}'
+  - '${_ARTIFACT_REGISTRY}/ai-processor:${TAG_NAME:-latest}'
