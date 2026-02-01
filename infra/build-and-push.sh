@@ -31,130 +31,63 @@ export LOG_FILE="${SCRIPT_DIR}/.build-push.log"
 # ============================================================================
 
 # Source required libraries
+# Source required libraries
 source "${SCRIPT_DIR}/scripts/lib/colors.sh"
 source "${SCRIPT_DIR}/scripts/lib/logging.sh"
 source "${SCRIPT_DIR}/scripts/lib/prompts.sh"
 source "${SCRIPT_DIR}/scripts/lib/gcloud.sh"
-source "${SCRIPT_DIR}/scripts/build/api_image.sh"
-source "${SCRIPT_DIR}/scripts/build/app_assets.sh"
-source "${SCRIPT_DIR}/scripts/build/app_image.sh"
+source "${SCRIPT_DIR}/scripts/builders/api_image.sh"
+source "${SCRIPT_DIR}/scripts/builders/app_assets.sh"
+source "${SCRIPT_DIR}/scripts/builders/app_image.sh"
+source "${SCRIPT_DIR}/scripts/builders/ai_processor_image.sh"
+source "${SCRIPT_DIR}/scripts/builders/ai_service_image.sh"
 source "${SCRIPT_DIR}/scripts/deploy/cloud_run.sh"
 
-# ============================================================================
-# HELP
-# ============================================================================
-
-show_help() {
-    cat <<EOF
-${BOLD}Build and Push Script${NC}
-
-${BOLD}Usage:${NC}
-  ./build-and-push.sh <environment> [tag] [--deploy]
-
-${BOLD}Arguments:${NC}
-  environment    Environment to build for: dev or prod (required)
-  tag            Docker image tag (default: latest)
-  --deploy       Also deploy to Cloud Run after building/pushing
-
-${BOLD}Examples:${NC}
-  ./build-and-push.sh dev                    # Build and push dev with 'latest' tag
-  ./build-and-push.sh dev v1.2.3             # Build and push dev with 'v1.2.3' tag
-  ./build-and-push.sh dev latest --deploy    # Build, push, and deploy to dev
-  ./build-and-push.sh prod v1.0.0 --deploy  # Build, push, and deploy to prod
-
-${BOLD}What this script does:${NC}
-  1. Builds auth-app API container image
-  2. Builds app static files container image
-  3. Pushes both images to Artifact Registry
-  4. Uses secrets from Secret Manager for build configuration
-  5. (Optional with --deploy) Deploys to Cloud Run via Terraform
-
-${BOLD}Deploying with "latest":${NC}
-  For --deploy with tag "latest", the script uses a unique tag (e.g. dev-1738...)
-  and builds without cache so Terraform and Cloud Run see a real change.
-  Use an explicit tag (e.g. v1.0.0) to avoid that and control the image tag.
-
-${BOLD}Prerequisites:${NC}
-  - Docker installed and running
-  - Authenticated with GCP (gcloud auth login)
-  - Docker configured for Artifact Registry
-  - Secrets exist in Secret Manager (created by infra/setup.sh)
-
-${BOLD}Note:${NC}
-  By default, this script only builds and pushes images.
-  Use --deploy flag to also deploy to Cloud Run via Terraform.
-EOF
-}
 
 # ============================================================================
-# VALIDATION
+# HELPER FUNCTIONS
 # ============================================================================
 
 validate_environment() {
     local env="$1"
-    if [[ "${env}" != "dev" ]] && [[ "${env}" != "prod" ]]; then
-        print_error "Invalid environment: ${env}"
-        print_info "Must be 'dev' or 'prod'"
+    if [[ "${env}" != "dev" && "${env}" != "prod" ]]; then
+        print_error "Invalid environment: ${env}. Must be 'dev' or 'prod'."
         return 1
     fi
-    return 0
-}
-
-check_prerequisites() {
-    local errors=0
-    
-    # Check Docker
-    if ! command -v docker &> /dev/null; then
-        print_error "Docker is not installed or not in PATH"
-        errors=$((errors + 1))
-    elif ! docker info &>/dev/null; then
-        print_error "Docker daemon is not running"
-        errors=$((errors + 1))
-    fi
-    
-    # Check gcloud
-    if ! command -v gcloud &> /dev/null; then
-        print_error "gcloud CLI is not installed or not in PATH"
-        errors=$((errors + 1))
-    fi
-    
-    # Check project access
-    local project_id="${DEFAULT_PROJECT_ID}"
-    if ! gcloud projects describe "${project_id}" &>/dev/null; then
-        print_error "Cannot access GCP project: ${project_id}"
-        print_info "Run: gcloud auth login"
-        errors=$((errors + 1))
-    fi
-    
-    if [[ ${errors} -gt 0 ]]; then
-        return 1
-    fi
-    
     return 0
 }
 
 get_project_config() {
     local env="$1"
-    local project_id="${DEFAULT_PROJECT_ID}"
-    local region="${DEFAULT_REGION}"
+    # Returns "project_id|region"
+    # Currently using defaults for both environments, can be customized here
+    echo "${DEFAULT_PROJECT_ID}|${DEFAULT_REGION}"
+}
+
+check_prerequisites() {
+    local missing=0
     
-    # Try to get region from Terraform state if available
-    local app_env_dir="${SCRIPT_DIR}/environments/application/${env}"
-    if [[ -d "${app_env_dir}" ]]; then
-        if command -v terraform &> /dev/null; then
-            local tf_region
-            if tf_region=$(cd "${app_env_dir}" && terraform output -raw region 2>/dev/null); then
-                region="${tf_region}"
-            fi
-        fi
+    if ! command -v docker &> /dev/null; then
+        print_error "docker is not installed"
+        missing=1
     fi
     
-    echo "${project_id}|${region}"
+    if ! command -v gcloud &> /dev/null; then
+        print_error "gcloud SDK is not installed"
+        missing=1
+    fi
+    
+    if [[ ${missing} -eq 1 ]]; then
+        print_info "Please install required tools and try again."
+        return 1
+    fi
+    return 0
 }
 
 # ============================================================================
 # BUILD AND PUSH
 # ============================================================================
+
 
 build_and_push_images() {
     local env="$1"
@@ -183,12 +116,19 @@ build_and_push_images() {
     fi
     
     # Determine image names
-    local image_name_api="${region}-docker.pkg.dev/${project_id}/rates-${env}-containers/api:${image_tag}"
-    local image_name_app="${region}-docker.pkg.dev/${project_id}/rates-${env}-containers/app:${image_tag}"
+    local registry="${region}-docker.pkg.dev"
+    local repository="${project_id}/rates-${env}-containers"
+    local image_name_api="${registry}/${repository}/api:${image_tag}"
+    local image_name_app="${registry}/${repository}/app:${image_tag}"
+    local image_name_ai_service="${registry}/${repository}/ai-service:${image_tag}"
+    local image_name_ai_processor="${registry}/${repository}/ai-processor:${image_tag}"
     
     print_info "API Image: ${image_name_api}"
     print_info "App Image: ${image_name_app}"
+    print_info "AI Service Image: ${image_name_ai_service}"
+    print_info "AI Processor Image: ${image_name_ai_processor}"
     
+    # ... (Keep existing secrets retrieval)
     # Retrieve Firebase config from Secret Manager
     print_step "Retrieving Firebase config from Secret Manager..."
     local firebase_config_secret="rates-${env}-firebase-web-config"
@@ -229,6 +169,18 @@ build_and_push_images() {
         "${LOG_FILE}" "${FORCE_REBUILD:-0}"; then
         return 1
     fi
+
+    # Build AI Processor image
+    if ! build_ai_processor_image "${PROJECT_ROOT}" "${image_name_ai_processor}" "${env}" \
+        "${LOG_FILE}" "${FORCE_REBUILD:-0}"; then
+        return 1
+    fi
+
+    # Build AI Service image
+    if ! build_ai_service_image "${PROJECT_ROOT}" "${image_name_ai_service}" "${env}" \
+        "${LOG_FILE}" "${FORCE_REBUILD:-0}"; then
+        return 1
+    fi
     
     # Get auth app URL
     local cloud_run_api_service_name="rates-${env}-api-${region}"
@@ -255,19 +207,40 @@ build_and_push_images() {
     
     # Push images
     print_step "Pushing images to Artifact Registry..."
+    
+    local push_failures=0
+    
     if docker push "${image_name_api}" >> "${LOG_FILE}" 2>&1; then
         print_success "API image pushed successfully"
     else
         print_error "API image push failed"
-        print_info "Check ${LOG_FILE} for details"
-        return 1
+        push_failures=$((push_failures + 1))
     fi
     
     if docker push "${image_name_app}" >> "${LOG_FILE}" 2>&1; then
         print_success "App image pushed successfully"
     else
         print_error "App image push failed"
-        print_info "Check ${LOG_FILE} for details"
+        push_failures=$((push_failures + 1))
+    fi
+
+    if docker push "${image_name_ai_processor}" >> "${LOG_FILE}" 2>&1; then
+        print_success "AI Processor image pushed successfully"
+    else
+        print_error "AI Processor image push failed"
+        push_failures=$((push_failures + 1))
+    fi
+
+    if docker push "${image_name_ai_service}" >> "${LOG_FILE}" 2>&1; then
+        print_success "AI Service image pushed successfully"
+    else
+        print_error "AI Service image push failed"
+
+        push_failures=$((push_failures + 1))
+    fi
+    
+    if [[ ${push_failures} -gt 0 ]]; then
+        print_error "Some images failed to push. Check ${LOG_FILE}"
         return 1
     fi
     
@@ -276,6 +249,8 @@ build_and_push_images() {
     print_info "Images:"
     print_info "  API: ${image_name_api}"
     print_info "  App: ${image_name_app}"
+    print_info "  AI Service: ${image_name_ai_service}"
+    print_info "  AI Processor: ${image_name_ai_processor}"
     print_info ""
     print_info "To deploy these images, update Cloud Run services or run Terraform apply."
     

@@ -20,6 +20,8 @@ phase_3_application() {
 This phase deploys the application infrastructure for ${env_name}:
 
   • Cloud Run services (API, App)
+  • Cloud Run Job (AI Processor)
+  • VPC Connector & AI Services
   • Secret Manager secrets
   • Service account permissions
   • Container image deployment
@@ -74,6 +76,8 @@ include_secrets       = false
 
 # Container image configuration
 container_image_tag   = "latest"
+ai_service_image_tag  = "latest"
+ai_processor_image_tag = "latest"
 EOF
     
     print_success "Created terraform.tfvars"

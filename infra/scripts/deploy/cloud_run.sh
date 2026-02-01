@@ -65,6 +65,20 @@ deploy_to_cloud_run() {
         else
             print_warning "Could not update container_image_tag in terraform.tfvars"
         fi
+        
+        if sed -i.bak "s/ai_service_image_tag[[:space:]]*=[[:space:]]*\\\"[^\\\"]*\\\"/ai_service_image_tag = \\\"${image_tag}\\\"/" terraform.tfvars 2>/dev/null; then
+            print_success "Updated ai_service_image_tag = ${image_tag}"
+            rm -f terraform.tfvars.bak
+        else
+            print_warning "Could not update ai_service_image_tag in terraform.tfvars"
+        fi
+        
+        if sed -i.bak "s/ai_processor_image_tag[[:space:]]*=[[:space:]]*\\\"[^\\\"]*\\\"/ai_processor_image_tag = \\\"${image_tag}\\\"/" terraform.tfvars 2>/dev/null; then
+            print_success "Updated ai_processor_image_tag = ${image_tag}"
+            rm -f terraform.tfvars.bak
+        else
+            print_warning "Could not update ai_processor_image_tag in terraform.tfvars"
+        fi
     fi
     
     # Initialize Terraform if needed

@@ -8,6 +8,13 @@
 # Dependencies: logging.sh, gcloud.sh
 # ============================================================================
 
+# Source builder scripts
+source "${SCRIPT_DIR}/scripts/builders/api_image.sh"
+source "${SCRIPT_DIR}/scripts/builders/app_assets.sh"
+source "${SCRIPT_DIR}/scripts/builders/app_image.sh"
+source "${SCRIPT_DIR}/scripts/builders/ai_processor_image.sh"
+source "${SCRIPT_DIR}/scripts/builders/ai_service_image.sh"
+
 set -euo pipefail
 
 # ============================================================================
@@ -47,19 +54,6 @@ docker_build_and_push() {
     local script_dir
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
     local project_root="${script_dir}/.."
-    local api_dir="${project_root}/apps/api"
-    local app_dir="${project_root}/apps/app"
-    
-    # Verify directories exist
-    if [[ ! -d "${api_dir}" ]]; then
-        print_error "API directory not found: ${api_dir}"
-        return 1
-    fi
-    
-    if [[ ! -d "${app_dir}" ]]; then
-        print_error "App directory not found: ${app_dir}"
-        return 1
-    fi
     
     # Configure Docker authentication
     if ! docker_configure_auth "${region}" "${project_id}"; then
@@ -69,53 +63,129 @@ docker_build_and_push() {
     # Define image names
     local registry="${region}-docker.pkg.dev"
     local repository="${project_id}/rates-${env}-containers"
-    local image_name_api="${registry}/${repository}/rates-api:${tag}"
-    local image_name_app="${registry}/${repository}/rates-app:${tag}"
+    local image_name_api="${registry}/${repository}/api:${tag}"
+    local image_name_app="${registry}/${repository}/app:${tag}"
+    local image_name_ai_service="${registry}/${repository}/ai-service:${tag}"
+    local image_name_ai_processor="${registry}/${repository}/ai-processor:${tag}"
     
     print_info "Building images:"
     print_info "  API: ${image_name_api}"
     print_info "  App: ${image_name_app}"
+    print_info "  AI Service: ${image_name_ai_service}"
+    print_info "  AI Processor: ${image_name_ai_processor}"
+    
+    # -------------------------------------------------------------------------
+    # Retrieve Secrets (Required for App Build)
+    # -------------------------------------------------------------------------
+    print_step "Retrieving build-time secrets..."
+    
+    # Firebase Config
+    local firebase_config_secret="rates-${env}-firebase-web-config"
+    local firebase_config_json=""
+    
+    if firebase_config_json=$(gcloud secrets versions access latest --secret="${firebase_config_secret}" --project="${project_id}" 2>/dev/null); then
+        print_success "Retrieved Firebase config"
+    else
+        print_warning "Could not retrieve Firebase config: ${firebase_config_secret}"
+        print_info "Build will proceed without Firebase config (UI may fail at runtime)"
+    fi
+    
+    # Nonce Secret
+    local nonce_secret_name="rates-${env}-nonce-secret"
+    local nonce_secret=""
+    
+    if nonce_secret=$(gcloud secrets versions access latest --secret="${nonce_secret_name}" --project="${project_id}" 2>/dev/null); then
+        print_success "Retrieved nonce secret"
+    else
+        print_warning "Could not retrieve nonce secret: ${nonce_secret_name}"
+    fi
+    
+    # Main App URL (for VITE_ALLOWED_REDIRECTS)
+    local project_number=""
+    local main_app_url=""
+    if project_number=$(gcloud projects describe "${project_id}" --format="value(projectNumber)" 2>/dev/null); then
+        main_app_url="https://rates-${env}-app-${region}-${project_number}.${region}.run.app"
+        print_success "Retrieved main app URL: ${main_app_url}"
+    else
+        print_warning "Could not retrieve project number for main app URL"
+    fi
+
+    # Auth App URL (for React App API calls)
+    local cloud_run_api_service_name="rates-${env}-api-${region}"
+    local auth_app_url=""
+    if auth_app_url=$(gcloud run services describe "${cloud_run_api_service_name}" \
+        --region="${region}" \
+        --project="${project_id}" \
+        --format="value(status.url)" 2>/dev/null); then
+        print_success "Retrieved auth app URL: ${auth_app_url}"
+    else
+        print_warning "Could not retrieve auth app URL (API service might not be deployed yet)"
+    fi
+    
+    # -------------------------------------------------------------------------
+    # Build Images
+    # -------------------------------------------------------------------------
     
     # Build API image
-    print_step "Building API Docker image..."
-    if docker build -t "${image_name_api}" "${api_dir}" >> "${LOG_FILE}" 2>&1; then
-        print_success "API Docker image built successfully"
-    else
-        print_error "API Docker build failed"
-        print_info "Check ${LOG_FILE} for details"
+    if ! build_api_image "${project_root}" "${image_name_api}" "${env}" \
+        "${firebase_config_json}" "${nonce_secret}" "${main_app_url}" \
+        "${LOG_FILE}" "0"; then
+        return 1
+    fi
+
+    # Build AI Service image
+    if ! build_ai_service_image "${project_root}" "${image_name_ai_service}" "${env}" \
+        "${LOG_FILE}" "0"; then
+        return 1
+    fi
+
+    # Build AI Processor image
+    if ! build_ai_processor_image "${project_root}" "${image_name_ai_processor}" "${env}" \
+        "${LOG_FILE}" "0"; then
         return 1
     fi
     
-    # Build App image
-    print_step "Building App Docker image..."
-    if docker build -t "${image_name_app}" "${app_dir}" >> "${LOG_FILE}" 2>&1; then
-        print_success "App Docker image built successfully"
-    else
-        print_error "App Docker build failed"
-        print_info "Check ${LOG_FILE} for details"
+    # Build App Assets (Static files)
+    if ! build_app_assets "${project_root}" "${env}" "${firebase_config_json}" \
+        "${nonce_secret}" "${auth_app_url}" "${LOG_FILE}"; then
         return 1
     fi
     
-    # Push API image
-    print_step "Pushing API Docker image to Artifact Registry..."
-    if docker push "${image_name_api}" >> "${LOG_FILE}" 2>&1; then
-        print_success "API Docker image pushed successfully"
-    else
-        print_error "API Docker push failed"
-        print_info "Check ${LOG_FILE} for details"
+    # Build App image (Nginx wrapper)
+    if ! build_app_image "${project_root}" "${image_name_app}" "${LOG_FILE}" "0"; then
         return 1
     fi
     
-    # Push App image
-    print_step "Pushing App Docker image to Artifact Registry..."
-    if docker push "${image_name_app}" >> "${LOG_FILE}" 2>&1; then
-        print_success "App Docker image pushed successfully"
-        return 0
-    else
-        print_error "App Docker push failed"
-        print_info "Check ${LOG_FILE} for details"
+    # -------------------------------------------------------------------------
+    # Push Images
+    # -------------------------------------------------------------------------
+    print_step "Pushing images to Artifact Registry..."
+    
+    local push_failures=0
+    
+    # Helper to push
+    push_image() {
+        local name="$1"
+        local label="$2"
+        if docker push "${name}" >> "${LOG_FILE}" 2>&1; then
+            print_success "${label} image pushed successfully"
+        else
+            print_error "${label} image push failed"
+            push_failures=$((push_failures + 1))
+        fi
+    }
+    
+    push_image "${image_name_api}" "API"
+    push_image "${image_name_app}" "App"
+    push_image "${image_name_ai_service}" "AI Service"
+    push_image "${image_name_ai_processor}" "AI Processor"
+    
+    if [[ ${push_failures} -gt 0 ]]; then
+        print_error "Some images failed to push. Check ${LOG_FILE}"
         return 1
     fi
+    
+    return 0
 }
 
 # ============================================================================

@@ -1,0 +1,73 @@
+import { ModelId, EmbeddingModelId, ModelInfo } from '../types/model.types';
+
+export const MODELS: Record<ModelId | EmbeddingModelId, ModelInfo> = {
+  'gemini-2.0-flash': {
+    id: 'gemini-2.0-flash',
+    displayName: 'Gemini 2.0 Flash',
+    type: 'generation',
+    maxInputTokens: 1048576,
+    maxOutputTokens: 8192,
+    inputPricePer1K: 0.00015,
+    outputPricePer1K: 0.0006,
+    supportsStreaming: true,
+    supportsSystemInstruction: true,
+  },
+  'gemini-2.0-pro': {
+    id: 'gemini-2.0-pro',
+    displayName: 'Gemini 2.0 Pro',
+    type: 'generation',
+    maxInputTokens: 2097152,
+    maxOutputTokens: 8192,
+    inputPricePer1K: 0.00125,
+    outputPricePer1K: 0.005,
+    supportsStreaming: true,
+    supportsSystemInstruction: true,
+  },
+  'gemini-1.5-flash': {
+    id: 'gemini-1.5-flash',
+    displayName: 'Gemini 1.5 Flash',
+    type: 'generation',
+    maxInputTokens: 1048576,
+    maxOutputTokens: 8192,
+    inputPricePer1K: 0.000075,
+    outputPricePer1K: 0.0003,
+    supportsStreaming: true,
+    supportsSystemInstruction: true,
+  },
+  'gemini-1.5-pro': {
+    id: 'gemini-1.5-pro',
+    displayName: 'Gemini 1.5 Pro',
+    type: 'generation',
+    maxInputTokens: 2097152,
+    maxOutputTokens: 8192,
+    inputPricePer1K: 0.00125,
+    outputPricePer1K: 0.005,
+    supportsStreaming: true,
+    supportsSystemInstruction: true,
+  },
+  'text-embedding-005': {
+    id: 'text-embedding-005',
+    displayName: 'Text Embedding 005',
+    type: 'embedding',
+    maxInputTokens: 2048,
+    embeddingDimensions: 768,
+    inputPricePer1K: 0.00001,
+    outputPricePer1K: 0,
+    supportsStreaming: false,
+    supportsSystemInstruction: false,
+  },
+  'text-embedding-004': {
+    id: 'text-embedding-004',
+    displayName: 'Text Embedding 004',
+    type: 'embedding',
+    maxInputTokens: 2048,
+    embeddingDimensions: 768,
+    inputPricePer1K: 0.00001,
+    outputPricePer1K: 0,
+    supportsStreaming: false,
+    supportsSystemInstruction: false,
+  },
+};
+
+export const DEFAULT_MODEL: ModelId = 'gemini-2.0-flash';
+export const DEFAULT_EMBEDDING_MODEL: EmbeddingModelId = 'text-embedding-005';

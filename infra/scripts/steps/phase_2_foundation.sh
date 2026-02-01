@@ -20,6 +20,7 @@ This phase creates the foundational infrastructure for the application:
   • Service accounts and IAM bindings
   • Artifact Registry for Docker images
   • Firebase services (Auth, Firestore, Web App)
+  • AI Service infrastructure (VPC, Pub/Sub, Service Accounts)
 
 Terraform State: gs://${STATE_BUCKET_NAME}/foundation/
 

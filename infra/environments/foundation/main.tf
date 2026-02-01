@@ -73,6 +73,10 @@ resource "google_project_service" "required_apis" {
     "cloudresourcemanager.googleapis.com", # Resource Manager
     "serviceusage.googleapis.com",     # Service Usage (already enabled in bootstrap)
     "billingbudgets.googleapis.com",   # Billing Budgets (for cost guardrails)
+    "aiplatform.googleapis.com",       # Vertex AI
+    "compute.googleapis.com",          # Compute Engine (for VPC)
+    "vpcaccess.googleapis.com",        # Serverless VPC Access
+    "pubsub.googleapis.com",           # Pub/Sub
   ])
 
   project            = var.project_id

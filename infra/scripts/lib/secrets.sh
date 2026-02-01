@@ -115,6 +115,30 @@ secrets_create_for_env() {
     chmod 600 "${nonce_file}"
     print_info "Nonce secret saved to: ${nonce_file}"
     
+    # -------------------------------------------------------------------------
+    # Create Vertex AI Config Secret
+    # -------------------------------------------------------------------------
+    print_step "Creating Vertex AI configuration secret..."
+    
+    local vertex_config_file="${HOME}/vertex-ai-config-${env}.json"
+    
+    cat > "${vertex_config_file}" <<EOF
+{
+  "projectId": "${project_id}",
+  "location": "us-central1",
+  "defaultModel": "gemini-2.0-flash",
+  "quotaProject": "${project_id}"
+}
+EOF
+    
+    if gcloud secrets versions add "${secret_prefix}-vertex-ai-config" \
+        --data-file="${vertex_config_file}" \
+        --project="${project_id}" >> "${LOG_FILE}" 2>&1; then
+        print_success "Vertex AI config secret added"
+    else
+        print_warning "Failed to add Vertex AI config secret (may already exist)"
+    fi
+
     print_success "All secrets created for ${env} environment"
     return 0
 }
