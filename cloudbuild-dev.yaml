@@ -10,12 +10,13 @@
 #
 # Build Steps:
 #   1. Build auth-app API container
-#   2. Push to Artifact Registry
-#   3. Deploy to Cloud Run
-#   4. Build and deploy Firebase Hosting (main-app, auth-app client)
+#   2. Build AI Service and AI Processor containers
+#   3. Push to Artifact Registry
+#   4. Deploy to Cloud Run (API, AI Service, AI Processor Job)
+#   5. Build and deploy Firebase Hosting (main-app, auth-app client)
 #
 # Cost Guardrails:
-#   - Timeout: 10 minutes (600s) per COST_GUARDRAILS.md
+#   - Timeout: 15 minutes (900s) - Increased to accommodate more builds
 #   - Machine type: Default (e2-medium equivalent)
 # ============================================================================
 
@@ -25,6 +26,8 @@ substitutions:
   _ARTIFACT_REGISTRY: us-central1-docker.pkg.dev/${PROJECT_ID}/rates-dev-containers
   _CLOUD_RUN_SERVICE: rates-dev-api-us-central1
   _CLOUD_RUN_SERVICE_APP: rates-dev-app-us-central1
+  _CLOUD_RUN_SERVICE_AI: rates-dev-ai-service-us-central1
+  _CLOUD_RUN_JOB_AI: rates-dev-ai-processor
   # Firebase Web App Configuration (required for frontend builds)
   # These should be set when creating the Cloud Build trigger
   # Get values from Firebase Console > Project Settings > Your apps > Web app config
@@ -38,10 +41,9 @@ substitutions:
 
 options:
   logging: CLOUD_LOGGING_ONLY
-  # Timeout: 10 minutes max per COST_GUARDRAILS.md
-  # This is set at the build level, individual steps can be shorter
+  # Timeout: 15 minutes max (increased for additional apps)
 
-timeout: 600s
+timeout: 900s
 
 steps:
   # ============================================================================
@@ -92,18 +94,103 @@ steps:
     waitFor: ['run-tests']
 
   # ============================================================================
-  # STEP 4: Push Container to Artifact Registry
+  # STEP 3a: Build AI Service Container
   # ============================================================================
   - name: 'gcr.io/cloud-builders/docker'
-    id: 'push-api-image'
+    id: 'build-ai-service-image'
     args:
-      - 'push'
-      - '--all-tags'
-      - '${_ARTIFACT_REGISTRY}/api'
-    waitFor: ['build-api-image']
+      - 'build'
+      - '-t'
+      - '${_ARTIFACT_REGISTRY}/ai-service:${SHORT_SHA}'
+      - '-t'
+      - '${_ARTIFACT_REGISTRY}/ai-service:latest'
+      - '-f'
+      - 'apps/ai-service/Dockerfile'
+      - '--build-arg'
+      - 'NODE_ENV=development'
+      - '.'
+    waitFor: ['run-tests']
 
   # ============================================================================
-  # STEP 5: Build App Image (Static Files with nginx)
+  # STEP 3b: Build AI Processor Container
+  # ============================================================================
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-ai-processor-image'
+    args:
+      - 'build'
+      - '-t'
+      - '${_ARTIFACT_REGISTRY}/ai-processor:${SHORT_SHA}'
+      - '-t'
+      - '${_ARTIFACT_REGISTRY}/ai-processor:latest'
+      - '-f'
+      - 'apps/ai-processor/Dockerfile'
+      - '--build-arg'
+      - 'NODE_ENV=development'
+      - '.'
+    waitFor: ['run-tests']
+
+  # ============================================================================
+  # STEP 4: Push Containers to Artifact Registry
+  # ============================================================================
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-images'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        docker push --all-tags ${_ARTIFACT_REGISTRY}/api
+        docker push --all-tags ${_ARTIFACT_REGISTRY}/ai-service
+        docker push --all-tags ${_ARTIFACT_REGISTRY}/ai-processor
+    waitFor: ['build-api-image', 'build-ai-service-image', 'build-ai-processor-image']
+
+  # ============================================================================
+  # STEP 5a: Retrieve and Validate Firebase Configuration
+  # ============================================================================
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'get-firebase-config'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Retrieving Firebase Web App Configuration"
+        SECRET_NAME="rates-${_ENVIRONMENT}-firebase-web-config"
+        FIREBASE_CONFIG=$(gcloud secrets versions access latest --secret="${SECRET_NAME}" --project="${PROJECT_ID}" 2>/dev/null || echo "")
+        
+        if [ -n "$FIREBASE_CONFIG" ] && echo "$FIREBASE_CONFIG" | grep -q "apiKey"; then
+          if command -v jq &> /dev/null; then
+            FIREBASE_API_KEY=$(echo "$FIREBASE_CONFIG" | jq -r '.apiKey // ""' 2>/dev/null || echo "")
+            FIREBASE_PROJECT_ID=$(echo "$FIREBASE_CONFIG" | jq -r '.projectId // ""' 2>/dev/null || echo "${PROJECT_ID}")
+            FIREBASE_AUTH_DOMAIN=$(echo "$FIREBASE_CONFIG" | jq -r '.authDomain // ""' 2>/dev/null || echo "${PROJECT_ID}.firebaseapp.com")
+            FIREBASE_STORAGE_BUCKET=$(echo "$FIREBASE_CONFIG" | jq -r '.storageBucket // ""' 2>/dev/null || echo "${PROJECT_ID}.appspot.com")
+            FIREBASE_MESSAGING_SENDER_ID=$(echo "$FIREBASE_CONFIG" | jq -r '.messagingSenderId // ""' 2>/dev/null || echo "")
+            FIREBASE_APP_ID=$(echo "$FIREBASE_CONFIG" | jq -r '.appId // ""' 2>/dev/null || echo "")
+            FIREBASE_MEASUREMENT_ID=$(echo "$FIREBASE_CONFIG" | jq -r '.measurementId // ""' 2>/dev/null || echo "")
+          else
+            FIREBASE_API_KEY=$(echo "$FIREBASE_CONFIG" | grep -o '"apiKey"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"apiKey"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "")
+            FIREBASE_PROJECT_ID=$(echo "$FIREBASE_CONFIG" | grep -o '"projectId"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"projectId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "${PROJECT_ID}")
+            FIREBASE_AUTH_DOMAIN=$(echo "$FIREBASE_CONFIG" | grep -o '"authDomain"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"authDomain"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "${PROJECT_ID}.firebaseapp.com")
+            FIREBASE_STORAGE_BUCKET=$(echo "$FIREBASE_CONFIG" | grep -o '"storageBucket"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"storageBucket"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "${PROJECT_ID}.appspot.com")
+            FIREBASE_MESSAGING_SENDER_ID=$(echo "$FIREBASE_CONFIG" | grep -o '"messagingSenderId"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"messagingSenderId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "")
+            FIREBASE_APP_ID=$(echo "$FIREBASE_CONFIG" | grep -o '"appId"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"appId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "")
+            FIREBASE_MEASUREMENT_ID=$(echo "$FIREBASE_CONFIG" | grep -o '"measurementId"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"measurementId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "")
+          fi
+        fi
+        
+        cat > /workspace/.firebase-env <<EOF
+export VITE_FIREBASE_API_KEY="${FIREBASE_API_KEY}"
+export VITE_FIREBASE_PROJECT_ID="${FIREBASE_PROJECT_ID}"
+export VITE_FIREBASE_AUTH_DOMAIN="${FIREBASE_AUTH_DOMAIN}"
+export VITE_FIREBASE_STORAGE_BUCKET="${FIREBASE_STORAGE_BUCKET}"
+export VITE_FIREBASE_MESSAGING_SENDER_ID="${FIREBASE_MESSAGING_SENDER_ID}"
+export VITE_FIREBASE_APP_ID="${FIREBASE_APP_ID}"
+export VITE_FIREBASE_MEASUREMENT_ID="${FIREBASE_MEASUREMENT_ID}"
+export VITE_FIREBASE_MODE=live
+export VITE_USE_FIREBASE_EMULATOR=false
+EOF
+    waitFor: ['install-dependencies']
+
+  # ============================================================================
+  # STEP 5b: Build App Static Files
   # ============================================================================
   - name: 'node:20-alpine'
     id: 'build-app-static'
@@ -112,21 +199,11 @@ steps:
       - '-c'
       - |
         npm install -g pnpm@9
-        echo "Building apps/app static files..."
+        [ -f /workspace/.firebase-env ] && . /workspace/.firebase-env
         pnpm --filter=app build
     env:
       - 'NODE_ENV=development'
       - 'VITE_ENVIRONMENT=${_ENVIRONMENT}'
-      # Firebase config from previous step
-      - 'VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY}'
-      - 'VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID}'
-      - 'VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN}'
-      - 'VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET}'
-      - 'VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID}'
-      - 'VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID}'
-      - 'VITE_FIREBASE_MEASUREMENT_ID=${VITE_FIREBASE_MEASUREMENT_ID}'
-      - 'VITE_FIREBASE_MODE=live'
-      - 'VITE_USE_FIREBASE_EMULATOR=false'
     waitFor: ['get-firebase-config']
 
   # ============================================================================
@@ -138,7 +215,6 @@ steps:
     args:
       - '-c'
       - |
-        # Create Dockerfile for app (static files with nginx)
         cat > /workspace/Dockerfile.app <<'EOF'
         FROM nginx:alpine
         COPY apps/app/dist /usr/share/nginx/html
@@ -159,7 +235,6 @@ steps:
         EXPOSE 8080
         CMD ["sh", "-c", "sed -i \"s/listen.*80/listen 8080/\" /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
         EOF
-        # Build the app image
         docker build -t ${_ARTIFACT_REGISTRY}/app:${SHORT_SHA} -t ${_ARTIFACT_REGISTRY}/app:latest -f /workspace/Dockerfile.app /workspace
     waitFor: ['build-app-static']
 
@@ -175,274 +250,48 @@ steps:
     waitFor: ['build-app-image']
 
   # ============================================================================
-  # STEP 8: Deploy API to Cloud Run
+  # STEP 8: Deploy All Services to Cloud Run
   # ============================================================================
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    id: 'deploy-cloud-run-api'
-    entrypoint: 'gcloud'
-    args:
-      - 'run'
-      - 'deploy'
-      - '${_CLOUD_RUN_SERVICE}'
-      - '--image'
-      - '${_ARTIFACT_REGISTRY}/api:${SHORT_SHA}'
-      - '--region'
-      - '${_REGION}'
-      - '--platform'
-      - 'managed'
-      - '--quiet'
-    waitFor: ['push-api-image']
-
-  # ============================================================================
-  # STEP 9: Deploy App to Cloud Run
-  # ============================================================================
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    id: 'deploy-cloud-run-app'
-    entrypoint: 'gcloud'
-    args:
-      - 'run'
-      - 'deploy'
-      - '${_CLOUD_RUN_SERVICE_APP}'
-      - '--image'
-      - '${_ARTIFACT_REGISTRY}/app:${SHORT_SHA}'
-      - '--region'
-      - '${_REGION}'
-      - '--platform'
-      - 'managed'
-      - '--quiet'
-    waitFor: ['push-app-image']
-
-  # ============================================================================
-  # STEP 6: Retrieve and Validate Firebase Configuration
-  # ============================================================================
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    id: 'get-firebase-config'
+    id: 'deploy-services'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        echo "============================================"
-        echo "Retrieving Firebase Web App Configuration"
-        echo "============================================"
-        
-        # Try to get from Secret Manager first
-        SECRET_NAME="rates-${_ENVIRONMENT}-firebase-web-config"
-        echo "Checking Secret Manager for: ${SECRET_NAME}..."
-        FIREBASE_CONFIG=$(gcloud secrets versions access latest --secret="${SECRET_NAME}" --project="${PROJECT_ID}" 2>/dev/null || echo "")
-        
-        if [ -n "$FIREBASE_CONFIG" ] && echo "$FIREBASE_CONFIG" | grep -q "apiKey"; then
-          echo "✓ Found Firebase config in Secret Manager"
-          # Parse JSON config - use jq if available, otherwise use sed (same fix as setup.sh)
-          if command -v jq &> /dev/null; then
-            FIREBASE_API_KEY=$(echo "$FIREBASE_CONFIG" | jq -r '.apiKey // ""' 2>/dev/null || echo "")
-            FIREBASE_PROJECT_ID=$(echo "$FIREBASE_CONFIG" | jq -r '.projectId // ""' 2>/dev/null || echo "${PROJECT_ID}")
-            FIREBASE_AUTH_DOMAIN=$(echo "$FIREBASE_CONFIG" | jq -r '.authDomain // ""' 2>/dev/null || echo "${PROJECT_ID}.firebaseapp.com")
-            FIREBASE_STORAGE_BUCKET=$(echo "$FIREBASE_CONFIG" | jq -r '.storageBucket // ""' 2>/dev/null || echo "${PROJECT_ID}.appspot.com")
-            FIREBASE_MESSAGING_SENDER_ID=$(echo "$FIREBASE_CONFIG" | jq -r '.messagingSenderId // ""' 2>/dev/null || echo "")
-            FIREBASE_APP_ID=$(echo "$FIREBASE_CONFIG" | jq -r '.appId // ""' 2>/dev/null || echo "")
-            FIREBASE_MEASUREMENT_ID=$(echo "$FIREBASE_CONFIG" | jq -r '.measurementId // ""' 2>/dev/null || echo "")
-          else
-            # Fallback: use sed to extract values (handles spaces in JSON)
-            FIREBASE_API_KEY=$(echo "$FIREBASE_CONFIG" | grep -o '"apiKey"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"apiKey"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "")
-            FIREBASE_PROJECT_ID=$(echo "$FIREBASE_CONFIG" | grep -o '"projectId"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"projectId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "${PROJECT_ID}")
-            FIREBASE_AUTH_DOMAIN=$(echo "$FIREBASE_CONFIG" | grep -o '"authDomain"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"authDomain"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "${PROJECT_ID}.firebaseapp.com")
-            FIREBASE_STORAGE_BUCKET=$(echo "$FIREBASE_CONFIG" | grep -o '"storageBucket"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"storageBucket"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "${PROJECT_ID}.appspot.com")
-            FIREBASE_MESSAGING_SENDER_ID=$(echo "$FIREBASE_CONFIG" | grep -o '"messagingSenderId"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"messagingSenderId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "")
-            FIREBASE_APP_ID=$(echo "$FIREBASE_CONFIG" | grep -o '"appId"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"appId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "")
-            FIREBASE_MEASUREMENT_ID=$(echo "$FIREBASE_CONFIG" | grep -o '"measurementId"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"measurementId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "")
-          fi
-        else
-          echo "Secret not found or invalid. Trying Firebase CLI..."
-          # Install Firebase CLI
-          npm install -g firebase-tools
-          
-          # Try to get from Firebase project
-          if firebase apps:list --project="${PROJECT_ID}" 2>/dev/null | grep -q "web"; then
-            echo "✓ Found web app in Firebase project"
-            WEB_APP_ID=$(firebase apps:list --project="${PROJECT_ID}" --json 2>/dev/null | grep -o '"appId":"[^"]*"' | head -1 | cut -d'"' -f4 || echo "")
-            if [ -n "$WEB_APP_ID" ]; then
-              echo "Getting SDK config for app: $WEB_APP_ID"
-              SDK_CONFIG=$(firebase apps:sdkconfig WEB "$WEB_APP_ID" --project="${PROJECT_ID}" 2>/dev/null || echo "")
-              if [ -n "$SDK_CONFIG" ] && echo "$SDK_CONFIG" | grep -q "apiKey"; then
-                echo "✓ Retrieved config from Firebase CLI"
-                # Use jq if available, otherwise use sed (same fix as setup.sh)
-                if command -v jq &> /dev/null; then
-                  FIREBASE_API_KEY=$(echo "$SDK_CONFIG" | jq -r '.apiKey // ""' 2>/dev/null || echo "")
-                  FIREBASE_PROJECT_ID=$(echo "$SDK_CONFIG" | jq -r '.projectId // ""' 2>/dev/null || echo "${PROJECT_ID}")
-                  FIREBASE_AUTH_DOMAIN=$(echo "$SDK_CONFIG" | jq -r '.authDomain // ""' 2>/dev/null || echo "${PROJECT_ID}.firebaseapp.com")
-                  FIREBASE_STORAGE_BUCKET=$(echo "$SDK_CONFIG" | jq -r '.storageBucket // ""' 2>/dev/null || echo "${PROJECT_ID}.appspot.com")
-                  FIREBASE_MESSAGING_SENDER_ID=$(echo "$SDK_CONFIG" | jq -r '.messagingSenderId // ""' 2>/dev/null || echo "")
-                  FIREBASE_APP_ID=$(echo "$SDK_CONFIG" | jq -r '.appId // ""' 2>/dev/null || echo "")
-                  FIREBASE_MEASUREMENT_ID=$(echo "$SDK_CONFIG" | jq -r '.measurementId // ""' 2>/dev/null || echo "")
-                else
-                  # Fallback: use sed to extract values (handles spaces in JSON)
-                  FIREBASE_API_KEY=$(echo "$SDK_CONFIG" | grep -o '"apiKey"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"apiKey"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "")
-                  FIREBASE_PROJECT_ID=$(echo "$SDK_CONFIG" | grep -o '"projectId"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"projectId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "${PROJECT_ID}")
-                  FIREBASE_AUTH_DOMAIN=$(echo "$SDK_CONFIG" | grep -o '"authDomain"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"authDomain"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "${PROJECT_ID}.firebaseapp.com")
-                  FIREBASE_STORAGE_BUCKET=$(echo "$SDK_CONFIG" | grep -o '"storageBucket"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"storageBucket"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "${PROJECT_ID}.appspot.com")
-                  FIREBASE_MESSAGING_SENDER_ID=$(echo "$SDK_CONFIG" | grep -o '"messagingSenderId"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"messagingSenderId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "")
-                  FIREBASE_APP_ID=$(echo "$SDK_CONFIG" | grep -o '"appId"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"appId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "")
-                  FIREBASE_MEASUREMENT_ID=$(echo "$SDK_CONFIG" | grep -o '"measurementId"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"measurementId"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "")
-                fi
-              fi
-            fi
-          fi
-        fi
-        
-        # Fallback to substitutions if provided
-        if [ -z "$FIREBASE_API_KEY" ] && [ -n "${_FIREBASE_API_KEY}" ]; then
-          echo "Using Firebase config from substitutions..."
-          FIREBASE_API_KEY="${_FIREBASE_API_KEY}"
-          FIREBASE_PROJECT_ID="${_FIREBASE_PROJECT_ID:-${PROJECT_ID}}"
-          FIREBASE_AUTH_DOMAIN="${_FIREBASE_AUTH_DOMAIN:-${PROJECT_ID}.firebaseapp.com}"
-          FIREBASE_STORAGE_BUCKET="${_FIREBASE_STORAGE_BUCKET:-${PROJECT_ID}.appspot.com}"
-          FIREBASE_MESSAGING_SENDER_ID="${_FIREBASE_MESSAGING_SENDER_ID}"
-          FIREBASE_APP_ID="${_FIREBASE_APP_ID}"
-          FIREBASE_MEASUREMENT_ID="${_FIREBASE_MEASUREMENT_ID}"
-        fi
-        
-        # Validate required values
-        echo ""
-        echo "============================================"
-        echo "Firebase Configuration Validation"
-        echo "============================================"
-        echo "API Key: ${FIREBASE_API_KEY:0:20}... (length: ${#FIREBASE_API_KEY})"
-        echo "Project ID: ${FIREBASE_PROJECT_ID}"
-        echo "Auth Domain: ${FIREBASE_AUTH_DOMAIN}"
-        echo "Storage Bucket: ${FIREBASE_STORAGE_BUCKET}"
-        echo "Messaging Sender ID: ${FIREBASE_MESSAGING_SENDER_ID}"
-        echo "App ID: ${FIREBASE_APP_ID}"
-        echo "Measurement ID: ${FIREBASE_MEASUREMENT_ID}"
-        echo "============================================"
-        
-        if [ -z "$FIREBASE_API_KEY" ]; then
-          echo "ERROR: Firebase API Key is missing!"
-          echo "Please either:"
-          echo "  1. Create a secret 'rates-${_ENVIRONMENT}-firebase-web-config' with JSON config"
-          echo "  2. Set substitution variables when creating the Cloud Build trigger"
-          echo "  3. Register a web app in Firebase Console"
-          exit 1
-        fi
-        
-        if [ -z "$FIREBASE_APP_ID" ]; then
-          echo "ERROR: Firebase App ID is missing!"
-          exit 1
-        fi
-        
-        # Write config to file for subsequent steps
-        cat > /workspace/.firebase-env <<EOF
-export VITE_FIREBASE_API_KEY="${FIREBASE_API_KEY}"
-export VITE_FIREBASE_PROJECT_ID="${FIREBASE_PROJECT_ID}"
-export VITE_FIREBASE_AUTH_DOMAIN="${FIREBASE_AUTH_DOMAIN}"
-export VITE_FIREBASE_STORAGE_BUCKET="${FIREBASE_STORAGE_BUCKET}"
-export VITE_FIREBASE_MESSAGING_SENDER_ID="${FIREBASE_MESSAGING_SENDER_ID}"
-export VITE_FIREBASE_APP_ID="${FIREBASE_APP_ID}"
-export VITE_FIREBASE_MEASUREMENT_ID="${FIREBASE_MEASUREMENT_ID}"
-export VITE_FIREBASE_MODE=live
-export VITE_USE_FIREBASE_EMULATOR=false
-EOF
-        
-        echo "✓ Firebase configuration saved to /workspace/.firebase-env"
-        echo "✓ Configuration validated successfully"
-    waitFor: ['install-dependencies']
+        echo "Deploying Api..."
+        gcloud run deploy ${_CLOUD_RUN_SERVICE} --image ${_ARTIFACT_REGISTRY}/api:${SHORT_SHA} --region ${_REGION} --platform managed --quiet
+        echo "Deploying App..."
+        gcloud run deploy ${_CLOUD_RUN_SERVICE_APP} --image ${_ARTIFACT_REGISTRY}/app:${SHORT_SHA} --region ${_REGION} --platform managed --quiet
+        echo "Deploying AI Service..."
+        gcloud run deploy ${_CLOUD_RUN_SERVICE_AI} --image ${_ARTIFACT_REGISTRY}/ai-service:${SHORT_SHA} --region ${_REGION} --platform managed --quiet
+        echo "Updating AI Processor Job..."
+        gcloud run jobs deploy ${_CLOUD_RUN_JOB_AI} --image ${_ARTIFACT_REGISTRY}/ai-processor:${SHORT_SHA} --region ${_REGION} --quiet
+    waitFor: ['push-images', 'push-app-image']
 
   # ============================================================================
-  # STEP 11: Build Main App (Firebase Hosting - Optional, also deployed to Cloud Run)
+  # STEP 9: Build and Deploy Firebase Hosting (Optional)
   # ============================================================================
   - name: 'node:20-alpine'
-    id: 'build-main-app'
+    id: 'build-extra-hosting'
     entrypoint: 'sh'
     args:
       - '-c'
       - |
         npm install -g pnpm@9
-        echo "Loading Firebase configuration..."
-        if [ -f /workspace/.firebase-env ]; then
-          . /workspace/.firebase-env
-          echo "✓ Firebase config loaded"
-          echo "  API Key: ${VITE_FIREBASE_API_KEY:0:20}..."
-          echo "  Project ID: ${VITE_FIREBASE_PROJECT_ID}"
-          echo "  App ID: ${VITE_FIREBASE_APP_ID}"
-        else
-          echo "ERROR: Firebase config file not found!"
-          exit 1
-        fi
-        echo "Building main app for ${_ENVIRONMENT}..."
-        echo "DEBUG: VITE_FIREBASE_API_KEY length: ${#VITE_FIREBASE_API_KEY}"
-        echo "DEBUG: VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID}"
-        pnpm --filter=app build
-    env:
-      - 'NODE_ENV=development'
-      - 'VITE_ENVIRONMENT=${_ENVIRONMENT}'
-      # Explicitly pass Firebase env vars (Vite requires VITE_* prefix)
-      - 'VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY}'
-      - 'VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID}'
-      - 'VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN}'
-      - 'VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET}'
-      - 'VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID}'
-      - 'VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID}'
-      - 'VITE_FIREBASE_MEASUREMENT_ID=${VITE_FIREBASE_MEASUREMENT_ID}'
-      - 'VITE_FIREBASE_MODE=live'
-      - 'VITE_USE_FIREBASE_EMULATOR=false'
-    waitFor: ['get-firebase-config']
-
-  # ============================================================================
-  # STEP 8: Build Auth App Client (Firebase Hosting)
-  # ============================================================================
-  - name: 'node:20-alpine'
-    id: 'build-auth-app-client'
-    entrypoint: 'sh'
-    args:
-      - '-c'
-      - |
-        npm install -g pnpm@9
-        echo "Loading Firebase configuration..."
-        if [ -f /workspace/.firebase-env ]; then
-          . /workspace/.firebase-env
-          echo "✓ Firebase config loaded"
-          echo "  API Key: ${VITE_FIREBASE_API_KEY:0:20}..."
-          echo "  Project ID: ${VITE_FIREBASE_PROJECT_ID}"
-          echo "  App ID: ${VITE_FIREBASE_APP_ID}"
-        else
-          echo "ERROR: Firebase config file not found!"
-          exit 1
-        fi
-        echo "Building auth app client for ${_ENVIRONMENT}..."
-        echo "DEBUG: VITE_FIREBASE_API_KEY length: ${#VITE_FIREBASE_API_KEY}"
-        echo "DEBUG: VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID}"
+        [ -f /workspace/.firebase-env ] && . /workspace/.firebase-env
+        echo "Building auth app client..."
         pnpm --filter=auth-app build:client
-    env:
-      - 'NODE_ENV=development'
-      - 'VITE_ENVIRONMENT=${_ENVIRONMENT}'
-      # Explicitly pass Firebase env vars (Vite requires VITE_* prefix)
-      - 'VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY}'
-      - 'VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID}'
-      - 'VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN}'
-      - 'VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET}'
-      - 'VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID}'
-      - 'VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID}'
-      - 'VITE_FIREBASE_MEASUREMENT_ID=${VITE_FIREBASE_MEASUREMENT_ID}'
-      - 'VITE_FIREBASE_MODE=live'
-      - 'VITE_USE_FIREBASE_EMULATOR=false'
     waitFor: ['get-firebase-config']
 
-  # ============================================================================
-  # STEP 13: Deploy to Firebase Hosting (Optional)
-  # ============================================================================
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'deploy-firebase-hosting'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        echo "Installing Firebase CLI..."
         npm install -g firebase-tools
-        
-        echo "Deploying to Firebase Hosting (${_ENVIRONMENT})..."
-        firebase deploy --only hosting:rates-${_ENVIRONMENT}-main-app,hosting:rates-${_ENVIRONMENT}-auth-app \
-          --project=${PROJECT_ID} \
-          --non-interactive
-    waitFor: ['build-main-app', 'build-auth-app-client']
+        firebase deploy --only hosting:rates-${_ENVIRONMENT}-main-app,hosting:rates-${_ENVIRONMENT}-auth-app --project=${PROJECT_ID} --non-interactive
+    waitFor: ['build-extra-hosting', 'build-app-static']
 
   # ============================================================================
   # STEP 10: Deployment Verification
@@ -456,29 +305,13 @@ EOF
         echo "============================================"
         echo "DEV DEPLOYMENT COMPLETE"
         echo "============================================"
-        echo ""
-               echo "Cloud Run Services:"
-               echo "  API: ${_CLOUD_RUN_SERVICE}"
-               echo "  App: ${_CLOUD_RUN_SERVICE_APP}"
-
-               # Get Cloud Run URLs
-               API_URL=$(gcloud run services describe ${_CLOUD_RUN_SERVICE} \
-                 --region=${_REGION} \
-                 --format='value(status.url)')
-               APP_URL=$(gcloud run services describe ${_CLOUD_RUN_SERVICE_APP} \
-                 --region=${_REGION} \
-                 --format='value(status.url)')
-
-               echo "Cloud Run URLs:"
-               echo "  API: $API_URL"
-               echo "  App: $APP_URL"
-        echo ""
-               echo "Testing health endpoints..."
-               curl -s "$API_URL/health" || echo "API health check pending..."
-               curl -s "$APP_URL/health" || echo "App health check pending..."
-        echo ""
+        echo "Services:"
+        echo "  API: ${_CLOUD_RUN_SERVICE}"
+        echo "  App: ${_CLOUD_RUN_SERVICE_APP}"
+        echo "  AI: ${_CLOUD_RUN_SERVICE_AI}"
+        echo "  Processor (Job): ${_CLOUD_RUN_JOB_AI}"
         echo "============================================"
-    waitFor: ['deploy-cloud-run-api', 'deploy-cloud-run-app', 'deploy-firebase-hosting']
+    waitFor: ['deploy-services', 'deploy-firebase-hosting']
 
 # Images to be pushed (for build history)
 images:
@@ -486,3 +319,7 @@ images:
   - '${_ARTIFACT_REGISTRY}/api:latest'
   - '${_ARTIFACT_REGISTRY}/app:${SHORT_SHA}'
   - '${_ARTIFACT_REGISTRY}/app:latest'
+  - '${_ARTIFACT_REGISTRY}/ai-service:${SHORT_SHA}'
+  - '${_ARTIFACT_REGISTRY}/ai-service:latest'
+  - '${_ARTIFACT_REGISTRY}/ai-processor:${SHORT_SHA}'
+  - '${_ARTIFACT_REGISTRY}/ai-processor:latest'

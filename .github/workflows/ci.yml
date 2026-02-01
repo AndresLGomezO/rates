@@ -33,6 +33,7 @@ jobs:
       firebase_client: ${{ steps.filter.outputs.firebase_client }}
       ui_theme: ${{ steps.filter.outputs.ui_theme }}
       ai_processor: ${{ steps.filter.outputs.ai_processor }}
+      ai_service: ${{ steps.filter.outputs.ai_service }}
       any: ${{ steps.filter.outputs.any }}
     steps:
       - name: Checkout
@@ -80,6 +81,12 @@ jobs:
               - "package.json"
               - "pnpm-lock.yaml"
               - "pnpm-workspace.yaml"
+            ai_service:
+              - "apps/ai-service/**"
+              - "packages/**"
+              - "package.json"
+              - "pnpm-lock.yaml"
+              - "pnpm-workspace.yaml"
 
   validate:
     name: Lint / format / type-check
@@ -104,6 +111,9 @@ jobs:
       - name: Install dependencies (workspace)
         run: pnpm install --frozen-lockfile
 
+      - name: Build packages
+        run: pnpm --filter "./packages/**" build
+
       - name: Format check
         run: pnpm format:check
 
@@ -121,7 +131,7 @@ jobs:
     name: Build (affected apps only)
     runs-on: ubuntu-latest
     needs: [changes, validate]
-    if: needs.changes.outputs.app == 'true' || needs.changes.outputs.auth_app == 'true' || needs.changes.outputs.ai_processor == 'true'
+    if: needs.changes.outputs.app == 'true' || needs.changes.outputs.auth_app == 'true' || needs.changes.outputs.ai_processor == 'true' || needs.changes.outputs.ai_service == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -132,6 +142,8 @@ jobs:
             enabled: ${{ needs.changes.outputs.auth_app == 'true' }}
           - workspace: ai-processor
             enabled: ${{ needs.changes.outputs.ai_processor == 'true' }}
+          - workspace: ai-service
+            enabled: ${{ needs.changes.outputs.ai_service == 'true' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -149,6 +161,9 @@ jobs:
 
       - name: Install dependencies (workspace)
         run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm --filter "./packages/**" build
 
       - name: Build ${{ matrix.workspace }}
         if: matrix.enabled

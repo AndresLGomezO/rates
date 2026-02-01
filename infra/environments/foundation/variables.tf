@@ -38,3 +38,12 @@ variable "environments" {
     error_message = "Environments must be 'dev' or 'prod'."
   }
 }
+# ============================================================================
+# AI INFRASTRUCTURE VARIABLES
+# ============================================================================
+
+variable "ai_vpc_subnet_cidr" {
+  description = "CIDR range for AI VPC subnet"
+  type        = string
+  default     = "10.0.0.0/24"
+}

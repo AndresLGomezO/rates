@@ -3,21 +3,33 @@ import { useNavigate } from 'react-router-dom';
 import type {
   AccountStatus,
   AccountType,
+  BillSubtype,
   CreateFinancialAccountInput,
+  InstallmentLoanSubtype,
   PaymentFrequency,
+  RevolvingCreditSubtype,
 } from '@rates/firebase-client';
 import { createFinancialAccount } from '../services/financialAccounts';
+import { InstallmentLoanFlow } from './InstallmentLoanFlow';
+import { RevolvingCreditFlow } from './RevolvingCreditFlow';
+import { BillFlow } from './BillFlow';
+import { OtherAccountFlow } from './OtherAccountFlow';
 import { Modal } from './Modal';
 import { Select } from './Select';
 import { formatCurrency } from '../utils/formatters';
 
 type WizardStep =
   | 'type'
+  | 'subtype'
   | 'details'
   | 'account'
   | 'financial'
   | 'review'
-  | 'success';
+  | 'success'
+  | 'installment_flow'
+  | 'revolving_flow'
+  | 'bill_flow'
+  | 'other_flow';
 
 interface NewAccountWizardProps {
   isOpen: boolean;
@@ -48,35 +60,97 @@ const ACCOUNT_TYPE_HELP: Record<AccountType, string> = {
   other: 'Anything that does not fit the categories above.',
 };
 
-const WIZARD_STEPS = [
-  'Type',
-  'Details',
-  'Account',
-  'Financial',
-  'Review',
-] as const;
+// Subtype mappings for Installment Loans
+const LOAN_SUBTYPE_LABELS: Record<InstallmentLoanSubtype, string> = {
+  mortgage: 'Mortgage',
+  auto: 'Auto',
+  personal: 'Personal',
+  student: 'Student',
+  other: 'Other',
+};
 
-function CheckIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M5 12l5 5L20 7" />
-    </svg>
-  );
-}
+const LOAN_SUBTYPE_ICONS: Record<InstallmentLoanSubtype, string> = {
+  mortgage: '🏠',
+  auto: '🚗',
+  personal: '👤',
+  student: '🎓',
+  other: '📋',
+};
+
+const LOAN_SUBTYPE_HELP: Record<InstallmentLoanSubtype, string> = {
+  mortgage: 'Home loans secured by real estate property.',
+  auto: 'Vehicle loans for cars, trucks, motorcycles, etc.',
+  personal: 'Unsecured personal loans for various purposes.',
+  student: 'Educational loans for tuition and related expenses.',
+  other: 'Other types of installment loans.',
+};
+
+// Subtype mappings for Revolving Credit
+const CREDIT_SUBTYPE_LABELS: Record<RevolvingCreditSubtype, string> = {
+  credit_card: 'Credit Card',
+  line_of_credit: 'Line of Credit',
+  store_card: 'Store Card',
+  overdraft: 'Overdraft',
+  other: 'Other',
+};
+
+const CREDIT_SUBTYPE_ICONS: Record<RevolvingCreditSubtype, string> = {
+  credit_card: '💳',
+  line_of_credit: '💰',
+  store_card: '🏪',
+  overdraft: '🏦',
+  other: '📋',
+};
+
+const CREDIT_SUBTYPE_HELP: Record<RevolvingCreditSubtype, string> = {
+  credit_card: 'Traditional credit cards with revolving balances.',
+  line_of_credit: 'Personal or home equity lines of credit.',
+  store_card: 'Retail store credit cards.',
+  overdraft: 'Bank overdraft protection accounts.',
+  other: 'Other types of revolving credit.',
+};
+
+// Subtype mappings for Bills
+const BILL_SUBTYPE_LABELS: Record<BillSubtype, string> = {
+  subscription: 'Subscription',
+  utility: 'Utility',
+  rent: 'Rent',
+  insurance: 'Insurance',
+  tax: 'Tax',
+  other: 'Other',
+};
+
+const BILL_SUBTYPE_ICONS: Record<BillSubtype, string> = {
+  subscription: '🔄',
+  utility: '⚡',
+  rent: '🏘️',
+  insurance: '🛡️',
+  tax: '💼',
+  other: '📋',
+};
+
+const BILL_SUBTYPE_HELP: Record<BillSubtype, string> = {
+  subscription: 'Recurring subscriptions (streaming, software, etc.).',
+  utility: 'Utilities (electricity, water, gas, internet).',
+  rent: 'Rent or lease payments.',
+  insurance: 'Insurance premiums (health, auto, life, etc.).',
+  tax: 'Tax payments and obligations.',
+  other: 'Other types of bills.',
+};
 
 function buildTitle(step: WizardStep, type: AccountType | null) {
   if (step === 'success') return 'Account created';
+  if (step === 'installment_flow') return 'New Installment Loan';
+  if (step === 'revolving_flow') return 'New Revolving Account';
+  if (step === 'bill_flow') return 'New Bill';
+  if (step === 'other_flow') return 'Track New Obligation';
   if (step === 'type') return 'Create a new account';
+  if (step === 'subtype') {
+    if (type === 'installment_loan') return 'Select loan type';
+    if (type === 'revolving_credit') return 'Select credit type';
+    if (type === 'bill') return 'Select bill type';
+    return 'Select subtype';
+  }
   const typeLabel = type ? ACCOUNT_TYPE_LABELS[type] : 'Account';
   if (step === 'details') return `Details for your ${typeLabel}`;
   if (step === 'account') return `Account & currency`;
@@ -92,6 +166,9 @@ export function NewAccountWizard({
   const navigate = useNavigate();
   const [step, setStep] = useState<WizardStep>('type');
   const [selectedType, setSelectedType] = useState<AccountType | null>(null);
+  const [selectedSubtype, setSelectedSubtype] = useState<
+    InstallmentLoanSubtype | RevolvingCreditSubtype | BillSubtype | null
+  >(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tipOpen, setTipOpen] = useState(false);
@@ -126,6 +203,7 @@ export function NewAccountWizard({
     // Reset wizard each time it opens for a predictable UX.
     setStep('type');
     setSelectedType(null);
+    setSelectedSubtype(null);
     setSaving(false);
     setError(null);
     setTipOpen(false);
@@ -246,6 +324,7 @@ export function NewAccountWizard({
   }, [formData, selectedType]);
 
   const canContinueFromType = !!selectedType;
+  const canContinueFromSubtype = !!selectedSubtype || selectedType === 'other';
   const canContinueFromDetails = Object.keys(detailsErrors).length === 0;
   const canContinueFromAccount = Object.keys(accountErrors).length === 0;
   const canContinueFromFinancial = selectedType
@@ -259,8 +338,28 @@ export function NewAccountWizard({
 
   const handleNext = () => {
     setError(null);
-    if (step === 'type' && canContinueFromType) setStep('details');
-    else if (step === 'details') {
+    if (step === 'type' && canContinueFromType) {
+      // Check if type needs subtype selection
+      if (selectedType === 'installment_loan') {
+        setStep('installment_flow');
+      } else if (selectedType === 'revolving_credit') {
+        setStep('revolving_flow');
+      } else if (selectedType === 'bill') {
+        setStep('bill_flow');
+      } else if (selectedType === 'other') {
+        setStep('other_flow');
+      } else {
+        setStep('subtype');
+      }
+    } else if (step === 'installment_flow') {
+      // Handled internally by InstallmentLoanFlow
+    } else if (step === 'revolving_flow') {
+      // Handled internally by RevolvingCreditFlow
+    } else if (step === 'bill_flow') {
+      // Handled internally by BillFlow
+    } else if (step === 'subtype' && canContinueFromSubtype) {
+      setStep('details');
+    } else if (step === 'details') {
       setDetailsAttempted(true);
       if (canContinueFromDetails) setStep('account');
     } else if (step === 'account') {
@@ -277,7 +376,13 @@ export function NewAccountWizard({
     if (step === 'review') setStep('financial');
     else if (step === 'financial') setStep('account');
     else if (step === 'account') setStep('details');
-    else if (step === 'details') setStep('type');
+    else if (step === 'details') {
+      if (selectedType === 'other') {
+        setStep('type');
+      } else {
+        setStep('subtype');
+      }
+    } else if (step === 'subtype') setStep('type');
   };
 
   const buildAccountPayload = (): Omit<
@@ -304,101 +409,109 @@ export function NewAccountWizard({
     // Build type-specific payload
     switch (selectedType) {
       case 'installment_loan': {
-        return {
+        const payload = {
           ...basePayload,
           accountType: 'installment_loan' as const,
-          loanSubtype: 'personal_loan' as const, // Default subtype
+          loanSubtype:
+            (selectedSubtype as InstallmentLoanSubtype) || 'personal',
           annualInterestRate: parseFloat(formData.rate),
           paymentFrequency: formData.paymentFrequency,
           currentPrincipal: {
             amount: parseFloat(formData.totalAmountRemaining),
             currency: formData.currency,
           },
-          scheduledPayment: formData.paymentAmount
-            ? {
-                amount: parseFloat(formData.paymentAmount),
-                currency: formData.currency,
-              }
-            : undefined,
-          originalPrincipal: formData.originalAmount
-            ? {
-                amount: parseFloat(formData.originalAmount),
-                currency: formData.currency,
-              }
-            : undefined,
           contractStartDate: formData.startDate
             ? new Date(formData.startDate)
             : new Date(),
-          termInPayments: formData.numberOfPayments
-            ? parseInt(formData.numberOfPayments, 10)
-            : undefined,
-          nextDueDate: formData.nextDueDate
-            ? new Date(formData.nextDueDate)
-            : undefined,
-        } as Omit<CreateFinancialAccountInput, 'userId'>;
+          ...(formData.paymentAmount && {
+            scheduledPayment: {
+              amount: parseFloat(formData.paymentAmount),
+              currency: formData.currency,
+            },
+          }),
+          ...(formData.originalAmount && {
+            originalPrincipal: {
+              amount: parseFloat(formData.originalAmount),
+              currency: formData.currency,
+            },
+          }),
+          ...(formData.numberOfPayments && {
+            termInPayments: parseInt(formData.numberOfPayments, 10),
+          }),
+          ...(formData.nextDueDate && {
+            nextDueDate: new Date(formData.nextDueDate),
+          }),
+        };
+
+        return payload as Omit<CreateFinancialAccountInput, 'userId'>;
       }
 
       case 'revolving_credit': {
-        return {
+        const payload = {
           ...basePayload,
           accountType: 'revolving_credit' as const,
-          creditSubtype: 'credit_card' as const, // Default subtype
+          creditSubtype:
+            (selectedSubtype as RevolvingCreditSubtype) || 'credit_card',
           currentBalance: {
             amount: parseFloat(formData.totalAmountRemaining),
             currency: formData.currency,
           },
           purchaseApr: parseFloat(formData.rate),
-          minimumPayment: formData.paymentAmount
-            ? {
-                amount: parseFloat(formData.paymentAmount),
-                currency: formData.currency,
-              }
-            : undefined,
-          nextDueDate: formData.nextDueDate
-            ? new Date(formData.nextDueDate)
-            : undefined,
-        } as Omit<CreateFinancialAccountInput, 'userId'>;
+          ...(formData.paymentAmount && {
+            minimumPayment: {
+              amount: parseFloat(formData.paymentAmount),
+              currency: formData.currency,
+            },
+          }),
+          ...(formData.nextDueDate && {
+            nextDueDate: new Date(formData.nextDueDate),
+          }),
+        };
+
+        return payload as Omit<CreateFinancialAccountInput, 'userId'>;
       }
 
       case 'bill': {
         const isRecurring = !!formData.paymentFrequency;
-        return {
+        const payload = {
           ...basePayload,
           accountType: 'bill' as const,
-          billSubtype: 'utility' as const, // Default subtype
+          billSubtype: (selectedSubtype as BillSubtype) || 'utility',
           isRecurring,
           isAmountVariable: false, // Assume fixed amount for now
           nextDueDate: new Date(formData.nextDueDate || getDefaultDueDate()),
-          recurringAmount: formData.paymentAmount
-            ? {
-                amount: parseFloat(formData.paymentAmount),
-                currency: formData.currency,
-              }
-            : undefined,
-          paymentFrequency: isRecurring ? formData.paymentFrequency : undefined,
-          endDate: formData.numberOfPayments
-            ? (() => {
-                // Calculate end date based on number of payments
-                const start = new Date(
-                  formData.nextDueDate || getDefaultDueDate()
-                );
-                const months = parseInt(formData.numberOfPayments, 10);
-                const end = new Date(start);
-                end.setMonth(end.getMonth() + months);
-                return end;
-              })()
-            : undefined,
-        } as Omit<CreateFinancialAccountInput, 'userId'>;
+          ...(formData.paymentAmount && {
+            recurringAmount: {
+              amount: parseFloat(formData.paymentAmount),
+              currency: formData.currency,
+            },
+          }),
+          ...(isRecurring && { paymentFrequency: formData.paymentFrequency }),
+          ...(formData.numberOfPayments && {
+            endDate: (() => {
+              const start = new Date(
+                formData.nextDueDate || getDefaultDueDate()
+              );
+              const months = parseInt(formData.numberOfPayments, 10);
+              const end = new Date(start);
+              end.setMonth(end.getMonth() + months);
+              return end;
+            })(),
+          }),
+        };
+
+        return payload as Omit<CreateFinancialAccountInput, 'userId'>;
       }
 
       case 'other': {
-        return {
+        const payload = {
           ...basePayload,
           accountType: 'other' as const,
-          nextRelevantDate: formData.nextDueDate
-            ? new Date(formData.nextDueDate)
-            : undefined,
-        } as Omit<CreateFinancialAccountInput, 'userId'>;
+          ...(formData.nextDueDate && {
+            nextRelevantDate: new Date(formData.nextDueDate),
+          }),
+        };
+        return payload as Omit<CreateFinancialAccountInput, 'userId'>;
       }
 
       default: {
@@ -427,184 +540,102 @@ export function NewAccountWizard({
     }
   };
 
-  const progressIndex =
-    step === 'type'
-      ? 0
-      : step === 'details'
-        ? 1
-        : step === 'account'
-          ? 2
-          : step === 'financial'
-            ? 3
-            : 4; // review | success
-
-  const renderProgressIndicator = () => {
-    // Fill to the divider to the right of the active step: step 0→20%, 1→40%, 2→60%, 3→80%, 4→100%
-    const percent = ((progressIndex + 1) / 5) * 100;
+  const renderFooter = () => {
+    if (
+      step === 'installment_flow' ||
+      step === 'revolving_flow' ||
+      step === 'bill_flow' ||
+      step === 'other_flow'
+    )
+      return null;
     return (
-      <div
-        className="rounded-md border border-white/[0.08] bg-white/[0.04] px-3 pb-2 pt-4 sm:px-4 sm:py-2.5"
-        aria-label="Wizard progress"
-      >
-        {/* Progress bar — segment lines at 20,40,60,80% align with the right edge of each step slot */}
-        <div
-          className="relative h-2 w-full overflow-hidden rounded-full bg-white/10 sm:h-2.5"
-          role="progressbar"
-          aria-valuenow={progressIndex}
-          aria-valuemin={0}
-          aria-valuemax={4}
-          aria-valuetext={`Step ${progressIndex + 1} of 5`}
-        >
-          {/* Segment dividers: 4 lines at 20, 40, 60, 80% — one at the right edge of each step’s column */}
-          {[20, 40, 60, 80].map((left) => (
-            <div
-              key={left}
-              className="pointer-events-none absolute bottom-0 top-0 w-px bg-white/15"
-              style={{ left: `${left}%` }}
-              aria-hidden
-            />
-          ))}
-          <div
-            className="relative z-10 h-full rounded-full bg-gradient-to-r from-[#1e40af] via-[#2563eb] to-[#334155] shadow-[0_0_10px_rgba(37,99,235,0.35)] transition-[width] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
-            style={{ width: `${percent}%` }}
-          />
-        </div>
+      <div className="flex items-center gap-3">
+        <>
+          <button
+            type="button"
+            className="hover:bg-white/16 cursor-pointer rounded-lg border border-neutral-600/40 bg-white/10 px-5 py-3.5 font-[650] text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:border-neutral-500/50 disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={step === 'type' ? handleClose : handleBack}
+            disabled={saving}
+          >
+            {step === 'type' ? 'Cancel' : 'Back'}
+          </button>
 
-        {/* Step row — 5 equal segments aligned with full bar; completed, current, and upcoming (remaining) */}
-        <div className="mt-2 flex w-full gap-0">
-          {WIZARD_STEPS.map((label, idx) => {
-            const isDone = idx < progressIndex;
-            const isCurrent = idx === progressIndex && step !== 'success';
-            const isUpcoming = idx > progressIndex;
-            return (
-              <div
-                key={label}
-                className="flex min-w-0 flex-1 flex-col items-center gap-1 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
-                aria-current={isCurrent ? 'step' : undefined}
-              >
-                {/* Marker — same size for all so remaining aligns with bar */}
-                {isDone ? (
-                  <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-[rgba(46,204,113,0.25)] text-[#2ecc71] sm:h-5 sm:w-5">
-                    <CheckIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                  </span>
-                ) : isCurrent ? (
-                  <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border-2 border-primary-500/50 bg-primary-500/20 shadow-[0_0_8px_rgba(30,64,175,0.3)] sm:h-5 sm:w-5">
-                    <span
-                      className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary-300"
-                      aria-hidden
-                    />
-                  </span>
-                ) : (
-                  <span
-                    className="h-4 w-4 flex-shrink-0 rounded-full border-2 border-white/20 bg-white/[0.04] sm:h-5 sm:w-5"
-                    aria-hidden
-                  />
-                )}
-                <span
-                  className={`max-w-full truncate px-0.5 text-center text-[10px] -tracking-[0.1px] sm:text-xs ${
-                    isUpcoming
-                      ? 'text-white/40'
-                      : isCurrent
-                        ? 'font-semibold text-white'
-                        : 'text-white/80'
-                  }`}
-                >
-                  {label}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+          <div className="flex-1" />
+
+          {(step === 'type' || step === 'subtype') && (
+            <button
+              type="button"
+              className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
+              onClick={handleNext}
+              disabled={
+                step === 'type' ? !canContinueFromType : !canContinueFromSubtype
+              }
+            >
+              Continue
+            </button>
+          )}
+          {step === 'details' && (
+            <button
+              type="submit"
+              form="wiz-details-form"
+              className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
+              disabled={saving}
+              title={
+                !canContinueFromDetails
+                  ? 'Click to see which fields need to be completed'
+                  : undefined
+              }
+            >
+              Continue
+            </button>
+          )}
+
+          {step === 'account' && (
+            <button
+              type="submit"
+              form="wiz-account-form"
+              className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
+              disabled={saving}
+              title={
+                !canContinueFromAccount
+                  ? 'Click to see which fields need to be completed'
+                  : undefined
+              }
+            >
+              Continue
+            </button>
+          )}
+
+          {step === 'financial' && (
+            <button
+              type="submit"
+              form="wiz-financial-form"
+              className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
+              disabled={saving}
+              title={
+                !canContinueFromFinancial
+                  ? 'Click to see which fields need to be completed'
+                  : undefined
+              }
+            >
+              Review
+            </button>
+          )}
+
+          {step === 'review' && (
+            <button
+              type="button"
+              className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
+              onClick={() => void handleCreate()}
+              disabled={saving}
+            >
+              {saving ? 'Creating…' : 'Create account'}
+            </button>
+          )}
+        </>
       </div>
     );
   };
-
-  const renderFooter = () => (
-    <div className="flex items-center gap-3">
-      <>
-        <button
-          type="button"
-          className="hover:bg-white/16 cursor-pointer rounded-lg border border-neutral-600/40 bg-white/10 px-5 py-3.5 font-[650] text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:border-neutral-500/50 disabled:cursor-not-allowed disabled:opacity-60"
-          onClick={step === 'type' ? handleClose : handleBack}
-          disabled={saving}
-        >
-          {step === 'type' ? 'Cancel' : 'Back'}
-        </button>
-
-        <div className="flex-1" />
-
-        {step === 'type' && (
-          <button
-            type="button"
-            className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
-            onClick={handleNext}
-            disabled={!canContinueFromType}
-          >
-            Continue
-          </button>
-        )}
-
-        {step === 'details' && (
-          <button
-            type="submit"
-            form="wiz-details-form"
-            className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
-            disabled={saving}
-            title={
-              !canContinueFromDetails
-                ? 'Click to see which fields need to be completed'
-                : undefined
-            }
-          >
-            Continue
-          </button>
-        )}
-
-        {step === 'account' && (
-          <button
-            type="submit"
-            form="wiz-account-form"
-            className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
-            disabled={saving}
-            title={
-              !canContinueFromAccount
-                ? 'Click to see which fields need to be completed'
-                : undefined
-            }
-          >
-            Continue
-          </button>
-        )}
-
-        {step === 'financial' && (
-          <button
-            type="submit"
-            form="wiz-financial-form"
-            className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
-            disabled={saving}
-            title={
-              !canContinueFromFinancial
-                ? 'Click to see which fields need to be completed'
-                : undefined
-            }
-          >
-            Review
-          </button>
-        )}
-
-        {step === 'review' && (
-          <button
-            type="button"
-            className="ds-button-gradient px-5 py-3.5 font-[650] shadow-[0_6px_18px_rgba(30,64,175,0.4)] hover:shadow-[0_10px_24px_rgba(30,64,175,0.5)]"
-            onClick={() => void handleCreate()}
-            disabled={saving}
-          >
-            {saving ? 'Creating…' : 'Create account'}
-          </button>
-        )}
-      </>
-    </div>
-  );
 
   return (
     <Modal
@@ -613,7 +644,6 @@ export function NewAccountWizard({
       title={buildTitle(step, selectedType)}
       footer={renderFooter()}
       compactHeader
-      headerSupplement={renderProgressIndicator()}
     >
       <div className="flex flex-col gap-5 text-white">
         {error && (
@@ -632,7 +662,7 @@ export function NewAccountWizard({
             </p>
 
             <div
-              className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:gap-2.5"
+              className="mt-5 grid grid-cols-2 gap-2 sm:mt-4 sm:gap-2.5"
               role="list"
             >
               {(Object.keys(ACCOUNT_TYPE_LABELS) as AccountType[]).map(
@@ -643,7 +673,7 @@ export function NewAccountWizard({
                       key={type}
                       type="button"
                       role="listitem"
-                      className={`flex min-h-[72px] cursor-pointer flex-col justify-center rounded-md border p-2.5 pt-0 text-left text-white transition-all duration-200 ease-out active:scale-[0.98] sm:min-h-[80px] sm:p-3 ${
+                      className={`flex min-h-[72px] cursor-pointer flex-col justify-center rounded-md border px-4 py-3 text-left text-white transition-all duration-200 ease-out active:scale-[0.98] sm:min-h-[80px] sm:p-3 ${
                         isSelected
                           ? 'border-primary-500/80 bg-primary-500/20 shadow-[0_0_0_2px_rgba(59,130,246,0.35),0_4px_14px_rgba(30,64,175,0.3)]'
                           : 'border-neutral-700/40 bg-white/[0.07] backdrop-blur-[10px] hover:border-neutral-600/50 hover:bg-white/10 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]'
@@ -651,7 +681,17 @@ export function NewAccountWizard({
                       onClick={() => {
                         setError(null);
                         setSelectedType(type);
-                        setStep('details');
+                        if (type === 'installment_loan') {
+                          setStep('installment_flow');
+                        } else if (type === 'revolving_credit') {
+                          setStep('revolving_flow');
+                        } else if (type === 'bill') {
+                          setStep('bill_flow');
+                        } else if (type === 'other') {
+                          setStep('other_flow');
+                        } else {
+                          setStep('subtype');
+                        }
                       }}
                     >
                       {/* Row 1: icon (left) + title (right) */}
@@ -666,7 +706,7 @@ export function NewAccountWizard({
                         >
                           {ACCOUNT_TYPE_ICONS[type]}
                         </span>
-                        <span className="min-w-0 flex-1 truncate text-[0.95rem] font-[700] -tracking-[0.2px] sm:text-[1rem]">
+                        <span className="min-w-0 flex-1 text-[0.95rem] font-[700] -tracking-[0.2px] sm:text-[1rem]">
                           {ACCOUNT_TYPE_LABELS[type]}
                         </span>
                       </div>
@@ -678,6 +718,248 @@ export function NewAccountWizard({
                   );
                 }
               )}
+            </div>
+          </div>
+        )}
+
+        {step === 'installment_flow' && (
+          <InstallmentLoanFlow
+            onBack={() => setStep('type')}
+            onComplete={(data) => {
+              void (async () => {
+                try {
+                  setSaving(true);
+                  setError(null);
+                  const accountId = await createFinancialAccount(data);
+                  void onCreated?.(accountId, 'installment_loan');
+                  onClose();
+                  void navigate(`/account/${accountId}`);
+                } catch (e) {
+                  setError(
+                    e instanceof Error ? e.message : 'Failed to create account'
+                  );
+                } finally {
+                  setSaving(false);
+                }
+              })();
+            }}
+          />
+        )}
+
+        {step === 'revolving_flow' && (
+          <RevolvingCreditFlow
+            onBack={() => setStep('type')}
+            onComplete={(data) => {
+              void (async () => {
+                try {
+                  setSaving(true);
+                  setError(null);
+                  const accountId = await createFinancialAccount(data);
+                  void onCreated?.(accountId, 'revolving_credit');
+                  onClose();
+                  void navigate(`/account/${accountId}`);
+                } catch (e) {
+                  setError(
+                    e instanceof Error ? e.message : 'Failed to create account'
+                  );
+                } finally {
+                  setSaving(false);
+                }
+              })();
+            }}
+          />
+        )}
+
+        {step === 'bill_flow' && (
+          <BillFlow
+            onBack={() => setStep('type')}
+            onComplete={(data) => {
+              void (async () => {
+                try {
+                  setSaving(true);
+                  setError(null);
+                  const accountId = await createFinancialAccount(data);
+                  void onCreated?.(accountId, 'bill');
+                  onClose();
+                  void navigate(`/account/${accountId}`);
+                } catch (e) {
+                  setError(
+                    e instanceof Error ? e.message : 'Failed to create account'
+                  );
+                } finally {
+                  setSaving(false);
+                }
+              })();
+            }}
+          />
+        )}
+
+        {step === 'other_flow' && (
+          <OtherAccountFlow
+            onBack={() => setStep('type')}
+            onComplete={(data) => {
+              void (async () => {
+                try {
+                  setSaving(true);
+                  setError(null);
+                  const accountId = await createFinancialAccount(data);
+                  void onCreated?.(accountId, 'other');
+                  onClose();
+                  void navigate(`/account/${accountId}`);
+                } catch (e) {
+                  setError(
+                    e instanceof Error ? e.message : 'Failed to create account'
+                  );
+                } finally {
+                  setSaving(false);
+                }
+              })();
+            }}
+          />
+        )}
+
+        {step === 'subtype' && selectedType && selectedType !== 'other' && (
+          <div>
+            <p className="mb-3 text-[0.85rem] opacity-75 sm:mb-4 sm:text-[0.9rem]">
+              {selectedType === 'installment_loan' &&
+                'What type of loan is this?'}
+              {selectedType === 'revolving_credit' &&
+                'What type of credit account?'}
+              {selectedType === 'bill' && 'What type of bill is this?'}
+            </p>
+
+            <div
+              className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:gap-2.5"
+              role="list"
+            >
+              {selectedType === 'installment_loan' &&
+                (
+                  Object.keys(LOAN_SUBTYPE_LABELS) as InstallmentLoanSubtype[]
+                ).map((subtype) => {
+                  const isSelected = selectedSubtype === subtype;
+                  return (
+                    <button
+                      key={subtype}
+                      type="button"
+                      role="listitem"
+                      className={`flex min-h-[72px] cursor-pointer flex-col justify-center rounded-md border p-2.5 pt-0 text-left text-white transition-all duration-200 ease-out active:scale-[0.98] sm:min-h-[80px] sm:p-3 ${
+                        isSelected
+                          ? 'border-primary-500/80 bg-primary-500/20 shadow-[0_0_0_2px_rgba(59,130,246,0.35),0_4px_14px_rgba(30,64,175,0.3)]'
+                          : 'border-neutral-700/40 bg-white/[0.07] backdrop-blur-[10px] hover:border-neutral-600/50 hover:bg-white/10 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]'
+                      }`}
+                      onClick={() => {
+                        setError(null);
+                        setSelectedSubtype(subtype);
+                        setStep('details');
+                      }}
+                    >
+                      <div className="flex min-h-[44px] items-center gap-2">
+                        <span
+                          className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-base ring-1 sm:h-10 sm:w-10 sm:text-lg ${
+                            isSelected
+                              ? 'bg-primary-500/35 shadow-[0_2px_10px_rgba(30,64,175,0.35)] ring-primary-400/40'
+                              : 'bg-white/12 shadow-[0_2px_8px_rgba(0,0,0,0.25)] ring-white/10'
+                          }`}
+                          aria-hidden
+                        >
+                          {LOAN_SUBTYPE_ICONS[subtype]}
+                        </span>
+                        <span className="min-w-0 flex-1 text-[0.95rem] font-[700] -tracking-[0.2px] sm:text-[1rem]">
+                          {LOAN_SUBTYPE_LABELS[subtype]}
+                        </span>
+                      </div>
+                      <p className="mt-1 line-clamp-2 min-h-[2.25em] text-[0.75rem] leading-snug opacity-80 sm:text-[0.8rem]">
+                        {LOAN_SUBTYPE_HELP[subtype]}
+                      </p>
+                    </button>
+                  );
+                })}
+
+              {selectedType === 'revolving_credit' &&
+                (
+                  Object.keys(CREDIT_SUBTYPE_LABELS) as RevolvingCreditSubtype[]
+                ).map((subtype) => {
+                  const isSelected = selectedSubtype === subtype;
+                  return (
+                    <button
+                      key={subtype}
+                      type="button"
+                      role="listitem"
+                      className={`flex min-h-[72px] cursor-pointer flex-col justify-center rounded-md border p-2.5 pt-0 text-left text-white transition-all duration-200 ease-out active:scale-[0.98] sm:min-h-[80px] sm:p-3 ${
+                        isSelected
+                          ? 'border-primary-500/80 bg-primary-500/20 shadow-[0_0_0_2px_rgba(59,130,246,0.35),0_4px_14px_rgba(30,64,175,0.3)]'
+                          : 'border-neutral-700/40 bg-white/[0.07] backdrop-blur-[10px] hover:border-neutral-600/50 hover:bg-white/10 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]'
+                      }`}
+                      onClick={() => {
+                        setError(null);
+                        setSelectedSubtype(subtype);
+                        setStep('details');
+                      }}
+                    >
+                      <div className="flex min-h-[44px] items-center gap-2">
+                        <span
+                          className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-base ring-1 sm:h-10 sm:w-10 sm:text-lg ${
+                            isSelected
+                              ? 'bg-primary-500/35 shadow-[0_2px_10px_rgba(30,64,175,0.35)] ring-primary-400/40'
+                              : 'bg-white/12 shadow-[0_2px_8px_rgba(0,0,0,0.25)] ring-white/10'
+                          }`}
+                          aria-hidden
+                        >
+                          {CREDIT_SUBTYPE_ICONS[subtype]}
+                        </span>
+                        <span className="min-w-0 flex-1 text-[0.95rem] font-[700] -tracking-[0.2px] sm:text-[1rem]">
+                          {CREDIT_SUBTYPE_LABELS[subtype]}
+                        </span>
+                      </div>
+                      <p className="mt-1 line-clamp-2 min-h-[2.25em] text-[0.75rem] leading-snug opacity-80 sm:text-[0.8rem]">
+                        {CREDIT_SUBTYPE_HELP[subtype]}
+                      </p>
+                    </button>
+                  );
+                })}
+
+              {selectedType === 'bill' &&
+                (Object.keys(BILL_SUBTYPE_LABELS) as BillSubtype[]).map(
+                  (subtype) => {
+                    const isSelected = selectedSubtype === subtype;
+                    return (
+                      <button
+                        key={subtype}
+                        type="button"
+                        role="listitem"
+                        className={`flex min-h-[72px] cursor-pointer flex-col justify-center rounded-md border p-2.5 pt-0 text-left text-white transition-all duration-200 ease-out active:scale-[0.98] sm:min-h-[80px] sm:p-3 ${
+                          isSelected
+                            ? 'border-primary-500/80 bg-primary-500/20 shadow-[0_0_0_2px_rgba(59,130,246,0.35),0_4px_14px_rgba(30,64,175,0.3)]'
+                            : 'border-neutral-700/40 bg-white/[0.07] backdrop-blur-[10px] hover:border-neutral-600/50 hover:bg-white/10 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]'
+                        }`}
+                        onClick={() => {
+                          setError(null);
+                          setSelectedSubtype(subtype);
+                          setStep('details');
+                        }}
+                      >
+                        <div className="flex min-h-[44px] items-center gap-2">
+                          <span
+                            className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-base ring-1 sm:h-10 sm:w-10 sm:text-lg ${
+                              isSelected
+                                ? 'bg-primary-500/35 shadow-[0_2px_10px_rgba(30,64,175,0.35)] ring-primary-400/40'
+                                : 'bg-white/12 shadow-[0_2px_8px_rgba(0,0,0,0.25)] ring-white/10'
+                            }`}
+                            aria-hidden
+                          >
+                            {BILL_SUBTYPE_ICONS[subtype]}
+                          </span>
+                          <span className="min-w-0 flex-1 text-[0.95rem] font-[700] -tracking-[0.2px] sm:text-[1rem]">
+                            {BILL_SUBTYPE_LABELS[subtype]}
+                          </span>
+                        </div>
+                        <p className="mt-1 line-clamp-2 min-h-[2.25em] text-[0.75rem] leading-snug opacity-80 sm:text-[0.8rem]">
+                          {BILL_SUBTYPE_HELP[subtype]}
+                        </p>
+                      </button>
+                    );
+                  }
+                )}
             </div>
           </div>
         )}

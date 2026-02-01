@@ -1,0 +1,40 @@
+{
+  "name": "ai-service",
+  "version": "1.0.0",
+  "description": "AI Service API Gateway for Rates Platform",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "@fastify/helmet": "^11.1.1",
+    "@fastify/autoload": "^5.8.0",
+    "@fastify/sensible": "^5.5.0",
+    "@google-cloud/firestore": "^7.5.0",
+    "@google-cloud/pubsub": "^4.3.3",
+    "@rates/vertex-ai-client": "workspace:*",
+    "dotenv": "^16.4.5",
+    "fastify": "^4.26.2",
+    "fastify-plugin": "^4.5.1",
+    "fastify-type-provider-zod": "^1.1.9",
+    "firebase-admin": "^12.0.0",
+    "pino": "^9.6.0",
+    "pino-pretty": "^11.0.0",
+    "tiktoken": "^1.0.14",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

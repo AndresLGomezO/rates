@@ -11,8 +11,9 @@ import {
   isInstallmentLoan,
   isRevolvingCredit,
   isBill,
+  isOther,
+  getAccountWithCalculated,
 } from '@rates/firebase-client';
-import { getAccountWithCalculated } from '@rates/firebase-client';
 import {
   createFinancialAccount,
   getUserFinancialAccounts,
@@ -69,6 +70,18 @@ function getAccountNextDueDate(account: FinancialAccount): Date | undefined {
 import { filterAccounts } from '../utils/filterAccounts';
 import { Modal } from '../components/Modal';
 import { CreateAccountForm } from '../components/CreateAccountForm';
+import { InstallmentLoanCard } from '../components/InstallmentLoanCard';
+import { AggregateLoanPayoffWidget } from '../components/InstallmentLoanInsights/AggregateLoanPayoffWidget';
+import { RevolvingCreditCard } from '../components/RevolvingCreditCard';
+import { AggregateRevolvingCreditWidget } from '../components/RevolvingCreditInsights/AggregateRevolvingCreditWidget';
+import { BillsDashboard } from '../components/BillInsights/BillsDashboard';
+import { BillCard } from '../components/BillInsights/BillCard';
+import { OtherInsightsContainer } from '../components/OtherAccountInsights';
+import { OtherAccountCard } from '../components/OtherAccountCard';
+
+// ... existing imports
+
+// Inside the component rendering loop:
 
 const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   installment_loan: 'Installment Loans',
@@ -77,8 +90,43 @@ const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   other: 'Other Accounts',
 };
 
+const SUBTYPE_LABELS: Record<string, string> = {
+  // Installment loan subtypes
+  mortgage: 'Mortgages',
+  auto: 'Auto Loans',
+  personal: 'Personal Loans',
+  student: 'Student Loans',
+  // Revolving credit subtypes
+  credit_card: 'Credit Cards',
+  line_of_credit: 'Lines of Credit',
+  store_card: 'Store Cards',
+  overdraft: 'Overdraft',
+  // Bill subtypes
+  subscription: 'Subscriptions',
+  utility: 'Utilities',
+  rent: 'Rent',
+  insurance: 'Insurance',
+  tax: 'Taxes',
+  // Other
+  other: 'Other',
+};
+
+function getPageTitle(
+  type: AccountType | undefined,
+  subtype: string | undefined
+): string {
+  if (!type) return 'Accounts';
+  if (subtype && SUBTYPE_LABELS[subtype]) {
+    return SUBTYPE_LABELS[subtype];
+  }
+  return ACCOUNT_TYPE_LABELS[type];
+}
+
 export default function AccountsByType() {
-  const { type } = useParams<{ type: AccountType }>();
+  const { type, subtype } = useParams<{
+    type: AccountType;
+    subtype?: string;
+  }>();
   const navigate = useNavigate();
   const [accounts, setAccounts] = useState<FinancialAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,7 +159,7 @@ export default function AccountsByType() {
   useEffect(() => {
     void loadAccounts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type]);
+  }, [type, subtype]);
 
   const loadAccounts = async () => {
     try {
@@ -121,11 +169,26 @@ export default function AccountsByType() {
       // Load accounts from Firestore
       const allAccounts = await getUserFinancialAccounts();
 
-      // Filter accounts by type
+      // Filter accounts by type and optionally by subtype
       if (type) {
-        const filtered = allAccounts.filter(
+        let filtered = allAccounts.filter(
           (account) => account.accountType === type
         );
+
+        // Further filter by subtype if present
+        if (subtype) {
+          filtered = filtered.filter((account) => {
+            if (isInstallmentLoan(account)) {
+              return account.loanSubtype === subtype;
+            } else if (isRevolvingCredit(account)) {
+              return account.creditSubtype === subtype;
+            } else if (isBill(account)) {
+              return account.billSubtype === subtype;
+            }
+            return false;
+          });
+        }
+
         setAccounts(filtered);
       } else {
         setAccounts([]);
@@ -290,10 +353,10 @@ export default function AccountsByType() {
       console.error('🔴 [handleCreateAccount] Error type:', typeof err);
       console.error('🔴 [handleCreateAccount] Error details:', {
         name: err instanceof Error ? err.name : 'Unknown',
-        message: err instanceof Error ? err.message : String(err),
+        message: err instanceof Error ? err.message : 'Unknown',
         stack: err instanceof Error ? err.stack : 'No stack trace',
         ...(err && typeof err === 'object' && 'code' in err
-          ? { code: err.code }
+          ? { code: String((err as { code: string | number | boolean }).code) }
           : {}),
       });
       setError(err instanceof Error ? err.message : 'Failed to create account');
@@ -350,7 +413,7 @@ export default function AccountsByType() {
       <div className="m-0 box-border flex w-full max-w-full animate-fadeIn-slow flex-col gap-8 overflow-x-hidden p-0">
         <div className="relative mb-10 flex items-center justify-between pb-6 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:content-['']">
           <h2 className="m-0 bg-gradient-to-br from-white to-white/80 bg-clip-text text-xl font-bold -tracking-[0.5px] text-transparent text-white drop-shadow-[0_2px_20px_rgba(255,255,255,0.1)] md:text-4xl">
-            {type ? ACCOUNT_TYPE_LABELS[type] : 'Accounts'}
+            {type ? getPageTitle(type, subtype) : 'Accounts'}
           </h2>
         </div>
         <div className="flex min-h-[400px] flex-col items-center justify-center text-center text-white/80">
@@ -375,10 +438,10 @@ export default function AccountsByType() {
   }
 
   return (
-    <div className="m-0 box-border flex w-full max-w-full animate-fadeIn-slow flex-col gap-8 overflow-x-hidden p-0">
-      <div className="relative mb-10 flex items-center justify-between pb-6 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:content-['']">
+    <div className="m-0 box-border flex w-full max-w-full animate-fadeIn-slow flex-col gap-6 overflow-x-hidden p-4">
+      <div className="relative mb-6 flex items-center justify-between pb-6 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:content-['']">
         <h2 className="m-0 bg-gradient-to-br from-white to-white/80 bg-clip-text text-xl font-bold -tracking-[0.5px] text-transparent text-white drop-shadow-[0_2px_20px_rgba(255,255,255,0.1)] md:text-4xl">
-          {ACCOUNT_TYPE_LABELS[type]}
+          {getPageTitle(type, subtype)}
         </h2>
         <button
           className="ds-button-gradient flex items-center gap-2 px-6 py-3.5 text-[0.95rem]"
@@ -575,41 +638,54 @@ export default function AccountsByType() {
         </div>
       ) : (
         <>
-          <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div className="ds-card-light p-6">
-              <h3 className="m-0 mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
-                Total Accounts
-              </h3>
-              <p className="m-0 text-2xl font-bold text-white">
-                {filteredAccounts.length}
-              </p>
-            </div>
-            <div className="ds-card-light p-6">
-              <h3 className="m-0 mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
-                Active Accounts
-              </h3>
-              <p className="m-0 text-2xl font-bold text-white">
-                {filteredAccounts.filter((a) => a.status === 'active').length}
-              </p>
-            </div>
-            <div className="ds-card-light p-6">
-              <h3 className="m-0 mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
-                Total Remaining
-              </h3>
-              <p className="m-0 text-2xl font-bold text-white">
-                {formatCurrency(
-                  filteredAccounts.reduce(
-                    (sum, a) => sum + getAccountRemainingBalance(a),
-                    0
-                  ),
-                  'COP'
-                )}
-              </p>
-            </div>
-          </div>
+          {type === 'installment_loan' ? (
+            <AggregateLoanPayoffWidget accounts={filteredAccounts} />
+          ) : type === 'revolving_credit' ? (
+            <AggregateRevolvingCreditWidget accounts={filteredAccounts} />
+          ) : type === 'bill' ? (
+            <BillsDashboard accounts={filteredAccounts} />
+          ) : type === 'other' ? (
+            <OtherInsightsContainer accounts={filteredAccounts} />
+          ) : null}
 
           <div className="flex flex-col gap-6">
             {filteredAccounts.map((account) => {
+              if (isInstallmentLoan(account) && type === 'installment_loan') {
+                return (
+                  <InstallmentLoanCard
+                    key={account.accountNumber}
+                    account={account}
+                    getStatusColor={getStatusColor}
+                  />
+                );
+              } else if (
+                isRevolvingCredit(account) &&
+                type === 'revolving_credit'
+              ) {
+                return (
+                  <RevolvingCreditCard
+                    key={account.accountNumber}
+                    account={account}
+                    getStatusColor={getStatusColor}
+                  />
+                );
+              } else if (isBill(account) && type === 'bill') {
+                return (
+                  <BillCard
+                    key={account.accountNumber}
+                    account={account}
+                    getStatusColor={getStatusColor}
+                  />
+                );
+              } else if (isOther(account)) {
+                return (
+                  <OtherAccountCard
+                    key={account.accountNumber}
+                    account={account} // Type guard guarantees OtherAccount
+                  />
+                );
+              }
+
               const accountWithCalculated = getAccountWithCalculated(account);
               const daysRemaining =
                 accountWithCalculated.daysRemainingToDueDate;
@@ -822,9 +898,10 @@ export default function AccountsByType() {
                               : 'text-white'
                         }`}
                       >
-                        {getAccountNextDueDate(account)
-                          ? formatDate(getAccountNextDueDate(account)!)
-                          : 'N/A'}{' '}
+                        {(() => {
+                          const nextDue = getAccountNextDueDate(account);
+                          return nextDue ? formatDate(nextDue) : 'N/A';
+                        })()}{' '}
                         ({accountWithCalculated.nextDueDatePeriod})
                       </span>
                     </div>

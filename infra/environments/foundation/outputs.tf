@@ -128,3 +128,37 @@ output "foundation_summary" {
     apis_enabled = length(google_project_service.required_apis)
   }
 }
+# ============================================================================
+# AI INFRASTRUCTURE OUTPUTS
+# ============================================================================
+
+output "ai_vpc_network_name" {
+  description = "Name of the AI VPC network"
+  value       = module.ai_vpc.network_name
+}
+
+output "ai_vpc_subnet_name" {
+  description = "Name of the AI VPC subnet"
+  value       = split("/", module.ai_vpc.subnet_id)[length(split("/", module.ai_vpc.subnet_id)) - 1]
+}
+
+output "ai_tasks_topics" {
+  description = "Map of environment to AI tasks topic name"
+  value = {
+    for env, topic in module.ai_tasks_topic : env => topic.topic_name
+  }
+}
+
+output "ai_service_sa_emails" {
+  description = "Map of environment to AI Service SA email"
+  value = {
+    for env, sa in module.ai_service_sa : env => sa.email
+  }
+}
+
+output "ai_processor_sa_emails" {
+  description = "Map of environment to AI Processor SA email"
+  value = {
+    for env, sa in module.ai_processor_sa : env => sa.email
+  }
+}

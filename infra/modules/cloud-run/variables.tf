@@ -168,6 +168,27 @@ variable "allow_unauthenticated" {
 }
 
 # ----------------------------------------------------------------------------
+# VPC Configuration
+# ----------------------------------------------------------------------------
+
+variable "vpc_connector_name" {
+  type        = string
+  description = "Name of the VPC connector to use (optional)"
+  default     = null
+}
+
+variable "vpc_egress" {
+  type        = string
+  description = "VPC egress setting (private-ranges-only or all-traffic)"
+  default     = "private-ranges-only"
+
+  validation {
+    condition     = contains(["private-ranges-only", "all-traffic"], var.vpc_egress)
+    error_message = "VPC egress must be 'private-ranges-only' or 'all-traffic'."
+  }
+}
+
+# ----------------------------------------------------------------------------
 # Labels
 # ----------------------------------------------------------------------------
 
@@ -175,4 +196,9 @@ variable "labels" {
   type        = map(string)
   description = "Labels to apply to the service"
   default     = {}
+}
+variable "probe_path" {
+  type        = string
+  description = "Path for the startup probe"
+  default     = "/health"
 }

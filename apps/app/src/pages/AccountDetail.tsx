@@ -6,11 +6,7 @@ import type {
   PaymentLogEntry,
   FinancialAccountCalculated,
 } from '@rates/firebase-client';
-import {
-  isInstallmentLoan,
-  isRevolvingCredit,
-  isBill,
-} from '@rates/firebase-client';
+import { isInstallmentLoan, isRevolvingCredit } from '@rates/firebase-client';
 import { getFinancialAccount } from '../services/financialAccounts';
 import {
   getPaymentPeriods,
@@ -33,7 +29,6 @@ import { BatchPaymentModal } from '../components/BatchPaymentModal';
 import type {
   ChartDataPoint,
   PaymentHistoryEntry,
-  AccountMetrics,
   PieLabelProps,
   AmortizationScheduleDataPoint,
   CumulativeInterestDataPoint,
@@ -41,6 +36,17 @@ import type {
   PaymentStatusDataPoint,
 } from './AccountDetail.types';
 import * as rechartsModule from 'recharts';
+import { LoanPayoffWidget } from '../components/InstallmentLoanInsights/LoanPayoffWidget';
+import { PaymentAnatomyWidget } from '../components/InstallmentLoanInsights/PaymentAnatomyWidget';
+import { PayoffAcceleratorWidget } from '../components/InstallmentLoanInsights/PayoffAcceleratorWidget';
+import { CreditUtilizationWidget } from '../components/RevolvingCreditInsights/CreditUtilizationWidget';
+import { RevolvingCostWidget } from '../components/RevolvingCreditInsights/RevolvingCostWidget';
+import { RevolvingPayoffAcceleratorWidget } from '../components/RevolvingCreditInsights/RevolvingPayoffAcceleratorWidget';
+import { BillHistoryWidget } from '../components/BillInsights/BillHistoryWidget';
+import { BillStatsWidget } from '../components/BillInsights/BillStatsWidget';
+import { BillTrendAnalysisWidget } from '../components/BillInsights/BillTrendAnalysisWidget';
+import { isBill, isOther } from '@rates/firebase-client';
+import { OtherAccountDetail } from '../components/OtherAccountInsights/OtherAccountDetail';
 
 // Helper functions to safely extract type-specific fields
 function getAccountRemainingBalance(account: FinancialAccount): number {
@@ -57,54 +63,6 @@ function getAccountOriginalAmount(
 ): number | undefined {
   if (isInstallmentLoan(account)) {
     return account.originalPrincipal?.amount;
-  }
-  return undefined;
-}
-
-function getAccountPaymentAmount(account: FinancialAccount): number {
-  if (isInstallmentLoan(account)) {
-    return account.scheduledPayment?.amount ?? 0;
-  } else if (isRevolvingCredit(account)) {
-    return (
-      account.userPlannedPayment?.amount ??
-      account.currentMinimumPayment?.amount ??
-      0
-    );
-  } else if (isBill(account)) {
-    return account.recurringAmount?.amount ?? 0;
-  }
-  return 0;
-}
-
-function getAccountInterestRate(account: FinancialAccount): number | undefined {
-  if (isInstallmentLoan(account)) {
-    return account.annualInterestRate;
-  } else if (isRevolvingCredit(account)) {
-    return account.purchaseApr;
-  }
-  return undefined;
-}
-
-function getAccountPaymentFrequency(
-  account: FinancialAccount
-): string | undefined {
-  if (isInstallmentLoan(account)) {
-    return account.paymentFrequency;
-  } else if (isBill(account) && account.isRecurring) {
-    return account.paymentFrequency;
-  }
-  return undefined;
-}
-
-function getAccountNextDueDate(account: FinancialAccount): Date | undefined {
-  if (
-    isInstallmentLoan(account) ||
-    isRevolvingCredit(account) ||
-    isBill(account)
-  ) {
-    const dueDate = account.nextDueDate;
-    if (!dueDate) return undefined;
-    return dueDate instanceof Date ? dueDate : dueDate.toDate();
   }
   return undefined;
 }
@@ -126,37 +84,8 @@ function getAccountTermInPayments(
   }
   return undefined;
 }
-/**
- * Calculate account metrics from calculated account and payment periods
- */
-function calculateAccountMetrics(
-  calculatedAccount: FinancialAccountCalculated,
-  paymentPeriods: PaymentPeriod[]
-): AccountMetrics {
-  const totalPaid = calculatedAccount.totalPaid?.amount ?? 0;
-  const totalInterestPaid = paymentPeriods.reduce(
-    (sum, p) => sum + (p.status === 'paid' ? p.interest : 0),
-    0
-  );
-  const totalCapitalPaid = paymentPeriods.reduce(
-    (sum, p) => sum + (p.status === 'paid' ? p.capital : 0),
-    0
-  );
-  const paidPeriods = paymentPeriods.filter((p) => p.status === 'paid').length;
-  const totalPeriods = paymentPeriods.length;
-  const progressPercentage =
-    totalPeriods > 0 ? (paidPeriods / totalPeriods) * 100 : 0;
 
-  return {
-    totalPaid,
-    totalInterestPaid,
-    totalCapitalPaid,
-    paidPeriods,
-    totalPeriods,
-    progressPercentage,
-  };
-}
-
+// calculateAccountMetrics removed
 /**
  * Prepare chart data from payment periods
  */
@@ -491,20 +420,6 @@ export default function AccountDetail() {
     [paymentPeriods]
   );
 
-  const metrics = useMemo(() => {
-    if (!calculatedAccount) {
-      return {
-        totalPaid: 0,
-        totalInterestPaid: 0,
-        totalCapitalPaid: 0,
-        paidPeriods: 0,
-        totalPeriods: 0,
-        progressPercentage: 0,
-      };
-    }
-    return calculateAccountMetrics(calculatedAccount, paymentPeriods);
-  }, [calculatedAccount, paymentPeriods]);
-
   const paymentStatus = useMemo(() => {
     return getAccountPaymentStatus(paymentPeriods);
   }, [paymentPeriods]);
@@ -523,7 +438,7 @@ export default function AccountDetail() {
 
   if (loading) {
     return (
-      <div className="mx-auto box-border max-w-[1400px] animate-fadeIn-slow px-8 py-8 md:p-4">
+      <div className="mx-auto box-border max-w-[1400px] animate-fadeIn-slow px-4 py-4 md:p-4">
         <div className="flex min-h-[400px] flex-col items-center justify-center text-center text-white/80">
           <div className="mb-4 h-[50px] w-[50px] animate-spin rounded-full border-4 border-neutral-600/30 border-t-primary-500"></div>
           <p>Loading account details...</p>
@@ -534,7 +449,7 @@ export default function AccountDetail() {
 
   if (error || !account || !calculatedAccount) {
     return (
-      <div className="mx-auto box-border max-w-[1400px] animate-fadeIn-slow px-8 py-8 md:p-4">
+      <div className="mx-auto box-border max-w-[1400px] animate-fadeIn-slow px-4 py-4 md:p-4">
         <div className="flex min-h-[400px] flex-col items-center justify-center text-center text-white/80">
           <h2 className="mb-4 text-danger-500">Error</h2>
           <p>{error ?? 'Account not found'}</p>
@@ -573,7 +488,7 @@ export default function AccountDetail() {
   } = rechartsModule;
 
   return (
-    <div className="mx-auto box-border max-w-[1400px] animate-fadeIn-slow px-8 py-8 md:p-4">
+    <div className="mx-auto box-border max-w-[1400px] animate-fadeIn-slow px-4 py-4 md:p-4">
       {/* Header */}
       <div className="mb-10 flex flex-wrap items-start justify-between gap-8 border-b border-neutral-700/30 pb-6 md:flex-col">
         <div className="min-w-0 flex-1">
@@ -646,345 +561,309 @@ export default function AccountDetail() {
       </div>
 
       {/* Key Metrics */}
-      <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]">
-        <div className="ds-card-light p-6">
-          <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/70">
-            Remaining Balance
-          </div>
-          <div className="mb-2 text-[1.75rem] font-bold text-primary-500">
-            {formatCurrency(getAccountRemainingBalance(account), currency)}
-          </div>
-          {getAccountOriginalAmount(account) !== undefined && (
-            <div className="text-sm text-white/50">
-              {formatCurrency(getAccountOriginalAmount(account)!, currency)}{' '}
-              original
-            </div>
-          )}
-        </div>
-        <div className="ds-card-light p-6">
-          <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/70">
-            Total Paid
-          </div>
-          <div className="mb-2 text-[1.75rem] font-bold text-success-css">
-            {formatCurrency(metrics.totalPaid, currency)}
-          </div>
-          <div className="text-sm text-white/50">
-            {paymentHistoryData.length} payments
-          </div>
-        </div>
-        <div className="ds-card-light p-6">
-          <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/70">
-            Payment Amount
-          </div>
-          <div className="mb-2 text-[1.75rem] font-bold text-white">
-            {formatCurrency(getAccountPaymentAmount(account), currency)}
-          </div>
-          <div className="text-sm text-white/50">
-            {getAccountInterestRate(account) ?? 0}% interest rate (
-            {getAccountPaymentFrequency(account) ?? 'N/A'})
-          </div>
-        </div>
-        <div className="ds-card-light p-6">
-          <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/70">
-            Progress
-          </div>
-          <div className="mb-2 text-[1.75rem] font-bold text-white">
-            {metrics.paidPeriods} / {metrics.totalPeriods} periods
-          </div>
-          <div className="mt-3 h-2 w-full overflow-hidden rounded bg-white/10">
-            <div
-              className="h-full rounded bg-gradient-to-r from-[#1e40af] to-[#334155] transition-all duration-500 ease-in-out"
-              style={{ width: `${metrics.progressPercentage}%` }}
-            ></div>
-          </div>
-        </div>
-        {getAccountNextDueDate(account) && (
-          <div className="ds-card-light p-6">
-            <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/70">
-              Next Due Date
-            </div>
-            <div className="text-[1.75rem] font-bold text-white">
-              {formatDate(getAccountNextDueDate(account)!)}
-            </div>
-          </div>
-        )}
-        <div className="ds-card-light p-6">
-          <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/70">
-            Interest Paid
-          </div>
-          <div className="mb-2 text-[1.75rem] font-bold text-warning-500">
-            {formatCurrency(metrics.totalInterestPaid, currency)}
-          </div>
-          <div className="text-sm text-white/50">
-            {metrics.totalCapitalPaid > 0
-              ? `${((metrics.totalInterestPaid / (metrics.totalInterestPaid + metrics.totalCapitalPaid)) * 100).toFixed(1)}% of total`
-              : 'N/A'}
-          </div>
-        </div>
-      </div>
-
       {/* Charts Section */}
-      <div className="mb-12 flex w-full flex-col">
-        <h2 className="col-span-full mb-8 w-full border-b border-neutral-700/30 pb-4 text-[1.75rem] font-bold text-white">
-          Loan Payment Insights
-        </h2>
-
-        <div className="box-border grid w-full grid-cols-1 gap-6 md:grid-cols-2 md:gap-6">
-          {/* Principal Reduction Over Time */}
-          {chartData.length > 0 && (
-            <div className="ds-card-light p-6">
-              <h3 className="m-0 mb-2 text-xl font-semibold text-white">
-                Principal Balance Over Time
-              </h3>
-              <p className="m-0 mb-4 text-sm leading-relaxed text-white/70">
-                Track how your loan principal decreases as you make payments
-              </p>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient
-                      id="principalGradient"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#1e40af" stopOpacity={0.8} />
-                      <stop
-                        offset="95%"
-                        stopColor="#1e40af"
-                        stopOpacity={0.1}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgba(255,255,255,0.1)"
-                  />
-                  <XAxis
-                    dataKey="date"
-                    stroke="rgba(255,255,255,0.6)"
-                    style={CHART_AXIS_STYLE}
-                  />
-                  <YAxis
-                    stroke="rgba(255,255,255,0.6)"
-                    style={CHART_AXIS_STYLE}
-                  />
-                  <Tooltip
-                    contentStyle={CHART_TOOLTIP_STYLE}
-                    formatter={(value: number) =>
-                      formatCurrency(value, currency)
-                    }
-                    labelFormatter={(label) => `Period: ${label}`}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="balance"
-                    stroke="#1e40af"
-                    fillOpacity={1}
-                    fill="url(#principalGradient)"
-                    name="Principal Balance"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          {/* Amortization Schedule - Principal vs Interest */}
-          {amortizationScheduleData.length > 0 && (
-            <div className="ds-card-light p-6">
-              <h3 className="m-0 mb-2 text-xl font-semibold text-white">
-                Amortization Schedule
-              </h3>
-              <p className="m-0 mb-4 text-sm leading-relaxed text-white/70">
-                See how each payment is split between principal and interest
-              </p>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={amortizationScheduleData}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgba(255,255,255,0.1)"
-                  />
-                  <XAxis
-                    dataKey="date"
-                    stroke="rgba(255,255,255,0.6)"
-                    style={CHART_AXIS_STYLE}
-                  />
-                  <YAxis
-                    stroke="rgba(255,255,255,0.6)"
-                    style={CHART_AXIS_STYLE}
-                  />
-                  <Tooltip
-                    contentStyle={CHART_TOOLTIP_STYLE}
-                    formatter={(value: number) =>
-                      formatCurrency(value, currency)
-                    }
-                  />
-                  <Legend />
-                  <Bar
-                    dataKey="principal"
-                    stackId="a"
-                    fill="#1e40af"
-                    name="Principal"
-                  />
-                  <Bar
-                    dataKey="interest"
-                    stackId="a"
-                    fill="#2563eb"
-                    name="Interest"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          {/* Cumulative Interest Paid */}
-          {cumulativeInterestData.length > 0 && (
-            <div className="ds-card-light p-6">
-              <h3 className="m-0 mb-2 text-xl font-semibold text-white">
-                Cumulative Interest Paid
-              </h3>
-              <p className="m-0 mb-4 text-sm leading-relaxed text-white/70">
-                Track total interest paid over the life of the loan
-              </p>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={cumulativeInterestData}>
-                  <defs>
-                    <linearGradient
-                      id="interestGradient"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.8} />
-                      <stop
-                        offset="95%"
-                        stopColor="#2563eb"
-                        stopOpacity={0.1}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgba(255,255,255,0.1)"
-                  />
-                  <XAxis
-                    dataKey="date"
-                    stroke="rgba(255,255,255,0.6)"
-                    style={CHART_AXIS_STYLE}
-                  />
-                  <YAxis
-                    stroke="rgba(255,255,255,0.6)"
-                    style={CHART_AXIS_STYLE}
-                  />
-                  <Tooltip
-                    contentStyle={CHART_TOOLTIP_STYLE}
-                    formatter={(value: number) =>
-                      formatCurrency(value, currency)
-                    }
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="cumulativeInterest"
-                    stroke="#2563eb"
-                    fillOpacity={1}
-                    fill="url(#interestGradient)"
-                    name="Cumulative Interest"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          {/* Interest vs Principal Ratio Over Time */}
-          {interestPrincipalRatioData.length > 0 && (
-            <div className="ds-card-light p-6">
-              <h3 className="m-0 mb-2 text-xl font-semibold text-white">
-                Interest vs Principal Ratio
-              </h3>
-              <p className="m-0 mb-4 text-sm leading-relaxed text-white/70">
-                Watch how the interest portion decreases and principal portion
-                increases over time
-              </p>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={interestPrincipalRatioData}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgba(255,255,255,0.1)"
-                  />
-                  <XAxis
-                    dataKey="date"
-                    stroke="rgba(255,255,255,0.6)"
-                    style={CHART_AXIS_STYLE}
-                  />
-                  <YAxis
-                    stroke="rgba(255,255,255,0.6)"
-                    style={CHART_AXIS_STYLE}
-                  />
-                  <Tooltip
-                    contentStyle={CHART_TOOLTIP_STYLE}
-                    formatter={(value: number) =>
-                      formatCurrency(value, currency)
-                    }
-                  />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="interestPortion"
-                    stroke="#2563eb"
-                    strokeWidth={2}
-                    name="Interest Portion"
-                    dot={{ fill: '#2563eb', r: 3 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="principalPortion"
-                    stroke="#1e40af"
-                    strokeWidth={2}
-                    name="Principal Portion"
-                    dot={{ fill: '#1e40af', r: 3 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          {/* Payment Status Distribution */}
-          {paymentStatusData.length > 0 && (
-            <div className="ds-card-light p-6">
-              <h3 className="m-0 mb-2 text-xl font-semibold text-white">
-                Payment Status Overview
-              </h3>
-              <p className="m-0 mb-4 text-sm leading-relaxed text-white/70">
-                Distribution of payment statuses across all periods
-              </p>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={paymentStatusData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={formatPieLabel}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {paymentStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={CHART_TOOLTIP_STYLE}
-                    formatter={(value: number) => `${value} periods`}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+      {isInstallmentLoan(account) ? (
+        <div className="mb-12 flex w-full flex-col gap-8">
+          <h2 className="col-span-full w-full border-b border-neutral-700/30 pb-4 text-[1.75rem] font-bold text-white">
+            Financial Insights
+          </h2>
+          <LoanPayoffWidget account={account} />
+          <PaymentAnatomyWidget account={account} />
+          <PayoffAcceleratorWidget account={account} />
         </div>
-      </div>
+      ) : isRevolvingCredit(account) ? (
+        <div className="mb-12 flex w-full flex-col gap-8">
+          <h2 className="col-span-full w-full border-b border-neutral-700/30 pb-4 text-[1.75rem] font-bold text-white">
+            Revolving Credit Insights
+          </h2>
+          <CreditUtilizationWidget account={account} />
+          <RevolvingCostWidget account={account} />
+          <RevolvingPayoffAcceleratorWidget account={account} />
+        </div>
+      ) : isBill(account) ? (
+        <div className="mb-12 flex w-full flex-col gap-8">
+          <h2 className="col-span-full w-full border-b border-neutral-700/30 pb-4 text-[1.75rem] font-bold text-white">
+            Bill Insights
+          </h2>
+          <BillStatsWidget account={account} />
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            <BillHistoryWidget account={account} />
+            <BillTrendAnalysisWidget account={account} />
+          </div>
+        </div>
+      ) : isOther(account) ? (
+        <OtherAccountDetail account={account} />
+      ) : (
+        <div className="mb-12 flex w-full flex-col">
+          <h2 className="col-span-full mb-8 w-full border-b border-neutral-700/30 pb-4 text-[1.75rem] font-bold text-white">
+            Loan Payment Insights
+          </h2>
+
+          <div className="box-border grid w-full grid-cols-1 gap-6 md:grid-cols-2 md:gap-6">
+            {/* Principal Reduction Over Time */}
+            {chartData.length > 0 && (
+              <div className="ds-card-light p-6">
+                <h3 className="m-0 mb-2 text-xl font-semibold text-white">
+                  Principal Balance Over Time
+                </h3>
+                <p className="m-0 mb-4 text-sm leading-relaxed text-white/70">
+                  Track how your loan principal decreases as you make payments
+                </p>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient
+                        id="principalGradient"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#1e40af"
+                          stopOpacity={0.8}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#1e40af"
+                          stopOpacity={0.1}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="rgba(255,255,255,0.1)"
+                    />
+                    <XAxis
+                      dataKey="date"
+                      stroke="rgba(255,255,255,0.6)"
+                      style={CHART_AXIS_STYLE}
+                    />
+                    <YAxis
+                      stroke="rgba(255,255,255,0.6)"
+                      style={CHART_AXIS_STYLE}
+                    />
+                    <Tooltip
+                      contentStyle={CHART_TOOLTIP_STYLE}
+                      formatter={(value: number) =>
+                        formatCurrency(value, currency)
+                      }
+                      labelFormatter={(label) => `Period: ${label}`}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="balance"
+                      stroke="#1e40af"
+                      fillOpacity={1}
+                      fill="url(#principalGradient)"
+                      name="Principal Balance"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* Amortization Schedule - Principal vs Interest */}
+            {amortizationScheduleData.length > 0 && (
+              <div className="ds-card-light p-6">
+                <h3 className="m-0 mb-2 text-xl font-semibold text-white">
+                  Amortization Schedule
+                </h3>
+                <p className="m-0 mb-4 text-sm leading-relaxed text-white/70">
+                  See how each payment is split between principal and interest
+                </p>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={amortizationScheduleData}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="rgba(255,255,255,0.1)"
+                    />
+                    <XAxis
+                      dataKey="date"
+                      stroke="rgba(255,255,255,0.6)"
+                      style={CHART_AXIS_STYLE}
+                    />
+                    <YAxis
+                      stroke="rgba(255,255,255,0.6)"
+                      style={CHART_AXIS_STYLE}
+                    />
+                    <Tooltip
+                      contentStyle={CHART_TOOLTIP_STYLE}
+                      formatter={(value: number) =>
+                        formatCurrency(value, currency)
+                      }
+                    />
+                    <Legend />
+                    <Bar
+                      dataKey="principal"
+                      stackId="a"
+                      fill="#1e40af"
+                      name="Principal"
+                    />
+                    <Bar
+                      dataKey="interest"
+                      stackId="a"
+                      fill="#2563eb"
+                      name="Interest"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* Cumulative Interest Paid */}
+            {cumulativeInterestData.length > 0 && (
+              <div className="ds-card-light p-6">
+                <h3 className="m-0 mb-2 text-xl font-semibold text-white">
+                  Cumulative Interest Paid
+                </h3>
+                <p className="m-0 mb-4 text-sm leading-relaxed text-white/70">
+                  Track total interest paid over the life of the loan
+                </p>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={cumulativeInterestData}>
+                    <defs>
+                      <linearGradient
+                        id="interestGradient"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#2563eb"
+                          stopOpacity={0.8}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#2563eb"
+                          stopOpacity={0.1}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="rgba(255,255,255,0.1)"
+                    />
+                    <XAxis
+                      dataKey="date"
+                      stroke="rgba(255,255,255,0.6)"
+                      style={CHART_AXIS_STYLE}
+                    />
+                    <YAxis
+                      stroke="rgba(255,255,255,0.6)"
+                      style={CHART_AXIS_STYLE}
+                    />
+                    <Tooltip
+                      contentStyle={CHART_TOOLTIP_STYLE}
+                      formatter={(value: number) =>
+                        formatCurrency(value, currency)
+                      }
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="cumulativeInterest"
+                      stroke="#2563eb"
+                      fillOpacity={1}
+                      fill="url(#interestGradient)"
+                      name="Cumulative Interest"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* Interest vs Principal Ratio Over Time */}
+            {interestPrincipalRatioData.length > 0 && (
+              <div className="ds-card-light p-6">
+                <h3 className="m-0 mb-2 text-xl font-semibold text-white">
+                  Interest vs Principal Ratio
+                </h3>
+                <p className="m-0 mb-4 text-sm leading-relaxed text-white/70">
+                  Watch how the interest portion decreases and principal portion
+                  increases over time
+                </p>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={interestPrincipalRatioData}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="rgba(255,255,255,0.1)"
+                    />
+                    <XAxis
+                      dataKey="date"
+                      stroke="rgba(255,255,255,0.6)"
+                      style={CHART_AXIS_STYLE}
+                    />
+                    <YAxis
+                      stroke="rgba(255,255,255,0.6)"
+                      style={CHART_AXIS_STYLE}
+                    />
+                    <Tooltip
+                      contentStyle={CHART_TOOLTIP_STYLE}
+                      formatter={(value: number) =>
+                        formatCurrency(value, currency)
+                      }
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="interestPortion"
+                      stroke="#2563eb"
+                      strokeWidth={2}
+                      name="Interest Portion"
+                      dot={{ fill: '#2563eb', r: 3 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="principalPortion"
+                      stroke="#1e40af"
+                      strokeWidth={2}
+                      name="Principal Portion"
+                      dot={{ fill: '#1e40af', r: 3 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* Payment Status Distribution */}
+            {paymentStatusData.length > 0 && (
+              <div className="ds-card-light p-6">
+                <h3 className="m-0 mb-2 text-xl font-semibold text-white">
+                  Payment Status Overview
+                </h3>
+                <p className="m-0 mb-4 text-sm leading-relaxed text-white/70">
+                  Distribution of payment statuses across all periods
+                </p>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={paymentStatusData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={formatPieLabel}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {paymentStatusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={CHART_TOOLTIP_STYLE}
+                      formatter={(value: number) => `${value} periods`}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Historical Payments */}
       <div className="mb-12">

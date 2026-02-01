@@ -98,3 +98,35 @@ export {
 
 // Bill Calculations
 export { generateBillDueDates } from './bill-calculations.js';
+
+// Financial Insights
+export * from './financial-insights.js';
+
+// Bill Insights Logic
+export { BillInsightsService } from './logic/bill-insights.js';
+export type {
+  MonthlyCalendarView,
+  AnnualCostView,
+  VariableBillTrend,
+} from './logic/bill-insights.js';
+
+// Other Accounts Utilities
+export * from './other-account-utils.js';
+
+// Other Accounts Insights
+export * from './insights/other-accounts.js';
+
+// Financial Profile
+export * from './financial-profile.js';
+
+// Dashboard Insights
+export { DashboardInsightsService } from './logic/dashboard-insights.js';
+export type {
+  FinancialHealthScore,
+  DashboardView,
+  AttentionItem,
+  MonthlyMoneyFlow,
+  TotalFinancialPicture,
+  ProgressMetrics,
+  QuickAction,
+} from './logic/dashboard-insights.js';

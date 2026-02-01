@@ -93,3 +93,24 @@ variable "deployment_approved" {
   # This variable serves as a manual gate for production deployments.
   # Set to true only after reviewing terraform plan output.
 }
+# ============================================================================
+# AI INFRASTRUCTURE VARIABLES
+# ============================================================================
+
+variable "vpc_connector_cidr" {
+  description = "CIDR range for VPC Connector"
+  type        = string
+  default     = "10.8.0.16/28"
+}
+
+variable "ai_service_image_tag" {
+  description = "Image tag for AI Service"
+  type        = string
+  default     = "latest"
+}
+
+variable "ai_processor_image_tag" {
+  description = "Image tag for AI Processor"
+  type        = string
+  default     = "latest"
+}

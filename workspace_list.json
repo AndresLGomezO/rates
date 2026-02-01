@@ -1,0 +1,796 @@
+[
+  {
+    "name": "rates-monorepo",
+    "version": "1.0.0",
+    "path": "/Users/andresgomezortiz/Projects/rates",
+    "private": true,
+    "devDependencies": {
+      "autoprefixer": {
+        "from": "autoprefixer",
+        "version": "10.4.23",
+        "resolved": "https://registry.npmjs.org/autoprefixer/-/autoprefixer-10.4.23.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/autoprefixer@10.4.23_postcss@8.5.6/node_modules/autoprefixer"
+      },
+      "firebase-tools": {
+        "from": "firebase-tools",
+        "version": "13.35.1",
+        "resolved": "https://registry.npmjs.org/firebase-tools/-/firebase-tools-13.35.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/firebase-tools@13.35.1_@types+node@20.19.30_encoding@0.1.13/node_modules/firebase-tools"
+      },
+      "husky": {
+        "from": "husky",
+        "version": "9.1.7",
+        "resolved": "https://registry.npmjs.org/husky/-/husky-9.1.7.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/husky@9.1.7/node_modules/husky"
+      },
+      "postcss": {
+        "from": "postcss",
+        "version": "8.5.6",
+        "resolved": "https://registry.npmjs.org/postcss/-/postcss-8.5.6.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss"
+      },
+      "prettier": {
+        "from": "prettier",
+        "version": "3.7.4",
+        "resolved": "https://registry.npmjs.org/prettier/-/prettier-3.7.4.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/prettier@3.7.4/node_modules/prettier"
+      },
+      "tailwindcss": {
+        "from": "tailwindcss",
+        "version": "3.4.19",
+        "resolved": "https://registry.npmjs.org/tailwindcss/-/tailwindcss-3.4.19.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/tailwindcss@3.4.19_tsx@4.21.0_yaml@2.8.2/node_modules/tailwindcss"
+      }
+    },
+    "unsavedDependencies": {
+      "eslint": {
+        "from": "eslint",
+        "version": "link:node_modules/.pnpm/eslint@9.39.1_jiti@1.21.7/node_modules/eslint",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/eslint@9.39.1_jiti@1.21.7/node_modules/eslint"
+      },
+      "eslint-plugin-react-hooks": {
+        "from": "eslint-plugin-react-hooks",
+        "version": "link:node_modules/.pnpm/eslint-plugin-react-hooks@5.2.0_eslint@9.39.1_jiti@1.21.7_/node_modules/eslint-plugin-react-hooks",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/eslint-plugin-react-hooks@5.2.0_eslint@9.39.1_jiti@1.21.7_/node_modules/eslint-plugin-react-hooks"
+      },
+      "eslint-scope": {
+        "from": "eslint-scope",
+        "version": "link:node_modules/.pnpm/eslint-scope@8.4.0/node_modules/eslint-scope",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/eslint-scope@8.4.0/node_modules/eslint-scope"
+      },
+      "eslint-visitor-keys": {
+        "from": "eslint-visitor-keys",
+        "version": "link:node_modules/.pnpm/eslint-visitor-keys@4.2.1/node_modules/eslint-visitor-keys",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/eslint-visitor-keys@4.2.1/node_modules/eslint-visitor-keys"
+      },
+      "typescript-eslint": {
+        "from": "typescript-eslint",
+        "version": "link:node_modules/.pnpm/typescript-eslint@8.49.0_eslint@9.39.1_jiti@1.21.7__typescript@5.9.3/node_modules/typescript-eslint",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/typescript-eslint@8.49.0_eslint@9.39.1_jiti@1.21.7__typescript@5.9.3/node_modules/typescript-eslint"
+      },
+      "@eslint/config-array": {
+        "from": "@eslint/config-array",
+        "version": "link:node_modules/.pnpm/@eslint+config-array@0.21.1/node_modules/@eslint/config-array",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@eslint+config-array@0.21.1/node_modules/@eslint/config-array"
+      },
+      "@eslint/config-helpers": {
+        "from": "@eslint/config-helpers",
+        "version": "link:node_modules/.pnpm/@eslint+config-helpers@0.4.2/node_modules/@eslint/config-helpers",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@eslint+config-helpers@0.4.2/node_modules/@eslint/config-helpers"
+      },
+      "@eslint/core": {
+        "from": "@eslint/core",
+        "version": "link:node_modules/.pnpm/@eslint+core@0.17.0/node_modules/@eslint/core",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@eslint+core@0.17.0/node_modules/@eslint/core"
+      },
+      "@eslint/eslintrc": {
+        "from": "@eslint/eslintrc",
+        "version": "link:node_modules/.pnpm/@eslint+eslintrc@3.3.3/node_modules/@eslint/eslintrc",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@eslint+eslintrc@3.3.3/node_modules/@eslint/eslintrc"
+      },
+      "@eslint/js": {
+        "from": "@eslint/js",
+        "version": "link:node_modules/.pnpm/@eslint+js@9.39.1/node_modules/@eslint/js",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@eslint+js@9.39.1/node_modules/@eslint/js"
+      },
+      "@eslint/object-schema": {
+        "from": "@eslint/object-schema",
+        "version": "link:node_modules/.pnpm/@eslint+object-schema@2.1.7/node_modules/@eslint/object-schema",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@eslint+object-schema@2.1.7/node_modules/@eslint/object-schema"
+      },
+      "@eslint/plugin-kit": {
+        "from": "@eslint/plugin-kit",
+        "version": "link:node_modules/.pnpm/@eslint+plugin-kit@0.4.1/node_modules/@eslint/plugin-kit",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@eslint+plugin-kit@0.4.1/node_modules/@eslint/plugin-kit"
+      },
+      "@eslint-community/eslint-utils": {
+        "from": "@eslint-community/eslint-utils",
+        "version": "link:node_modules/.pnpm/@eslint-community+eslint-utils@4.9.0_eslint@9.39.1_jiti@1.21.7_/node_modules/@eslint-community/eslint-utils",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@eslint-community+eslint-utils@4.9.0_eslint@9.39.1_jiti@1.21.7_/node_modules/@eslint-community/eslint-utils"
+      },
+      "@eslint-community/regexpp": {
+        "from": "@eslint-community/regexpp",
+        "version": "link:node_modules/.pnpm/@eslint-community+regexpp@4.12.2/node_modules/@eslint-community/regexpp",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@eslint-community+regexpp@4.12.2/node_modules/@eslint-community/regexpp"
+      },
+      "@typescript-eslint/eslint-plugin": {
+        "from": "@typescript-eslint/eslint-plugin",
+        "version": "link:node_modules/.pnpm/@typescript-eslint+eslint-plugin@8.49.0_@typescript-eslint+parser@8.49.0_eslint@9.39.1_jiti@1_r3asevlnwwcwp4jf4wyypdcsyu/node_modules/@typescript-eslint/eslint-plugin",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@typescript-eslint+eslint-plugin@8.49.0_@typescript-eslint+parser@8.49.0_eslint@9.39.1_jiti@1_r3asevlnwwcwp4jf4wyypdcsyu/node_modules/@typescript-eslint/eslint-plugin"
+      },
+      "@typescript-eslint/parser": {
+        "from": "@typescript-eslint/parser",
+        "version": "link:node_modules/.pnpm/@typescript-eslint+parser@8.49.0_eslint@9.39.1_jiti@1.21.7__typescript@5.9.3/node_modules/@typescript-eslint/parser",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@typescript-eslint+parser@8.49.0_eslint@9.39.1_jiti@1.21.7__typescript@5.9.3/node_modules/@typescript-eslint/parser"
+      },
+      "@typescript-eslint/project-service": {
+        "from": "@typescript-eslint/project-service",
+        "version": "link:node_modules/.pnpm/@typescript-eslint+project-service@8.49.0_typescript@5.9.3/node_modules/@typescript-eslint/project-service",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@typescript-eslint+project-service@8.49.0_typescript@5.9.3/node_modules/@typescript-eslint/project-service"
+      },
+      "@typescript-eslint/scope-manager": {
+        "from": "@typescript-eslint/scope-manager",
+        "version": "link:node_modules/.pnpm/@typescript-eslint+scope-manager@8.49.0/node_modules/@typescript-eslint/scope-manager",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@typescript-eslint+scope-manager@8.49.0/node_modules/@typescript-eslint/scope-manager"
+      },
+      "@typescript-eslint/tsconfig-utils": {
+        "from": "@typescript-eslint/tsconfig-utils",
+        "version": "link:node_modules/.pnpm/@typescript-eslint+tsconfig-utils@8.49.0_typescript@5.9.3/node_modules/@typescript-eslint/tsconfig-utils",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@typescript-eslint+tsconfig-utils@8.49.0_typescript@5.9.3/node_modules/@typescript-eslint/tsconfig-utils"
+      },
+      "@typescript-eslint/type-utils": {
+        "from": "@typescript-eslint/type-utils",
+        "version": "link:node_modules/.pnpm/@typescript-eslint+type-utils@8.49.0_eslint@9.39.1_jiti@1.21.7__typescript@5.9.3/node_modules/@typescript-eslint/type-utils",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@typescript-eslint+type-utils@8.49.0_eslint@9.39.1_jiti@1.21.7__typescript@5.9.3/node_modules/@typescript-eslint/type-utils"
+      },
+      "eslint-plugin-tailwindcss": {
+        "from": "eslint-plugin-tailwindcss",
+        "version": "link:node_modules/.pnpm/eslint-plugin-tailwindcss@3.18.2_tailwindcss@3.4.19_tsx@4.21.0_yaml@2.8.2_/node_modules/eslint-plugin-tailwindcss",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/eslint-plugin-tailwindcss@3.18.2_tailwindcss@3.4.19_tsx@4.21.0_yaml@2.8.2_/node_modules/eslint-plugin-tailwindcss"
+      },
+      "@typescript-eslint/utils": {
+        "from": "@typescript-eslint/utils",
+        "version": "link:node_modules/.pnpm/@typescript-eslint+utils@8.49.0_eslint@9.39.1_jiti@1.21.7__typescript@5.9.3/node_modules/@typescript-eslint/utils",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@typescript-eslint+utils@8.49.0_eslint@9.39.1_jiti@1.21.7__typescript@5.9.3/node_modules/@typescript-eslint/utils"
+      },
+      "@typescript-eslint/visitor-keys": {
+        "from": "@typescript-eslint/visitor-keys",
+        "version": "link:node_modules/.pnpm/@typescript-eslint+visitor-keys@8.49.0/node_modules/@typescript-eslint/visitor-keys",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@typescript-eslint+visitor-keys@8.49.0/node_modules/@typescript-eslint/visitor-keys"
+      },
+      "eslint-plugin-react-refresh": {
+        "from": "eslint-plugin-react-refresh",
+        "version": "link:node_modules/.pnpm/eslint-plugin-react-refresh@0.4.24_eslint@9.39.1_jiti@1.21.7_/node_modules/eslint-plugin-react-refresh",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/eslint-plugin-react-refresh@0.4.24_eslint@9.39.1_jiti@1.21.7_/node_modules/eslint-plugin-react-refresh"
+      },
+      "@typescript-eslint/types": {
+        "from": "@typescript-eslint/types",
+        "version": "link:node_modules/.pnpm/@typescript-eslint+types@8.49.0/node_modules/@typescript-eslint/types",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@typescript-eslint+types@8.49.0/node_modules/@typescript-eslint/types"
+      },
+      "@typescript-eslint/typescript-estree": {
+        "from": "@typescript-eslint/typescript-estree",
+        "version": "link:node_modules/.pnpm/@typescript-eslint+typescript-estree@8.49.0_typescript@5.9.3/node_modules/@typescript-eslint/typescript-estree",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@typescript-eslint+typescript-estree@8.49.0_typescript@5.9.3/node_modules/@typescript-eslint/typescript-estree"
+      }
+    }
+  },
+  {
+    "name": "ai-processor",
+    "version": "1.0.0",
+    "path": "/Users/andresgomezortiz/Projects/rates/apps/ai-processor",
+    "private": true,
+    "dependencies": {
+      "@google-cloud/pubsub": {
+        "from": "@google-cloud/pubsub",
+        "version": "4.11.0",
+        "resolved": "https://registry.npmjs.org/@google-cloud/pubsub/-/pubsub-4.11.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@google-cloud+pubsub@4.11.0_encoding@0.1.13/node_modules/@google-cloud/pubsub"
+      },
+      "@google-cloud/secret-manager": {
+        "from": "@google-cloud/secret-manager",
+        "version": "6.1.1",
+        "resolved": "https://registry.npmjs.org/@google-cloud/secret-manager/-/secret-manager-6.1.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@google-cloud+secret-manager@6.1.1/node_modules/@google-cloud/secret-manager"
+      },
+      "@rates/firebase-client": {
+        "from": "@rates/firebase-client",
+        "version": "link:../../packages/firebase-client",
+        "path": "/Users/andresgomezortiz/Projects/rates/packages/firebase-client"
+      },
+      "@rates/vertex-ai-client": {
+        "from": "@rates/vertex-ai-client",
+        "version": "link:../../packages/vertex-ai-client",
+        "path": "/Users/andresgomezortiz/Projects/rates/packages/vertex-ai-client"
+      },
+      "dotenv": {
+        "from": "dotenv",
+        "version": "16.6.1",
+        "resolved": "https://registry.npmjs.org/dotenv/-/dotenv-16.6.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/dotenv@16.6.1/node_modules/dotenv"
+      },
+      "firebase-admin": {
+        "from": "firebase-admin",
+        "version": "13.6.0",
+        "resolved": "https://registry.npmjs.org/firebase-admin/-/firebase-admin-13.6.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/firebase-admin@13.6.0_encoding@0.1.13/node_modules/firebase-admin"
+      },
+      "pino": {
+        "from": "pino",
+        "version": "9.14.0",
+        "resolved": "https://registry.npmjs.org/pino/-/pino-9.14.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/pino@9.14.0/node_modules/pino"
+      },
+      "zod": {
+        "from": "zod",
+        "version": "3.25.76",
+        "resolved": "https://registry.npmjs.org/zod/-/zod-3.25.76.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/zod@3.25.76/node_modules/zod"
+      }
+    },
+    "devDependencies": {
+      "@eslint/js": {
+        "from": "@eslint/js",
+        "version": "9.39.1",
+        "resolved": "https://registry.npmjs.org/@eslint/js/-/js-9.39.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@eslint+js@9.39.1/node_modules/@eslint/js"
+      },
+      "@types/node": {
+        "from": "@types/node",
+        "version": "22.19.2",
+        "resolved": "https://registry.npmjs.org/@types/node/-/node-22.19.2.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@types+node@22.19.2/node_modules/@types/node"
+      },
+      "eslint": {
+        "from": "eslint",
+        "version": "9.39.1",
+        "resolved": "https://registry.npmjs.org/eslint/-/eslint-9.39.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/eslint@9.39.1_jiti@1.21.7/node_modules/eslint"
+      },
+      "globals": {
+        "from": "globals",
+        "version": "15.15.0",
+        "resolved": "https://registry.npmjs.org/globals/-/globals-15.15.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/globals@15.15.0/node_modules/globals"
+      },
+      "prettier": {
+        "from": "prettier",
+        "version": "3.7.4",
+        "resolved": "https://registry.npmjs.org/prettier/-/prettier-3.7.4.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/prettier@3.7.4/node_modules/prettier"
+      },
+      "tsx": {
+        "from": "tsx",
+        "version": "4.21.0",
+        "resolved": "https://registry.npmjs.org/tsx/-/tsx-4.21.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/tsx@4.21.0/node_modules/tsx"
+      },
+      "typescript": {
+        "from": "typescript",
+        "version": "5.9.3",
+        "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript"
+      },
+      "typescript-eslint": {
+        "from": "typescript-eslint",
+        "version": "8.49.0",
+        "resolved": "https://registry.npmjs.org/typescript-eslint/-/typescript-eslint-8.49.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/typescript-eslint@8.49.0_eslint@9.39.1_jiti@1.21.7__typescript@5.9.3/node_modules/typescript-eslint"
+      }
+    }
+  },
+  {
+    "name": "ai-service",
+    "version": "1.0.0",
+    "path": "/Users/andresgomezortiz/Projects/rates/apps/ai-service",
+    "private": false,
+    "dependencies": {
+      "@fastify/autoload": {
+        "from": "@fastify/autoload",
+        "version": "5.10.0",
+        "resolved": "https://registry.npmjs.org/@fastify/autoload/-/autoload-5.10.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@fastify+autoload@5.10.0/node_modules/@fastify/autoload"
+      },
+      "@fastify/cors": {
+        "from": "@fastify/cors",
+        "version": "9.0.1",
+        "resolved": "https://registry.npmjs.org/@fastify/cors/-/cors-9.0.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@fastify+cors@9.0.1/node_modules/@fastify/cors"
+      },
+      "@fastify/helmet": {
+        "from": "@fastify/helmet",
+        "version": "11.1.1",
+        "resolved": "https://registry.npmjs.org/@fastify/helmet/-/helmet-11.1.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@fastify+helmet@11.1.1/node_modules/@fastify/helmet"
+      },
+      "@fastify/sensible": {
+        "from": "@fastify/sensible",
+        "version": "5.6.0",
+        "resolved": "https://registry.npmjs.org/@fastify/sensible/-/sensible-5.6.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@fastify+sensible@5.6.0/node_modules/@fastify/sensible"
+      },
+      "@google-cloud/firestore": {
+        "from": "@google-cloud/firestore",
+        "version": "7.11.6",
+        "resolved": "https://registry.npmjs.org/@google-cloud/firestore/-/firestore-7.11.6.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@google-cloud+firestore@7.11.6_encoding@0.1.13/node_modules/@google-cloud/firestore"
+      },
+      "@google-cloud/pubsub": {
+        "from": "@google-cloud/pubsub",
+        "version": "4.11.0",
+        "resolved": "https://registry.npmjs.org/@google-cloud/pubsub/-/pubsub-4.11.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@google-cloud+pubsub@4.11.0_encoding@0.1.13/node_modules/@google-cloud/pubsub"
+      },
+      "@rates/vertex-ai-client": {
+        "from": "@rates/vertex-ai-client",
+        "version": "link:../../packages/vertex-ai-client",
+        "path": "/Users/andresgomezortiz/Projects/rates/packages/vertex-ai-client"
+      },
+      "dotenv": {
+        "from": "dotenv",
+        "version": "16.6.1",
+        "resolved": "https://registry.npmjs.org/dotenv/-/dotenv-16.6.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/dotenv@16.6.1/node_modules/dotenv"
+      },
+      "fastify": {
+        "from": "fastify",
+        "version": "4.29.1",
+        "resolved": "https://registry.npmjs.org/fastify/-/fastify-4.29.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/fastify@4.29.1/node_modules/fastify"
+      },
+      "fastify-plugin": {
+        "from": "fastify-plugin",
+        "version": "4.5.1",
+        "resolved": "https://registry.npmjs.org/fastify-plugin/-/fastify-plugin-4.5.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/fastify-plugin@4.5.1/node_modules/fastify-plugin"
+      },
+      "fastify-type-provider-zod": {
+        "from": "fastify-type-provider-zod",
+        "version": "1.2.0",
+        "resolved": "https://registry.npmjs.org/fastify-type-provider-zod/-/fastify-type-provider-zod-1.2.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/fastify-type-provider-zod@1.2.0_fastify@4.29.1_zod@3.25.76/node_modules/fastify-type-provider-zod"
+      },
+      "firebase-admin": {
+        "from": "firebase-admin",
+        "version": "12.7.0",
+        "resolved": "https://registry.npmjs.org/firebase-admin/-/firebase-admin-12.7.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/firebase-admin@12.7.0_encoding@0.1.13/node_modules/firebase-admin"
+      },
+      "pino": {
+        "from": "pino",
+        "version": "9.14.0",
+        "resolved": "https://registry.npmjs.org/pino/-/pino-9.14.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/pino@9.14.0/node_modules/pino"
+      },
+      "pino-pretty": {
+        "from": "pino-pretty",
+        "version": "11.3.0",
+        "resolved": "https://registry.npmjs.org/pino-pretty/-/pino-pretty-11.3.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/pino-pretty@11.3.0/node_modules/pino-pretty"
+      },
+      "tiktoken": {
+        "from": "tiktoken",
+        "version": "1.0.22",
+        "resolved": "https://registry.npmjs.org/tiktoken/-/tiktoken-1.0.22.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/tiktoken@1.0.22/node_modules/tiktoken"
+      },
+      "zod": {
+        "from": "zod",
+        "version": "3.25.76",
+        "resolved": "https://registry.npmjs.org/zod/-/zod-3.25.76.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/zod@3.25.76/node_modules/zod"
+      }
+    },
+    "devDependencies": {
+      "@types/node": {
+        "from": "@types/node",
+        "version": "20.19.30",
+        "resolved": "https://registry.npmjs.org/@types/node/-/node-20.19.30.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@types+node@20.19.30/node_modules/@types/node"
+      },
+      "tsx": {
+        "from": "tsx",
+        "version": "4.21.0",
+        "resolved": "https://registry.npmjs.org/tsx/-/tsx-4.21.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/tsx@4.21.0/node_modules/tsx"
+      },
+      "typescript": {
+        "from": "typescript",
+        "version": "5.9.3",
+        "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript"
+      }
+    }
+  },
+  {
+    "name": "app",
+    "version": "0.0.0",
+    "path": "/Users/andresgomezortiz/Projects/rates/apps/app",
+    "private": true,
+    "dependencies": {
+      "@rates/firebase-client": {
+        "from": "@rates/firebase-client",
+        "version": "link:../../packages/firebase-client",
+        "path": "/Users/andresgomezortiz/Projects/rates/packages/firebase-client"
+      },
+      "@rates/ui-theme": {
+        "from": "@rates/ui-theme",
+        "version": "link:../../packages/ui-theme",
+        "path": "/Users/andresgomezortiz/Projects/rates/packages/ui-theme"
+      },
+      "firebase": {
+        "from": "firebase",
+        "version": "11.10.0",
+        "resolved": "https://registry.npmjs.org/firebase/-/firebase-11.10.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/firebase@11.10.0/node_modules/firebase"
+      },
+      "react": {
+        "from": "react",
+        "version": "18.3.1",
+        "resolved": "https://registry.npmjs.org/react/-/react-18.3.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/react@18.3.1/node_modules/react"
+      },
+      "react-dom": {
+        "from": "react-dom",
+        "version": "18.3.1",
+        "resolved": "https://registry.npmjs.org/react-dom/-/react-dom-18.3.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/react-dom@18.3.1_react@18.3.1/node_modules/react-dom"
+      },
+      "react-router": {
+        "from": "react-router",
+        "version": "7.10.1",
+        "resolved": "https://registry.npmjs.org/react-router/-/react-router-7.10.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/react-router@7.10.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/react-router"
+      },
+      "react-router-dom": {
+        "from": "react-router-dom",
+        "version": "7.10.1",
+        "resolved": "https://registry.npmjs.org/react-router-dom/-/react-router-dom-7.10.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/react-router-dom@7.10.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/react-router-dom"
+      },
+      "recharts": {
+        "from": "recharts",
+        "version": "2.15.4",
+        "resolved": "https://registry.npmjs.org/recharts/-/recharts-2.15.4.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/recharts@2.15.4_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/recharts"
+      }
+    },
+    "devDependencies": {
+      "@eslint/js": {
+        "from": "@eslint/js",
+        "version": "9.39.1",
+        "resolved": "https://registry.npmjs.org/@eslint/js/-/js-9.39.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@eslint+js@9.39.1/node_modules/@eslint/js"
+      },
+      "@types/react": {
+        "from": "@types/react",
+        "version": "18.3.27",
+        "resolved": "https://registry.npmjs.org/@types/react/-/react-18.3.27.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@types+react@18.3.27/node_modules/@types/react"
+      },
+      "@types/react-dom": {
+        "from": "@types/react-dom",
+        "version": "18.3.7",
+        "resolved": "https://registry.npmjs.org/@types/react-dom/-/react-dom-18.3.7.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@types+react-dom@18.3.7_@types+react@18.3.27/node_modules/@types/react-dom"
+      },
+      "@typescript-eslint/eslint-plugin": {
+        "from": "@typescript-eslint/eslint-plugin",
+        "version": "8.49.0",
+        "resolved": "https://registry.npmjs.org/@typescript-eslint/eslint-plugin/-/eslint-plugin-8.49.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@typescript-eslint+eslint-plugin@8.49.0_@typescript-eslint+parser@8.49.0_eslint@9.39.1_jiti@1_r3asevlnwwcwp4jf4wyypdcsyu/node_modules/@typescript-eslint/eslint-plugin"
+      },
+      "@typescript-eslint/parser": {
+        "from": "@typescript-eslint/parser",
+        "version": "8.49.0",
+        "resolved": "https://registry.npmjs.org/@typescript-eslint/parser/-/parser-8.49.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@typescript-eslint+parser@8.49.0_eslint@9.39.1_jiti@1.21.7__typescript@5.9.3/node_modules/@typescript-eslint/parser"
+      },
+      "@vitejs/plugin-react": {
+        "from": "@vitejs/plugin-react",
+        "version": "4.7.0",
+        "resolved": "https://registry.npmjs.org/@vitejs/plugin-react/-/plugin-react-4.7.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@vitejs+plugin-react@4.7.0_vite@6.4.1_@types+node@20.19.30_jiti@1.21.7_tsx@4.21.0_yaml@2.8.2_/node_modules/@vitejs/plugin-react"
+      },
+      "eslint": {
+        "from": "eslint",
+        "version": "9.39.1",
+        "resolved": "https://registry.npmjs.org/eslint/-/eslint-9.39.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/eslint@9.39.1_jiti@1.21.7/node_modules/eslint"
+      },
+      "eslint-plugin-react-hooks": {
+        "from": "eslint-plugin-react-hooks",
+        "version": "5.2.0",
+        "resolved": "https://registry.npmjs.org/eslint-plugin-react-hooks/-/eslint-plugin-react-hooks-5.2.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/eslint-plugin-react-hooks@5.2.0_eslint@9.39.1_jiti@1.21.7_/node_modules/eslint-plugin-react-hooks"
+      },
+      "eslint-plugin-react-refresh": {
+        "from": "eslint-plugin-react-refresh",
+        "version": "0.4.24",
+        "resolved": "https://registry.npmjs.org/eslint-plugin-react-refresh/-/eslint-plugin-react-refresh-0.4.24.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/eslint-plugin-react-refresh@0.4.24_eslint@9.39.1_jiti@1.21.7_/node_modules/eslint-plugin-react-refresh"
+      },
+      "eslint-plugin-tailwindcss": {
+        "from": "eslint-plugin-tailwindcss",
+        "version": "3.18.2",
+        "resolved": "https://registry.npmjs.org/eslint-plugin-tailwindcss/-/eslint-plugin-tailwindcss-3.18.2.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/eslint-plugin-tailwindcss@3.18.2_tailwindcss@3.4.19_tsx@4.21.0_yaml@2.8.2_/node_modules/eslint-plugin-tailwindcss"
+      },
+      "globals": {
+        "from": "globals",
+        "version": "15.15.0",
+        "resolved": "https://registry.npmjs.org/globals/-/globals-15.15.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/globals@15.15.0/node_modules/globals"
+      },
+      "typescript": {
+        "from": "typescript",
+        "version": "5.9.3",
+        "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript"
+      },
+      "typescript-eslint": {
+        "from": "typescript-eslint",
+        "version": "8.49.0",
+        "resolved": "https://registry.npmjs.org/typescript-eslint/-/typescript-eslint-8.49.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/typescript-eslint@8.49.0_eslint@9.39.1_jiti@1.21.7__typescript@5.9.3/node_modules/typescript-eslint"
+      },
+      "vite": {
+        "from": "vite",
+        "version": "6.4.1",
+        "resolved": "https://registry.npmjs.org/vite/-/vite-6.4.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/vite@6.4.1_@types+node@20.19.30_jiti@1.21.7_tsx@4.21.0_yaml@2.8.2/node_modules/vite"
+      }
+    }
+  },
+  {
+    "name": "auth-app",
+    "version": "0.0.0",
+    "path": "/Users/andresgomezortiz/Projects/rates/apps/auth-app",
+    "private": true,
+    "dependencies": {
+      "@rates/ui-theme": {
+        "from": "@rates/ui-theme",
+        "version": "link:../../packages/ui-theme",
+        "path": "/Users/andresgomezortiz/Projects/rates/packages/ui-theme"
+      },
+      "firebase": {
+        "from": "firebase",
+        "version": "11.10.0",
+        "resolved": "https://registry.npmjs.org/firebase/-/firebase-11.10.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/firebase@11.10.0/node_modules/firebase"
+      },
+      "firebase-admin": {
+        "from": "firebase-admin",
+        "version": "13.6.0",
+        "resolved": "https://registry.npmjs.org/firebase-admin/-/firebase-admin-13.6.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/firebase-admin@13.6.0_encoding@0.1.13/node_modules/firebase-admin"
+      },
+      "react": {
+        "from": "react",
+        "version": "18.3.1",
+        "resolved": "https://registry.npmjs.org/react/-/react-18.3.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/react@18.3.1/node_modules/react"
+      },
+      "react-dom": {
+        "from": "react-dom",
+        "version": "18.3.1",
+        "resolved": "https://registry.npmjs.org/react-dom/-/react-dom-18.3.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/react-dom@18.3.1_react@18.3.1/node_modules/react-dom"
+      },
+      "react-router": {
+        "from": "react-router",
+        "version": "7.10.1",
+        "resolved": "https://registry.npmjs.org/react-router/-/react-router-7.10.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/react-router@7.10.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/react-router"
+      },
+      "react-router-dom": {
+        "from": "react-router-dom",
+        "version": "7.10.1",
+        "resolved": "https://registry.npmjs.org/react-router-dom/-/react-router-dom-7.10.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/react-router-dom@7.10.1_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/react-router-dom"
+      }
+    },
+    "devDependencies": {
+      "@eslint/js": {
+        "from": "@eslint/js",
+        "version": "9.39.1",
+        "resolved": "https://registry.npmjs.org/@eslint/js/-/js-9.39.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@eslint+js@9.39.1/node_modules/@eslint/js"
+      },
+      "@types/node": {
+        "from": "@types/node",
+        "version": "22.19.2",
+        "resolved": "https://registry.npmjs.org/@types/node/-/node-22.19.2.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@types+node@22.19.2/node_modules/@types/node"
+      },
+      "@types/react": {
+        "from": "@types/react",
+        "version": "18.3.27",
+        "resolved": "https://registry.npmjs.org/@types/react/-/react-18.3.27.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@types+react@18.3.27/node_modules/@types/react"
+      },
+      "@types/react-dom": {
+        "from": "@types/react-dom",
+        "version": "18.3.7",
+        "resolved": "https://registry.npmjs.org/@types/react-dom/-/react-dom-18.3.7.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@types+react-dom@18.3.7_@types+react@18.3.27/node_modules/@types/react-dom"
+      },
+      "@typescript-eslint/eslint-plugin": {
+        "from": "@typescript-eslint/eslint-plugin",
+        "version": "8.49.0",
+        "resolved": "https://registry.npmjs.org/@typescript-eslint/eslint-plugin/-/eslint-plugin-8.49.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@typescript-eslint+eslint-plugin@8.49.0_@typescript-eslint+parser@8.49.0_eslint@9.39.1_jiti@1_r3asevlnwwcwp4jf4wyypdcsyu/node_modules/@typescript-eslint/eslint-plugin"
+      },
+      "@typescript-eslint/parser": {
+        "from": "@typescript-eslint/parser",
+        "version": "8.49.0",
+        "resolved": "https://registry.npmjs.org/@typescript-eslint/parser/-/parser-8.49.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@typescript-eslint+parser@8.49.0_eslint@9.39.1_jiti@1.21.7__typescript@5.9.3/node_modules/@typescript-eslint/parser"
+      },
+      "@vitejs/plugin-react": {
+        "from": "@vitejs/plugin-react",
+        "version": "4.7.0",
+        "resolved": "https://registry.npmjs.org/@vitejs/plugin-react/-/plugin-react-4.7.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@vitejs+plugin-react@4.7.0_vite@6.4.1_@types+node@22.19.2_jiti@1.21.7_tsx@4.21.0_yaml@2.8.2_/node_modules/@vitejs/plugin-react"
+      },
+      "eslint": {
+        "from": "eslint",
+        "version": "9.39.1",
+        "resolved": "https://registry.npmjs.org/eslint/-/eslint-9.39.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/eslint@9.39.1_jiti@1.21.7/node_modules/eslint"
+      },
+      "eslint-plugin-react-hooks": {
+        "from": "eslint-plugin-react-hooks",
+        "version": "5.2.0",
+        "resolved": "https://registry.npmjs.org/eslint-plugin-react-hooks/-/eslint-plugin-react-hooks-5.2.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/eslint-plugin-react-hooks@5.2.0_eslint@9.39.1_jiti@1.21.7_/node_modules/eslint-plugin-react-hooks"
+      },
+      "eslint-plugin-react-refresh": {
+        "from": "eslint-plugin-react-refresh",
+        "version": "0.4.24",
+        "resolved": "https://registry.npmjs.org/eslint-plugin-react-refresh/-/eslint-plugin-react-refresh-0.4.24.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/eslint-plugin-react-refresh@0.4.24_eslint@9.39.1_jiti@1.21.7_/node_modules/eslint-plugin-react-refresh"
+      },
+      "globals": {
+        "from": "globals",
+        "version": "15.15.0",
+        "resolved": "https://registry.npmjs.org/globals/-/globals-15.15.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/globals@15.15.0/node_modules/globals"
+      },
+      "typescript": {
+        "from": "typescript",
+        "version": "5.9.3",
+        "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript"
+      },
+      "typescript-eslint": {
+        "from": "typescript-eslint",
+        "version": "8.49.0",
+        "resolved": "https://registry.npmjs.org/typescript-eslint/-/typescript-eslint-8.49.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/typescript-eslint@8.49.0_eslint@9.39.1_jiti@1.21.7__typescript@5.9.3/node_modules/typescript-eslint"
+      },
+      "vite": {
+        "from": "vite",
+        "version": "6.4.1",
+        "resolved": "https://registry.npmjs.org/vite/-/vite-6.4.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/vite@6.4.1_@types+node@22.19.2_jiti@1.21.7_tsx@4.21.0_yaml@2.8.2/node_modules/vite"
+      }
+    }
+  },
+  {
+    "name": "@rates/firebase-client",
+    "version": "0.0.0",
+    "path": "/Users/andresgomezortiz/Projects/rates/packages/firebase-client",
+    "private": true,
+    "dependencies": {
+      "firebase": {
+        "from": "firebase",
+        "version": "11.10.0",
+        "resolved": "https://registry.npmjs.org/firebase/-/firebase-11.10.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/firebase@11.10.0/node_modules/firebase"
+      }
+    },
+    "devDependencies": {
+      "@eslint/js": {
+        "from": "@eslint/js",
+        "version": "9.39.1",
+        "resolved": "https://registry.npmjs.org/@eslint/js/-/js-9.39.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@eslint+js@9.39.1/node_modules/@eslint/js"
+      },
+      "@types/node": {
+        "from": "@types/node",
+        "version": "22.19.2",
+        "resolved": "https://registry.npmjs.org/@types/node/-/node-22.19.2.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@types+node@22.19.2/node_modules/@types/node"
+      },
+      "eslint": {
+        "from": "eslint",
+        "version": "9.39.1",
+        "resolved": "https://registry.npmjs.org/eslint/-/eslint-9.39.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/eslint@9.39.1_jiti@1.21.7/node_modules/eslint"
+      },
+      "globals": {
+        "from": "globals",
+        "version": "15.15.0",
+        "resolved": "https://registry.npmjs.org/globals/-/globals-15.15.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/globals@15.15.0/node_modules/globals"
+      },
+      "typescript": {
+        "from": "typescript",
+        "version": "5.9.3",
+        "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript"
+      },
+      "typescript-eslint": {
+        "from": "typescript-eslint",
+        "version": "8.49.0",
+        "resolved": "https://registry.npmjs.org/typescript-eslint/-/typescript-eslint-8.49.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/typescript-eslint@8.49.0_eslint@9.39.1_jiti@1.21.7__typescript@5.9.3/node_modules/typescript-eslint"
+      }
+    }
+  },
+  {
+    "name": "@rates/ui-theme",
+    "version": "0.0.1",
+    "path": "/Users/andresgomezortiz/Projects/rates/packages/ui-theme",
+    "private": true
+  },
+  {
+    "name": "@rates/vertex-ai-client",
+    "version": "1.0.0",
+    "path": "/Users/andresgomezortiz/Projects/rates/packages/vertex-ai-client",
+    "private": false,
+    "dependencies": {
+      "@google-cloud/aiplatform": {
+        "from": "@google-cloud/aiplatform",
+        "version": "3.35.0",
+        "resolved": "https://registry.npmjs.org/@google-cloud/aiplatform/-/aiplatform-3.35.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@google-cloud+aiplatform@3.35.0_encoding@0.1.13/node_modules/@google-cloud/aiplatform"
+      },
+      "@google-cloud/vertexai": {
+        "from": "@google-cloud/vertexai",
+        "version": "1.10.0",
+        "resolved": "https://registry.npmjs.org/@google-cloud/vertexai/-/vertexai-1.10.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@google-cloud+vertexai@1.10.0_encoding@0.1.13/node_modules/@google-cloud/vertexai"
+      },
+      "zod": {
+        "from": "zod",
+        "version": "3.25.76",
+        "resolved": "https://registry.npmjs.org/zod/-/zod-3.25.76.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/zod@3.25.76/node_modules/zod"
+      }
+    },
+    "devDependencies": {
+      "@types/node": {
+        "from": "@types/node",
+        "version": "20.19.30",
+        "resolved": "https://registry.npmjs.org/@types/node/-/node-20.19.30.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/@types+node@20.19.30/node_modules/@types/node"
+      },
+      "globals": {
+        "from": "globals",
+        "version": "15.15.0",
+        "resolved": "https://registry.npmjs.org/globals/-/globals-15.15.0.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/globals@15.15.0/node_modules/globals"
+      },
+      "tsup": {
+        "from": "tsup",
+        "version": "8.5.1",
+        "resolved": "https://registry.npmjs.org/tsup/-/tsup-8.5.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/tsup@8.5.1_jiti@1.21.7_postcss@8.5.6_tsx@4.21.0_typescript@5.9.3_yaml@2.8.2/node_modules/tsup"
+      },
+      "typescript": {
+        "from": "typescript",
+        "version": "5.9.3",
+        "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/typescript@5.9.3/node_modules/typescript"
+      },
+      "vitest": {
+        "from": "vitest",
+        "version": "1.6.1",
+        "resolved": "https://registry.npmjs.org/vitest/-/vitest-1.6.1.tgz",
+        "path": "/Users/andresgomezortiz/Projects/rates/node_modules/.pnpm/vitest@1.6.1_@types+node@20.19.30/node_modules/vitest"
+      }
+    }
+  }
+]

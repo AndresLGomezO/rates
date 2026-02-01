@@ -6,7 +6,7 @@ export default function Landing() {
   const redirectTo = searchParams.get('redirectTo');
 
   // Debug: Extract origin from redirectTo if present
-  let redirectToOrigin = null;
+  let redirectToOrigin: string | null = null;
   if (redirectTo) {
     try {
       redirectToOrigin = new URL(redirectTo).origin;

@@ -305,20 +305,18 @@ export async function createFinancialAccount(
         '✅ [createFinancialAccount] Database:',
         firestore.app.options.projectId
       );
-    } catch (saveError) {
+    } catch (saveError: unknown) {
       console.error(
         '🔴 [createFinancialAccount] Firestore save error:',
         saveError
       );
-      console.error(
-        '🔴 [createFinancialAccount] Error code:',
+      const errorCode =
         saveError && typeof saveError === 'object' && 'code' in saveError
-          ? saveError.code
-          : 'unknown'
-      );
+          ? String((saveError as { code: string | number | boolean }).code)
+          : 'unknown';
+      console.error(`🔴 [createFinancialAccount] Error code: ${errorCode}`);
       console.error(
-        '🔴 [createFinancialAccount] Error message:',
-        saveError instanceof Error ? saveError.message : String(saveError)
+        `🔴 [createFinancialAccount] Error message: ${saveError instanceof Error ? saveError.message : 'Unknown'}`
       );
       console.error(
         '🔴 [createFinancialAccount] Document path:',
@@ -332,7 +330,7 @@ export async function createFinancialAccount(
     }
 
     return accountId;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('🔴 [createFinancialAccount] Error occurred:', error);
     console.error(
       '🔴 [createFinancialAccount] Error name:',
@@ -340,14 +338,16 @@ export async function createFinancialAccount(
     );
     console.error(
       '🔴 [createFinancialAccount] Error message:',
-      error instanceof Error ? error.message : String(error)
+      error instanceof Error ? error.message : 'Unknown'
     );
     console.error(
       '🔴 [createFinancialAccount] Error stack:',
       error instanceof Error ? error.stack : 'No stack trace'
     );
     if (error && typeof error === 'object' && 'code' in error) {
-      console.error('🔴 [createFinancialAccount] Error code:', error.code);
+      console.error(
+        `🔴 [createFinancialAccount] Error code: ${String((error as { code: string | number }).code)}`
+      );
     }
     throw error;
   }
@@ -426,7 +426,7 @@ export async function getFinancialAccount(
       Object.keys(data)
     );
     return data;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('🔴 [getFinancialAccount] Error occurred:', error);
     console.error(
       '🔴 [getFinancialAccount] Error name:',
@@ -434,10 +434,13 @@ export async function getFinancialAccount(
     );
     console.error(
       '🔴 [getFinancialAccount] Error message:',
-      error instanceof Error ? error.message : String(error)
+      error instanceof Error ? error.message : 'Unknown'
     );
     if (error && typeof error === 'object' && 'code' in error) {
-      console.error('🔴 [getFinancialAccount] Error code:', error.code);
+      console.error(
+        '🔴 [getFinancialAccount] Error code:',
+        String((error as { code: string | number }).code)
+      );
     }
     throw error;
   }
@@ -606,7 +609,7 @@ export async function getUserFinancialAccounts(): Promise<FinancialAccount[]> {
     );
 
     return accounts;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('🔴 [getUserFinancialAccounts] Error occurred:', error);
     console.error(
       '🔴 [getUserFinancialAccounts] Error name:',
@@ -614,10 +617,13 @@ export async function getUserFinancialAccounts(): Promise<FinancialAccount[]> {
     );
     console.error(
       '🔴 [getUserFinancialAccounts] Error message:',
-      error instanceof Error ? error.message : String(error)
+      error instanceof Error ? error.message : 'Unknown'
     );
     if (error && typeof error === 'object' && 'code' in error) {
-      console.error('🔴 [getUserFinancialAccounts] Error code:', error.code);
+      console.error(
+        '🔴 [getUserFinancialAccounts] Error code:',
+        String((error as { code: string | number }).code)
+      );
     }
     throw error;
   }

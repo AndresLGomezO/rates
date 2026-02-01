@@ -32,6 +32,15 @@ terraform {
   }
 }
 
+
+locals {
+  ingress_mapping = {
+    "all"                                 = "INGRESS_TRAFFIC_ALL"
+    "internal"                            = "INGRESS_TRAFFIC_INTERNAL_ONLY"
+    "internal-and-cloud-load-balancing"   = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
+  }
+}
+
 # ----------------------------------------------------------------------------
 # Cloud Run Service (V2 API)
 # ----------------------------------------------------------------------------
@@ -41,9 +50,10 @@ resource "google_cloud_run_v2_service" "this" {
   location = var.region
   project  = var.project_id
 
+
   # Ingress setting
   # Source: docs/IAM_SECURITY_MODEL.md §5.1 (Public internet access)
-  ingress = "INGRESS_TRAFFIC_${upper(replace(var.ingress, "-", "_"))}"
+  ingress = local.ingress_mapping[var.ingress]
 
   template {
     # Service Account
@@ -105,13 +115,23 @@ resource "google_cloud_run_v2_service" "this" {
       # Health check / startup probe (optional)
       startup_probe {
         http_get {
-          path = "/health"
+          path = var.probe_path
           port = 8080
         }
         initial_delay_seconds = 0
         timeout_seconds       = 3
         period_seconds        = 10
         failure_threshold     = 3
+      }
+    }
+
+
+    # VPC Access
+    dynamic "vpc_access" {
+      for_each = var.vpc_connector_name != null ? [1] : []
+      content {
+        connector = var.vpc_connector_name
+        egress    = upper(replace(var.vpc_egress, "-", "_"))
       }
     }
   }

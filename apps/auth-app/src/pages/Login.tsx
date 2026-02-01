@@ -243,7 +243,8 @@ export default function Login() {
               } catch (e: unknown) {
                 return (
                   <div style={{ color: 'red' }}>
-                    ✗ redirectTo is not a valid URL: {String(e)}
+                    ✗ redirectTo is not a valid URL:{' '}
+                    {e instanceof Error ? e.message : 'Invalid URL'}
                   </div>
                 );
               }
