@@ -18,7 +18,6 @@ if (isDev) {
 
   dotenv.config({
     path: path.resolve(process.cwd(), '.env.development'),
-    override: true,
   });
 
   // Restore shell variable if it was set

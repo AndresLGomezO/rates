@@ -75,6 +75,9 @@ module "cloud_run_ai_service" {
     LOG_LEVEL                   = "info"
     RATE_LIMIT_REQUESTS_PER_MIN = "60"
     RATE_LIMIT_TOKENS_PER_DAY   = "100000"
+    VERTEX_AI_MOCK              = "false"
+    FIREBASE_AUTH_EMULATOR_HOST = ""
+    FIRESTORE_EMULATOR_HOST     = ""
   }
 
   # VPC Configuration

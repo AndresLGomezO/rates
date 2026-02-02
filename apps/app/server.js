@@ -123,6 +123,43 @@ fastify.post('/api/ai/chat', async (request, reply) => {
   }
 });
 
+fastify.post('/api/ai/extract/document', async (request, reply) => {
+  try {
+    const userAuthorization = request.headers['authorization'];
+    const body = request.body;
+
+    // 1. Get ID Token for Service-to-Service Auth
+    const idToken = await getGoogleIdToken(AI_SERVICE_URL);
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Forwarded-Authorization': userAuthorization || '',
+    };
+
+    if (idToken) {
+      headers['Authorization'] = `Bearer ${idToken}`;
+    }
+
+    const response = await fetch(`${AI_SERVICE_URL}/v1/extract/document`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      request.log.error(`AI Service Error: ${response.status} - ${errorText}`);
+      return reply.code(response.status).send(errorText);
+    }
+
+    const data = await response.json();
+    return reply.send(data);
+  } catch (err) {
+    request.log.error(err);
+    return reply.status(500).send({ error: 'Failed to extract document data' });
+  }
+});
+
 fastify.get('/api/ai/chat/sessions', async (request, reply) => {
   try {
     const userAuthorization = request.headers['authorization'];
