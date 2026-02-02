@@ -6,6 +6,8 @@ import {
   type ChatSession,
 } from '../../services/chat.service';
 import type { ChatMessage } from '../../services/ai';
+import { getUserFinancialAccounts } from '../../services/financialAccounts';
+import type { FinancialAccount } from '@rates/firebase-client';
 
 export const AIAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,6 +17,10 @@ export const AIAssistant: React.FC = () => {
   const [sessionId, setSessionId] = useState<string | undefined>(undefined);
   const [view, setView] = useState<'chat' | 'history'>('chat');
   const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [accounts, setAccounts] = useState<
+    (FinancialAccount & { id: string })[]
+  >([]);
+  const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   // useLocation removed as context is now backend-driven
 
@@ -63,6 +69,28 @@ export const AIAssistant: React.FC = () => {
     }
   }, [view]);
 
+  // Load accounts on mount
+  useEffect(() => {
+    void loadAccounts();
+  }, []);
+
+  const loadAccounts = async () => {
+    try {
+      const userAccounts = await getUserFinancialAccounts();
+      setAccounts(userAccounts);
+    } catch (error) {
+      console.error('Failed to load accounts:', error);
+    }
+  };
+
+  const toggleAccountSelection = (accountId: string) => {
+    setSelectedAccountIds((prev) =>
+      prev.includes(accountId)
+        ? prev.filter((id) => id !== accountId)
+        : [...prev, accountId]
+    );
+  };
+
   const handleSend = async () => {
     if (!inputValue.trim() || isLoading) return;
 
@@ -73,7 +101,17 @@ export const AIAssistant: React.FC = () => {
 
     try {
       // Backend handles context building now
-      const response = await sendChatMessage(inputValue, sessionId);
+      // Inject selected context if any
+      let promptToSend = inputValue;
+      if (selectedAccountIds.length > 0) {
+        const selectedNames = accounts
+          .filter((a) => selectedAccountIds.includes(a.id))
+          .map((a) => a.accountName)
+          .join(', ');
+        promptToSend += `\n\n[Context: refer to accounts: ${selectedNames}]`;
+      }
+
+      const response = await sendChatMessage(promptToSend, sessionId);
 
       // Save session ID for continuity
       if (response.sessionId && !sessionId) {
@@ -236,8 +274,47 @@ export const AIAssistant: React.FC = () => {
             </div>
           )}
 
+          {/* Account Badges */}
+          {accounts.length > 0 && selectedAccountIds.length > 0 && (
+            <div className="scrollbar-none flex flex-nowrap gap-2 overflow-x-auto border-t border-white/10 bg-white/5 px-4 py-2">
+              {accounts.map((account) => {
+                const isSelected = selectedAccountIds.includes(account.id);
+                return (
+                  <button
+                    key={account.id}
+                    onClick={() => toggleAccountSelection(account.id)}
+                    className={`flex-shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-[10px] font-medium transition-all ${
+                      isSelected
+                        ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25'
+                        : 'border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    {account.accountName}
+                    {isSelected && <span className="ml-1">✕</span>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {accounts.length > 0 && selectedAccountIds.length === 0 && (
+            <div className="scrollbar-none flex flex-nowrap gap-2 overflow-x-auto border-t border-white/10 bg-white/5 px-4 py-2">
+              <span className="flex-shrink-0 py-1 text-[10px] text-white/40">
+                Context:
+              </span>
+              {accounts.map((account) => (
+                <button
+                  key={account.id}
+                  onClick={() => toggleAccountSelection(account.id)}
+                  className="flex-shrink-0 whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-medium text-white/60 transition-all hover:bg-white/10 hover:text-white"
+                >
+                  {account.accountName}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Input Area */}
-          <div className="border-t border-white/10 bg-white/5 p-4">
+          <div className="bg-white/5 p-4 pt-2">
             <div className="relative flex items-center gap-2">
               <input
                 type="text"

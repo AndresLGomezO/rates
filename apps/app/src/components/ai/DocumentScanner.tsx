@@ -1,7 +1,14 @@
 import React, { useState, useRef } from 'react';
-import { sendMessage } from '../../services/ai';
+import { extractDocument } from '../../services/ai';
+import type { CreateFinancialAccountInput } from '@rates/firebase-client';
 
-export const DocumentScanner: React.FC = () => {
+interface DocumentScannerProps {
+  onScanComplete?: (data: Partial<CreateFinancialAccountInput>) => void;
+}
+
+export const DocumentScanner: React.FC<DocumentScannerProps> = ({
+  onScanComplete,
+}) => {
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<{
     content: string;
@@ -19,21 +26,26 @@ export const DocumentScanner: React.FC = () => {
     setScanResult(null);
     setError(null);
 
-    // In a real implementation, we would upload the file to GCS and then trigger the processor.
-    // For now, we'll simulate the task creation.
     try {
-      // 1. Upload file (Mocked)
-      console.log('Uploading file:', file.name);
+      // Convert to Base64
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
 
-      // 2. Trigger AI Processor via AI Service
-      // The spec says we use /v1/tasks for async operations
-      // For this prototype, we'll use a specific prompt to simulate OCR if the service supports it
-      const response = await sendMessage(
-        `I have uploaded a document named ${file.name}. Please simulate extracting fields for a financial account.`,
-        'Respond with a JSON-like summary of extracted fields: accountName, type, balance, dueDate.'
-      );
+      const base64File = await base64Promise;
 
-      setScanResult(response);
+      const response = await extractDocument(base64File, file.type);
+
+      setScanResult({
+        content: JSON.stringify(response, null, 2),
+      });
+
+      if (onScanComplete) {
+        onScanComplete(response);
+      }
     } catch (err) {
       console.error('Scan Error:', err);
       setError('Failed to process document. Please try again.');

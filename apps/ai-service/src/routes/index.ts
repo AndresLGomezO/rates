@@ -5,6 +5,7 @@ import { taskRoutes } from './tasks.routes.js';
 import { usageRoutes } from './usage.routes.js';
 import { healthRoutes } from './health.routes.js';
 import { chatRoutes } from './chat.routes.js';
+import { documentRoutes } from './document.routes.js';
 
 export async function registerRoutes(app: FastifyInstance) {
   app.register(healthRoutes);
@@ -13,4 +14,5 @@ export async function registerRoutes(app: FastifyInstance) {
   app.register(taskRoutes);
   app.register(usageRoutes);
   app.register(chatRoutes);
+  app.register(documentRoutes);
 }

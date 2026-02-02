@@ -105,6 +105,9 @@ importers:
       '@google-cloud/pubsub':
         specifier: ^4.3.3
         version: 4.11.0(encoding@0.1.13)
+      '@rates/firebase-client':
+        specifier: workspace:*
+        version: link:../../packages/firebase-client
       '@rates/vertex-ai-client':
         specifier: workspace:*
         version: link:../../packages/vertex-ai-client

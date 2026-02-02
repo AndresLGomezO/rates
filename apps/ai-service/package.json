@@ -20,6 +20,7 @@
     "@google-cloud/firestore": "^7.5.0",
     "@google-cloud/pubsub": "^4.3.3",
     "@rates/vertex-ai-client": "workspace:*",
+    "@rates/firebase-client": "workspace:*",
     "dotenv": "^16.4.5",
     "fastify": "^4.26.2",
     "fastify-plugin": "^4.5.1",

@@ -1,4 +1,5 @@
 import { getAuthToken } from '../utils/auth';
+import { type CreateFinancialAccountInput } from '@rates/firebase-client';
 
 // BFF Proxy URL (Same Origin)
 const AI_PROXY_URL = '/api/ai';
@@ -48,12 +49,48 @@ export async function sendMessage(
 
   if (!response.ok) {
     const errorData = (await response.json().catch(() => ({}))) as {
-      error?: { message?: string };
+      error?: string;
     };
-    throw new Error(
-      errorData.error?.message || 'Failed to send message to AI Service'
-    );
+    throw new Error(errorData.error || 'Failed to generate content');
   }
 
   return response.json() as Promise<GenerateResponse>;
+}
+
+/**
+ * Extracts financial account details from a document.
+ * @param file Base64 encoded file string
+ * @param mimeType MIME type of the file
+ */
+export async function extractDocument(
+  file: string,
+  mimeType: string
+): Promise<Partial<CreateFinancialAccountInput>> {
+  const token = getAuthToken(false);
+
+  if (typeof token !== 'string') {
+    throw new Error('No authentication token available');
+  }
+
+  const response = await fetch(`${AI_PROXY_URL}/extract/document`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      'X-Request-ID': crypto.randomUUID(),
+    },
+    body: JSON.stringify({
+      file,
+      mimeType,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = (await response.json().catch(() => ({}))) as {
+      error?: string;
+    };
+    throw new Error(errorData.error || 'Failed to extract document');
+  }
+
+  return response.json() as Promise<Partial<CreateFinancialAccountInput>>;
 }

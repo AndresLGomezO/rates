@@ -506,7 +506,9 @@ function waitForAuth(): Promise<void> {
   });
 }
 
-export async function getUserFinancialAccounts(): Promise<FinancialAccount[]> {
+export async function getUserFinancialAccounts(): Promise<
+  (FinancialAccount & { id: string })[]
+> {
   console.log('🔵 [getUserFinancialAccounts] Starting accounts retrieval...');
 
   try {
@@ -601,12 +603,12 @@ export async function getUserFinancialAccounts(): Promise<FinancialAccount[]> {
       isFromCache: querySnapshot.metadata.fromCache,
     });
 
-    const accounts = querySnapshot.docs.map(
-      (docSnapshot: { data: () => unknown }) => {
-        const data = docSnapshot.data();
-        return data as FinancialAccount;
-      }
-    );
+    const accounts = querySnapshot.docs.map((docSnapshot) => {
+      const data = docSnapshot.data();
+      return { id: docSnapshot.id, ...data } as FinancialAccount & {
+        id: string;
+      };
+    });
 
     console.log(
       '✅ [getUserFinancialAccounts] Accounts retrieved:',

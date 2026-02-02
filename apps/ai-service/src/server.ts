@@ -23,6 +23,7 @@ export async function createServer() {
   const fastify = Fastify({
     logger: true,
     disableRequestLogging: true,
+    bodyLimit: 30 * 1024 * 1024, // 30MB
   });
 
   fastify.setValidatorCompiler(validatorCompiler);
