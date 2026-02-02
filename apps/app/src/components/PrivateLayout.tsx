@@ -6,6 +6,7 @@ import { SearchBar } from './SearchBar';
 import { AIAssistant } from './ai/AIAssistant';
 import { SmartNotifications } from './ai/SmartNotifications';
 import { LogPaymentModal } from './LogPaymentModal';
+import { NewAccountWizard } from './NewAccountWizard';
 
 interface Category {
   readonly type: string;
@@ -76,6 +77,7 @@ export function PrivateLayout({ children }: PropsWithChildren) {
     Record<string, boolean>
   >({});
   const [isLogPaymentOpen, setIsLogPaymentOpen] = useState(false);
+  const [isNewAccountSetupOpen, setIsNewAccountSetupOpen] = useState(false);
 
   // Auto-open accounts menu when on accounts route
   useEffect(() => {
@@ -434,11 +436,38 @@ export function PrivateLayout({ children }: PropsWithChildren) {
       <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-3">
         {/* Action Options (Shown when open) */}
         <div
-          className={`flex flex-col gap-3 transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isFabOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+          className={`flex flex-col gap-3 transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            isFabOpen
+              ? 'pointer-events-auto opacity-100'
+              : 'pointer-events-none opacity-0'
+          }`}
         >
+          {/* Create Account Option */}
+          <div
+            className={`flex items-center gap-3 transition-transform duration-300 ${
+              isFabOpen ? 'translate-y-0' : 'translate-y-10'
+            }`}
+          >
+            <span className="navbar-tooltip rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white shadow backdrop-blur-md">
+              New Account
+            </span>
+            <button
+              onClick={() => {
+                setIsNewAccountSetupOpen(true);
+                setIsFabOpen(false);
+              }}
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-xl text-primary-600 shadow-lg shadow-black/20 transition-transform hover:scale-110 active:scale-95"
+              aria-label="Create Account"
+            >
+              ➕
+            </button>
+          </div>
+
           {/* Log Payment Option */}
           <div
-            className={`flex items-center gap-3 transition-transform duration-300 ${isFabOpen ? 'translate-y-0' : 'translate-y-10'}`}
+            className={`flex items-center gap-3 transition-transform delay-[50ms] duration-300 ${
+              isFabOpen ? 'translate-y-0' : 'translate-y-10'
+            }`}
           >
             <span className="navbar-tooltip rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white shadow backdrop-blur-md">
               Log Payment
@@ -457,7 +486,9 @@ export function PrivateLayout({ children }: PropsWithChildren) {
 
           {/* AI Assistant Option */}
           <div
-            className={`flex items-center gap-3 transition-transform delay-[50ms] duration-300 ${isFabOpen ? 'translate-y-0' : 'translate-y-10'}`}
+            className={`flex items-center gap-3 transition-transform delay-[100ms] duration-300 ${
+              isFabOpen ? 'translate-y-0' : 'translate-y-10'
+            }`}
           >
             <span className="navbar-tooltip rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white shadow backdrop-blur-md">
               AI Assistant
@@ -478,10 +509,12 @@ export function PrivateLayout({ children }: PropsWithChildren) {
         {/* Main Toggle Button */}
         <button
           onClick={() => setIsFabOpen(!isFabOpen)}
-          className={`flex h-14 w-14 items-center justify-center rounded-full bg-primary-600 text-3xl text-white shadow-lg shadow-primary-600/30 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:scale-110 hover:shadow-primary-600/40 active:scale-95 ${isFabOpen ? 'rotate-[135deg] bg-red-500 shadow-red-500/30' : ''}`}
+          className={`flex h-14 w-14 items-center justify-center rounded-full bg-primary-600 text-3xl text-white shadow-lg shadow-primary-600/30 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:scale-110 hover:shadow-primary-600/40 active:scale-95 ${
+            isFabOpen ? 'rotate-[135deg] bg-red-500 shadow-red-500/30' : ''
+          }`}
           aria-label={isFabOpen ? 'Close Actions' : 'Open Actions'}
         >
-          +
+          {isFabOpen ? '✕' : '+'}
         </button>
       </div>
 
@@ -493,6 +526,16 @@ export function PrivateLayout({ children }: PropsWithChildren) {
         onPaymentLogged={() => {
           // Optional: Refresh global data if needed
           setIsLogPaymentOpen(false);
+        }}
+      />
+
+      <NewAccountWizard
+        isOpen={isNewAccountSetupOpen}
+        onClose={() => setIsNewAccountSetupOpen(false)}
+        onCreated={() => {
+          setIsNewAccountSetupOpen(false);
+          // Optional: Force reload or rely on user navigation
+          window.location.reload();
         }}
       />
     </div>

@@ -72,7 +72,7 @@ export const InlineInsights: React.FC<{ context: string }> = ({ context }) => {
       {insights.map((insight) => (
         <div
           key={insight.id}
-          className={`min-w-[290px] rounded-xl border p-5 backdrop-blur-md transition-all ${
+          className={`min-w-[270px] rounded-xl border p-5 backdrop-blur-md transition-all ${
             insight.type === 'tip'
               ? 'border-blue-500/20 bg-blue-500/5'
               : insight.type === 'warning'

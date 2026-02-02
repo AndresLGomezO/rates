@@ -10,6 +10,6 @@ use_fallback_image = false
 include_secrets = true
 
 # Container image configuration
-container_image_tag = "dev-1770047797"
-ai_service_image_tag = "dev-1770047797"
-ai_processor_image_tag = "dev-1770047797"
+container_image_tag = "dev-1770052820"
+ai_service_image_tag = "dev-1770052820"
+ai_processor_image_tag = "dev-1770052820"
