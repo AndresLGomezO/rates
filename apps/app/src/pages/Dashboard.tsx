@@ -64,7 +64,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 pb-32">
+    <div className="mx-auto max-w-7xl px-4 py-4 pb-32">
       {/* Header */}
       <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>

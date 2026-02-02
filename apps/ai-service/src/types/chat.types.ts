@@ -145,3 +145,129 @@ export interface ChatResponse {
   };
   contextUsed: DataCategory[];
 }
+
+// --- Entity Resolution Types ---
+
+export interface UserVocabulary {
+  accounts: AccountReference[];
+  categories: CategoryReference[];
+  merchants: string[];
+  tags: string[];
+  locale: string;
+  currency: string;
+}
+
+export interface AccountReference {
+  id: string;
+  name: string;
+  institution: string;
+  type: string;
+  nickname?: string;
+  lastFour?: string;
+  aliases: string[];
+  // Expanded fields for context
+  currentBalance?: number;
+  currency?: string;
+  nextDueDate?: Timestamp;
+  interestRate?: number;
+  creditLimit?: number;
+}
+
+export interface CategoryReference {
+  name: string;
+  subcategories?: string[];
+  icon?: string;
+  isCustom: boolean;
+}
+
+export interface ExtractedEntities {
+  intent: IntentType;
+  accounts: string[] | null;
+  merchants: string[] | null;
+  categories: string[] | null;
+  tags: string[] | null;
+  timeframe: TimeframeFilter;
+  amountFilter: AmountFilter | null;
+  transactionType: 'expense' | 'income' | 'transfer' | 'all';
+  sortBy: 'date' | 'amount' | 'merchant';
+  limit: number | null;
+  confidence: number;
+}
+
+export type IntentType =
+  | 'account_balance'
+  | 'account_list'
+  | 'transaction_search'
+  | 'transaction_sum'
+  | 'transaction_count'
+  | 'spending_analysis'
+  | 'comparison'
+  | 'general_question';
+
+export interface TimeframeFilter {
+  type: 'relative' | 'absolute' | 'all_time';
+  period: RelativePeriod | null;
+  startDate: string | null; // YYYY-MM-DD
+  endDate: string | null; // YYYY-MM-DD
+}
+
+export type RelativePeriod =
+  | 'today'
+  | 'yesterday'
+  | 'this_week'
+  | 'last_week'
+  | 'this_month'
+  | 'last_month'
+  | 'last_30_days'
+  | 'last_90_days'
+  | 'this_year'
+  | 'last_year';
+
+export interface AmountFilter {
+  operator: 'greater_than' | 'less_than' | 'equals' | 'between';
+  value: number | null;
+  valueTo: number | null;
+}
+
+export interface ResolvedFilters {
+  accountIds: string[];
+  merchantPatterns: string[];
+  categories: string[];
+  tags: string[];
+  dateRange: DateRange | null;
+  amountFilter: AmountFilter | null;
+  transactionType: 'expense' | 'income' | 'transfer' | 'all';
+  sortBy: 'date' | 'amount' | 'merchant';
+  limit: number | null;
+}
+
+export interface DateRange {
+  start: Date;
+  end: Date;
+}
+
+export interface Transaction {
+  id: string;
+  date: string; // ISO string
+  amount: number;
+  description: string;
+  merchantName?: string;
+  category?: string;
+  accountId?: string;
+  [key: string]: unknown;
+}
+
+export interface AggregationResult {
+  totalSpent: number;
+  totalIncome: number;
+  count: number;
+  byCategory: { category: string; amount: number; count: number }[];
+  byMerchant: { merchant: string; amount: number; count: number }[];
+}
+
+export interface FinancialData {
+  accounts: AccountReference[];
+  transactions: Transaction[] | null;
+  aggregations: AggregationResult | null;
+  comparison?: unknown | null;
+}

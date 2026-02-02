@@ -29,7 +29,16 @@ import type {
 import { validateFinancialAccount } from '@rates/firebase-client';
 
 // Collection name constant
-export const FINANCIAL_ACCOUNTS_COLLECTION = 'financialAccounts';
+const collectionPrefix = import.meta.env.VITE_FIRESTORE_COLLECTION_PREFIX as
+  | string
+  | undefined;
+const collectionName = 'financialAccounts';
+
+export const FINANCIAL_ACCOUNTS_COLLECTION = collectionPrefix
+  ? collectionPrefix.endsWith('_')
+    ? `${collectionPrefix}${collectionName}`
+    : `${collectionPrefix}_${collectionName}`
+  : collectionName;
 
 /**
  * Decode JWT token to extract user ID

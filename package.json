@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "pnpm --filter app dev",
     "dev:auth-app": "pnpm --filter auth-app dev",
-    "build": "pnpm --filter app build",
+    "build": "pnpm --filter \"./apps/*\" --filter \"./packages/*\" build",
     "build:auth-app": "pnpm --filter auth-app build",
     "preview": "pnpm --filter app preview",
     "preview:auth-app": "pnpm --filter auth-app preview",

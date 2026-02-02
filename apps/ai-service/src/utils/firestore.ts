@@ -14,5 +14,8 @@ if (process.env.FIRESTORE_EMULATOR_HOST) {
   console.log(`☁️ [Firestore] Using GCP Project ${config.gcp.projectId}`);
 }
 
-export const getCollectionName = (name: string) =>
-  `${config.firestore.collectionPrefix}_${name}`;
+export const getCollectionName = (name: string) => {
+  const prefix = config.firestore.collectionPrefix;
+  if (!prefix) return name;
+  return prefix.endsWith('_') ? `${prefix}${name}` : `${prefix}_${name}`;
+};

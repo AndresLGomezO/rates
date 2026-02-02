@@ -19,9 +19,40 @@ export async function authMiddleware(
     return;
   }
   // Check if we should skip validation (local dev)
+  // Check if we should skip validation (local dev)
   if (config.auth.skipValidation) {
-    // Always inject mock user for development when validation is skipped
-    // This allows the frontend to send a dummy token while still working locally
+    // Try to extract user ID from token if present, even if we skip verification
+    const authHeader =
+      (request.headers['x-forwarded-authorization'] as string) ||
+      (request.headers['authorization'] as string);
+
+    if (authHeader) {
+      const [scheme, token] = authHeader.split(' ');
+      if (scheme === 'Bearer' && token) {
+        try {
+          // Decode token without verification to get payload
+          const payload = JSON.parse(
+            Buffer.from(token.split('.')[1], 'base64').toString()
+          );
+          const uid = payload.user_id || payload.sub || payload.uid;
+
+          if (uid) {
+            (request as unknown as AuthenticatedRequest).user = {
+              uid,
+              email: payload.email || 'dev@example.com',
+            };
+            return;
+          }
+        } catch {
+          // Ignore decoding errors in dev mode, fallback to mock
+          request.log.warn(
+            'Failed to decode token in dev mode, falling back to mock user'
+          );
+        }
+      }
+    }
+
+    // Fallback: Always inject mock user for development when validation is skipped AND no valid token is provided
     (request as unknown as AuthenticatedRequest).user = {
       uid: 'dev-user-123',
       email: 'dev@example.com',

@@ -1,4 +1,5 @@
 import { getAuthToken } from '../utils/auth';
+import type { ChatMessage } from './ai';
 
 // BFF Proxy URL
 const AI_PROXY_URL = '/api/ai';
@@ -66,4 +67,55 @@ export async function sendChatMessage(
   }
 
   return response.json() as Promise<ChatResponse>;
+}
+
+export interface ChatSession {
+  id: string;
+  title: string;
+  updatedAt: {
+    _seconds: number;
+    _nanoseconds: number;
+  };
+}
+
+export async function getUserSessions(): Promise<ChatSession[]> {
+  const token = getAuthToken(false);
+  if (typeof token !== 'string')
+    throw new Error('No authentication token available');
+
+  const response = await fetch(`${AI_PROXY_URL}/chat/sessions`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch sessions');
+  }
+
+  const data = (await response.json()) as { sessions: ChatSession[] };
+  return data.sessions;
+}
+
+export async function getSession(
+  sessionId: string
+): Promise<{ session: ChatSession; messages: ChatMessage[] }> {
+  const token = getAuthToken(false);
+  if (typeof token !== 'string')
+    throw new Error('No authentication token available');
+
+  const response = await fetch(`${AI_PROXY_URL}/chat/sessions/${sessionId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch session details');
+  }
+
+  return response.json() as Promise<{
+    session: ChatSession;
+    messages: ChatMessage[];
+  }>;
 }

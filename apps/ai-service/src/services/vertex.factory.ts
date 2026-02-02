@@ -14,10 +14,10 @@ export function createVertexClient(
 
   if (isMock) {
     console.log('🔶 Using MOCK Vertex AI client');
-    // @ts-expect-error - MockVertexAIClient implements Partial<VertexAIClient> but used as IVertexClient
+    // MockVertexAIClient implements Partial<VertexAIClient> but used as IVertexClient
     return new MockVertexAIClient({
       delay: appConfig.vertexAI.mockDelay,
-    });
+    }) as unknown as VertexAIClient;
   }
 
   console.log('🟢 Using REAL Vertex AI client');
