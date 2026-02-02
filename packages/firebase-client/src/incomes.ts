@@ -112,6 +112,44 @@ export interface PayDayPattern {
 }
 
 /**
+ * Benefit subtypes
+ */
+export type BenefitSubtype =
+  | 'social_security' // Social Security retirement
+  | 'social_security_disability' // SSDI
+  | 'ssi' // Supplemental Security Income
+  | 'pension_government' // Government pension (federal, state, local)
+  | 'pension_military' // Military retirement
+  | 'pension_private' // Private company pension
+  | 'va_benefits' // Veterans Affairs benefits
+  | 'disability_private' // Private disability insurance
+  | 'workers_comp' // Workers' compensation
+  | 'unemployment' // Unemployment benefits
+  | 'child_support' // Court-ordered child support
+  | 'alimony' // Court-ordered alimony/spousal support
+  | 'welfare' // TANF, general assistance
+  | 'other';
+
+/**
+ * Beneficiary types
+ */
+export type BeneficiaryType =
+  | 'self'
+  | 'spouse'
+  | 'child'
+  | 'other_dependent'
+  | 'household'; // Benefit for entire household
+
+/**
+ * Social Security payment schedules
+ */
+export type SSPaymentSchedule =
+  | 'second_wednesday' // Birth dates 1-10
+  | 'third_wednesday' // Birth dates 11-20
+  | 'fourth_wednesday' // Birth dates 21-31
+  | 'third_of_month'; // For those receiving before May 1997
+
+/**
  * Base income interface
  */
 export interface BaseIncome {
@@ -413,13 +451,94 @@ export interface InvestmentIncome extends BaseIncome {
 }
 
 /**
+ * Benefits Income specific fields
+ */
+export interface BenefitsIncome extends BaseIncome {
+  type: 'benefits';
+  benefitSubtype: BenefitSubtype;
+
+  // ===== BENEFIT IDENTIFICATION =====
+
+  /** Source agency or organization */
+  benefitSource?: string;
+
+  /** Specific program name (if applicable) */
+  programName?: string;
+
+  /** Who receives this benefit */
+  beneficiary: BeneficiaryType;
+
+  /** Beneficiary name (if not self) */
+  beneficiaryName?: string;
+
+  // ===== INCOME DETAILS =====
+
+  /** Benefit amount per period */
+  benefitAmount: CurrencyAmount;
+
+  /** Payment frequency */
+  paymentFrequency: PaymentFrequency;
+
+  /** Specific payment day (varies by program) */
+  paymentDayOfMonth?: number;
+
+  /** For Social Security: based on birth date */
+  paymentScheduleType?: SSPaymentSchedule;
+
+  // ===== DURATION =====
+
+  /** When benefits started */
+  benefitStartDate?: Timestamp | Date;
+
+  /** When benefits end (for temporary benefits) */
+  benefitEndDate?: Timestamp | Date;
+
+  /** Is this a permanent/ongoing benefit? */
+  isPermanent: boolean;
+
+  /** For unemployment: weeks remaining */
+  weeksRemaining?: number;
+
+  // ===== ADJUSTMENTS =====
+
+  /** Expected annual COLA percentage */
+  expectedColaPercent?: number;
+
+  /** Date of next expected adjustment */
+  nextAdjustmentDate?: Timestamp | Date;
+
+  // ===== TAX TREATMENT =====
+
+  /** Is this benefit taxable? */
+  isTaxable?: boolean;
+
+  /** Is tax withheld from payments? */
+  hasTaxWithholding?: boolean;
+
+  /** Withholding amount (if applicable) */
+  withholdingAmount?: CurrencyAmount;
+
+  // ===== FLAGS =====
+
+  /** Is this benefit means-tested? */
+  isMeansTested?: boolean;
+
+  /** Is this a survivor benefit? */
+  isSurvivorBenefit?: boolean;
+
+  /** Is this a spousal benefit? */
+  isSpousalBenefit?: boolean;
+}
+
+/**
  * Discriminated union of all income types
  */
 export type Income =
   | SalaryIncome
   | FreelanceGigIncome
   | RentalIncome
-  | InvestmentIncome;
+  | InvestmentIncome
+  | BenefitsIncome;
 
 /**
  * Helper to omit properties from a union type distributively
@@ -551,6 +670,29 @@ export function validateIncome(income: Partial<Income>): string[] {
     if (!hasAmount) {
       errors.push(
         'At least one income amount, rate/principal, yield/portfolio, or range is required'
+      );
+    }
+  }
+
+  if (income.type === 'benefits') {
+    const benefits = income as BenefitsIncome;
+    if (!benefits.benefitSubtype) errors.push('Benefit subtype is required');
+    if (!benefits.beneficiary) errors.push('Beneficiary is required');
+    if (!benefits.benefitAmount) errors.push('Benefit amount is required');
+    if (!benefits.paymentFrequency)
+      errors.push('Payment frequency is required');
+
+    if (benefits.isPermanent === undefined) {
+      errors.push('Permanence status is required');
+    }
+
+    if (
+      benefits.isPermanent === false &&
+      !benefits.benefitEndDate &&
+      !benefits.weeksRemaining
+    ) {
+      errors.push(
+        'End date or weeks remaining is required for temporary benefits'
       );
     }
   }
