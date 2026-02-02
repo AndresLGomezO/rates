@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { IncomeType, CreateIncomeInput } from '@rates/firebase-client';
 import { createIncome } from '../services/incomes';
 import { SalaryFlow } from './SalaryFlow';
+import { FreelanceGigFlow } from './FreelanceGigFlow';
 import { Modal } from './Modal';
 
 interface NewIncomeWizardProps {
@@ -28,7 +29,6 @@ const INCOME_TYPE_OPTIONS: {
     label: 'Freelance & Gig',
     icon: '🚀',
     help: 'Income from projects, gig work, or consulting.',
-    disabled: true,
   },
   {
     type: 'rental',
@@ -79,7 +79,7 @@ export function NewIncomeWizard({
   }, [isOpen]);
 
   const handleTypeSelect = (type: IncomeType) => {
-    if (type !== 'salary') return; // Only salary in first iteration
+    if (type !== 'salary' && type !== 'freelance') return;
     setSelectedType(type);
     setStep('flow');
   };
@@ -152,6 +152,13 @@ export function NewIncomeWizard({
 
         {step === 'flow' && selectedType === 'salary' && (
           <SalaryFlow
+            onBack={() => setStep('type')}
+            onComplete={handleCreate}
+          />
+        )}
+
+        {step === 'flow' && selectedType === 'freelance' && (
+          <FreelanceGigFlow
             onBack={() => setStep('type')}
             onComplete={handleCreate}
           />

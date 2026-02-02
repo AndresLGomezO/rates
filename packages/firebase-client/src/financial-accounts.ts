@@ -366,9 +366,16 @@ export type FinancialAccountWithCalculated = FinancialAccount &
   FinancialAccountCalculated;
 
 /**
+ * Helper to omit properties from a union type distributively
+ */
+type DistributiveOmit<T, K extends string | number | symbol> = T extends unknown
+  ? Omit<T, K>
+  : never;
+
+/**
  * Input data for creating a new financial account
  */
-export type CreateFinancialAccountInput = Omit<
+export type CreateFinancialAccountInput = DistributiveOmit<
   FinancialAccount,
   'createdAt' | 'updatedAt' | 'paymentLog'
 > & {
@@ -378,9 +385,9 @@ export type CreateFinancialAccountInput = Omit<
 /**
  * Input data for updating a financial account
  */
-export type UpdateFinancialAccountInput = Partial<
-  Omit<FinancialAccount, 'createdAt' | 'userId'>
-> & {
+export type UpdateFinancialAccountInput = (FinancialAccount extends unknown
+  ? Partial<Omit<FinancialAccount, 'createdAt' | 'userId'>>
+  : never) & {
   updatedAt: Timestamp | Date;
 };
 

@@ -148,7 +148,7 @@ export function SalaryFlow({ onBack, onComplete }: SalaryFlowProps) {
     const amount = parseFloat(amountValue) || 0;
     const hours = parseFloat(typicalHoursPerWeek) || 0;
 
-    const payload: CreateIncomeInput = {
+    const payload = {
       type: 'salary',
       subtype,
       name,
@@ -167,7 +167,7 @@ export function SalaryFlow({ onBack, onComplete }: SalaryFlowProps) {
         hourlyRate: { amount, currency },
         typicalHoursPerWeek: hours,
       }),
-    };
+    } as CreateIncomeInput;
 
     void onComplete(payload);
   };

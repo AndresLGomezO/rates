@@ -122,12 +122,12 @@ export async function createIncome(
     const firestore: Firestore = getFirestore();
     const userId = incomeData.userId || getCurrentUserId();
 
-    const incomeDataWithUserId: CreateIncomeInput & { userId: string } = {
+    const incomeDataWithUserId = {
       ...incomeData,
       userId,
-    };
+    } as CreateIncomeInput & { userId: string };
 
-    const errors = validateIncome(incomeDataWithUserId);
+    const errors = validateIncome(incomeDataWithUserId as Partial<Income>);
     if (errors.length > 0) {
       throw new Error(`Validation failed: ${errors.join(', ')}`);
     }
@@ -147,6 +147,22 @@ export async function createIncome(
         income.nextPayDate = Timestamp.fromDate(
           income.nextPayDate
         ) as unknown as typeof income.nextPayDate;
+      }
+      if (income.startDate instanceof Date) {
+        income.startDate = Timestamp.fromDate(
+          income.startDate
+        ) as unknown as typeof income.startDate;
+      }
+      if (income.endDate instanceof Date) {
+        income.endDate = Timestamp.fromDate(
+          income.endDate
+        ) as unknown as typeof income.endDate;
+      }
+    } else if (income.type === 'freelance') {
+      if (income.nextExpectedPayment instanceof Date) {
+        income.nextExpectedPayment = Timestamp.fromDate(
+          income.nextExpectedPayment
+        ) as unknown as typeof income.nextExpectedPayment;
       }
       if (income.startDate instanceof Date) {
         income.startDate = Timestamp.fromDate(
