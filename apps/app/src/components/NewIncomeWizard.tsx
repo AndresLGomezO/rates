@@ -3,6 +3,7 @@ import type { IncomeType, CreateIncomeInput } from '@rates/firebase-client';
 import { createIncome } from '../services/incomes';
 import { SalaryFlow } from './SalaryFlow';
 import { FreelanceGigFlow } from './FreelanceGigFlow';
+import { RentalFlow } from './RentalFlow';
 import { Modal } from './Modal';
 
 interface NewIncomeWizardProps {
@@ -35,7 +36,6 @@ const INCOME_TYPE_OPTIONS: {
     label: 'Rental Income',
     icon: '🏠',
     help: 'Income from properties you rent out.',
-    disabled: true,
   },
   {
     type: 'investments',
@@ -79,7 +79,7 @@ export function NewIncomeWizard({
   }, [isOpen]);
 
   const handleTypeSelect = (type: IncomeType) => {
-    if (type !== 'salary' && type !== 'freelance') return;
+    if (type !== 'salary' && type !== 'freelance' && type !== 'rental') return;
     setSelectedType(type);
     setStep('flow');
   };
@@ -159,6 +159,13 @@ export function NewIncomeWizard({
 
         {step === 'flow' && selectedType === 'freelance' && (
           <FreelanceGigFlow
+            onBack={() => setStep('type')}
+            onComplete={handleCreate}
+          />
+        )}
+
+        {step === 'flow' && selectedType === 'rental' && (
+          <RentalFlow
             onBack={() => setStep('type')}
             onComplete={handleCreate}
           />

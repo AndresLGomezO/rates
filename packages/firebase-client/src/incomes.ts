@@ -206,9 +206,142 @@ export interface FreelanceGigIncome extends BaseIncome {
 }
 
 /**
+ * Rental Income specific fields
+ */
+export interface RentalIncome extends BaseIncome {
+  type: 'rental';
+  rentalSubtype: RentalSubtype;
+
+  // ===== PROPERTY IDENTIFICATION =====
+
+  /** Property name or address for reference */
+  propertyName?: string;
+
+  /** Full address (optional, for records) */
+  propertyAddress?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+    country?: string;
+  };
+
+  /** Number of units (for multi-family) */
+  numberOfUnits?: number;
+
+  // ===== RENTAL DETAILS =====
+
+  /** Rental amount per period */
+  rentalAmount: CurrencyAmount;
+
+  /** How often rent is collected */
+  rentalFrequency: PaymentFrequency;
+
+  /** Day of month rent is due (for monthly) */
+  rentDueDay?: number;
+
+  /** For long-term: tenant information */
+  tenantName?: string;
+
+  /** Lease start date */
+  leaseStartDate?: Timestamp | Date;
+
+  /** Lease end date */
+  leaseEndDate?: Timestamp | Date;
+
+  /** Is lease auto-renewing? */
+  isLeaseAutoRenewing?: boolean;
+
+  // ===== SHORT-TERM RENTAL FIELDS =====
+
+  /** Platform used (Airbnb, VRBO, etc.) */
+  platformType?: RentalPlatformType;
+
+  /** Nightly/weekly rate */
+  nightlyRate?: CurrencyAmount;
+  weeklyRate?: CurrencyAmount;
+
+  /** Expected occupancy percentage (0-100) */
+  expectedOccupancyPercent?: number;
+
+  /** Average nights booked per month */
+  averageNightsPerMonth?: number;
+
+  // ===== EXPENSE TRACKING =====
+
+  /** Does user want to track net income? */
+  trackNetIncome: boolean;
+
+  /** Link to existing mortgage account (if any) */
+  linkedMortgageAccountId?: string;
+
+  /** Monthly mortgage payment (if not linked) */
+  mortgagePayment?: CurrencyAmount;
+
+  /** Property management fee (% or fixed) */
+  propertyManagementFee?: {
+    type: 'percentage' | 'fixed';
+    value: number;
+  };
+
+  /** Other monthly expenses */
+  otherMonthlyExpenses?: CurrencyAmount;
+
+  /** Expense breakdown (optional detail) */
+  expenseBreakdown?: {
+    insurance?: CurrencyAmount;
+    propertyTax?: CurrencyAmount;
+    hoa?: CurrencyAmount;
+    utilities?: CurrencyAmount;
+    maintenance?: CurrencyAmount;
+    other?: CurrencyAmount;
+  };
+
+  // ===== CALCULATED FIELDS =====
+
+  /** Gross monthly income */
+  grossMonthlyIncome?: CurrencyAmount;
+
+  /** Net monthly income (after expenses) */
+  netMonthlyIncome?: CurrencyAmount;
+
+  /** Total monthly expenses */
+  totalMonthlyExpenses?: CurrencyAmount;
+
+  // ===== FLAGS =====
+
+  /** Is this the user's primary residence? (house hacking) */
+  isPrimaryResidence?: boolean;
+
+  /** Does user live in one unit? */
+  ownerOccupied?: boolean;
+
+  /** Is property currently vacant? */
+  isCurrentlyVacant?: boolean;
+
+  /** Expected vacancy date (if tenant leaving) */
+  expectedVacancyDate?: Timestamp | Date;
+}
+
+export type RentalSubtype =
+  | 'long_term' // Traditional yearly lease
+  | 'short_term' // Airbnb, VRBO, vacation rental
+  | 'room_rental' // Renting a room in primary residence
+  | 'commercial' // Commercial property rental
+  | 'other';
+
+export type RentalPlatformType =
+  | 'airbnb'
+  | 'vrbo'
+  | 'booking_com'
+  | 'direct' // Direct booking, no platform
+  | 'property_manager' // Managed by PM company
+  | 'other';
+
+/**
  * Discriminated union of all income types
  */
-export type Income = SalaryIncome | FreelanceGigIncome;
+export type Income = SalaryIncome | FreelanceGigIncome | RentalIncome;
 
 /**
  * Helper to omit properties from a union type distributively
@@ -303,6 +436,17 @@ export function validateIncome(income: Partial<Income>): string[] {
       ) {
         errors.push('Typical hours per week is required for hourly work');
       }
+    }
+  }
+
+  if (income.type === 'rental') {
+    const rental = income as RentalIncome;
+    if (!rental.rentalSubtype) errors.push('Rental subtype is required');
+    if (!rental.rentalAmount) errors.push('Rental amount is required');
+    if (!rental.rentalFrequency) errors.push('Rental frequency is required');
+
+    if (rental.rentalSubtype === 'short_term') {
+      if (!rental.platformType) errors.push('Platform type is required');
     }
   }
 

@@ -229,15 +229,11 @@ export function FreelanceGigFlow({
       type: 'freelance' as const,
       subtype,
       name,
-      sourceName: sourceName || undefined,
       isSideIncome,
       predictability,
       status: 'active',
       currency,
       isRetainer,
-      nextExpectedPayment: nextPaymentDate
-        ? new Date(nextPaymentDate)
-        : undefined,
       typicalPaymentFrequency: frequency,
 
       // Amounts
@@ -247,18 +243,20 @@ export function FreelanceGigFlow({
       }),
       ...(!isRetainer && {
         rateType,
-        rateAmount: rateAmount
-          ? { amount: parseFloat(rateAmount) || 0, currency }
-          : undefined,
-        estimatedMonthlyIncome: fixedAmount
-          ? { amount: parseFloat(fixedAmount) || 0, currency }
-          : undefined,
-        incomeRangeLow: rangeLow
-          ? { amount: parseFloat(rangeLow) || 0, currency }
-          : undefined,
-        incomeRangeHigh: rangeHigh
-          ? { amount: parseFloat(rangeHigh) || 0, currency }
-          : undefined,
+        ...(rateAmount && {
+          rateAmount: { amount: parseFloat(rateAmount) || 0, currency },
+        }),
+        ...(fixedAmount && {
+          estimatedMonthlyIncome: {
+            amount: parseFloat(fixedAmount) || 0,
+            currency,
+          },
+        }),
+        ...(rangeLow &&
+          rangeHigh && {
+            incomeRangeLow: { amount: parseFloat(rangeLow) || 0, currency },
+            incomeRangeHigh: { amount: parseFloat(rangeHigh) || 0, currency },
+          }),
       }),
 
       // Volume if applicable
@@ -274,6 +272,14 @@ export function FreelanceGigFlow({
         platformType: platformType || 'other',
       }),
     };
+
+    if (sourceName) {
+      payload.sourceName = sourceName;
+    }
+
+    if (nextPaymentDate) {
+      payload.nextExpectedPayment = new Date(nextPaymentDate);
+    }
 
     void onComplete(payload);
   };

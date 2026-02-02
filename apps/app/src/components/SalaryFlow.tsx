@@ -148,28 +148,36 @@ export function SalaryFlow({ onBack, onComplete }: SalaryFlowProps) {
     const amount = parseFloat(amountValue) || 0;
     const hours = parseFloat(typicalHoursPerWeek) || 0;
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       type: 'salary',
       subtype,
       name,
-      employerName: employerName || undefined,
       status: 'active',
       currency,
       paymentFrequency: frequency,
       isVariable: subtype === 'hourly',
-      nextPayDate: nextPayDate ? new Date(nextPayDate) : undefined,
-      ...(amountMethod === 'take_home' && {
-        takeHomePay: { amount, currency },
-      }),
-      ...(amountMethod === 'gross' && { grossPay: { amount, currency } }),
-      ...(amountMethod === 'annual' && { annualSalary: { amount, currency } }),
-      ...(amountMethod === 'hourly' && {
-        hourlyRate: { amount, currency },
-        typicalHoursPerWeek: hours,
-      }),
-    } as CreateIncomeInput;
+    };
 
-    void onComplete(payload);
+    if (amountMethod === 'take_home') {
+      payload.takeHomePay = { amount, currency };
+    } else if (amountMethod === 'gross') {
+      payload.grossPay = { amount, currency };
+    } else if (amountMethod === 'annual') {
+      payload.annualSalary = { amount, currency };
+    } else if (amountMethod === 'hourly') {
+      payload.hourlyRate = { amount, currency };
+      payload.typicalHoursPerWeek = hours;
+    }
+
+    if (employerName) {
+      payload.employerName = employerName;
+    }
+
+    if (nextPayDate) {
+      payload.nextPayDate = new Date(nextPayDate);
+    }
+
+    void onComplete(payload as CreateIncomeInput);
   };
 
   // Calculations for preview

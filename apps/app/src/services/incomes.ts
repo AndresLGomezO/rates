@@ -174,6 +174,23 @@ export async function createIncome(
           income.endDate
         ) as unknown as typeof income.endDate;
       }
+    } else if (income.type === 'rental') {
+      const rental = income;
+      if (rental.leaseStartDate instanceof Date) {
+        rental.leaseStartDate = Timestamp.fromDate(
+          rental.leaseStartDate
+        ) as unknown as typeof rental.leaseStartDate;
+      }
+      if (rental.leaseEndDate instanceof Date) {
+        rental.leaseEndDate = Timestamp.fromDate(
+          rental.leaseEndDate
+        ) as unknown as typeof rental.leaseEndDate;
+      }
+      if (rental.expectedVacancyDate instanceof Date) {
+        rental.expectedVacancyDate = Timestamp.fromDate(
+          rental.expectedVacancyDate
+        ) as unknown as typeof rental.expectedVacancyDate;
+      }
     }
 
     const incomeId = `income-${Date.now()}`;
