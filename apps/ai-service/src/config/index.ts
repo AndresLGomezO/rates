@@ -16,8 +16,12 @@ if (isDev) {
   // Capture shell variable to prevent overwrite
   const shellVertexMock = process.env.VERTEX_AI_MOCK;
 
+  // Only override if NOT running in Cloud Run (K_SERVICE is set in Cloud Run)
+  const isCloudRun = !!process.env.K_SERVICE;
+
   dotenv.config({
     path: path.resolve(process.cwd(), '.env.development'),
+    override: !isCloudRun,
   });
 
   // Restore shell variable if it was set

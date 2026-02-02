@@ -89,6 +89,7 @@ build_app_assets() {
         VITE_AI_SERVICE_URL="${ai_service_url}" \
         NODE_ENV="production" \
         VITE_ENVIRONMENT="${env}" \
+        VITE_FIRESTORE_COLLECTION_PREFIX="${env}" \
         pnpm --filter=app build >> "${log_file}" 2>&1); then
         print_success "App static files built successfully"
     else
