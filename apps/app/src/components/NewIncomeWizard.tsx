@@ -6,6 +6,7 @@ import { FreelanceGigFlow } from './FreelanceGigFlow';
 import { RentalFlow } from './RentalFlow';
 import { InvestmentFlow } from './InvestmentFlow';
 import { BenefitsFlow } from './BenefitsFlow';
+import { OtherIncomeFlow } from './OtherIncomeFlow';
 import { Modal } from './Modal';
 
 interface NewIncomeWizardProps {
@@ -56,7 +57,6 @@ const INCOME_TYPE_OPTIONS: {
     label: 'Other',
     icon: '📋',
     help: 'Any other source of income.',
-    disabled: true,
   },
 ];
 
@@ -84,7 +84,8 @@ export function NewIncomeWizard({
       type !== 'freelance' &&
       type !== 'rental' &&
       type !== 'investments' &&
-      type !== 'benefits'
+      type !== 'benefits' &&
+      type !== 'other'
     )
       return;
     setSelectedType(type);
@@ -187,6 +188,13 @@ export function NewIncomeWizard({
 
         {step === 'flow' && selectedType === 'benefits' && (
           <BenefitsFlow
+            onBack={() => setStep('type')}
+            onComplete={handleCreate}
+          />
+        )}
+
+        {step === 'flow' && selectedType === 'other' && (
+          <OtherIncomeFlow
             onBack={() => setStep('type')}
             onComplete={handleCreate}
           />

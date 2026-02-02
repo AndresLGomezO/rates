@@ -7,6 +7,7 @@ import type {
 import { WizardProgressBar } from './WizardProgressBar';
 import { Select } from './Select';
 import { CurrencyInput } from './CurrencyInput';
+import { removeUndefined } from '../utils/data';
 
 type SalaryFlowStep =
   | 'name_employer'
@@ -177,7 +178,7 @@ export function SalaryFlow({ onBack, onComplete }: SalaryFlowProps) {
       payload.nextPayDate = new Date(nextPayDate);
     }
 
-    void onComplete(payload as CreateIncomeInput);
+    void onComplete(removeUndefined(payload) as CreateIncomeInput);
   };
 
   // Calculations for preview

@@ -8,6 +8,7 @@ import type {
 import { WizardProgressBar } from './WizardProgressBar';
 import { Select } from './Select';
 import { CurrencyInput } from './CurrencyInput';
+import { removeUndefined } from '../utils/data';
 
 type BenefitsFlowStep =
   | 'name_beneficiary'
@@ -238,7 +239,7 @@ export function BenefitsFlow({ onBack, onComplete }: BenefitsFlowProps) {
       if (weeksRemaining) payload.weeksRemaining = parseInt(weeksRemaining, 10);
     }
 
-    void onComplete(payload as unknown as CreateIncomeInput);
+    void onComplete(removeUndefined(payload) as unknown as CreateIncomeInput);
   };
 
   const selectedSubtypeInfo = BENEFIT_TYPE_OPTIONS.find(

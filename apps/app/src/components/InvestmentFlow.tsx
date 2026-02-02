@@ -9,6 +9,7 @@ import type {
 import { WizardProgressBar } from './WizardProgressBar';
 import { Select } from './Select';
 import { CurrencyInput } from './CurrencyInput';
+import { removeUndefined } from '../utils/data';
 
 type InvestmentFlowStep =
   | 'name_institution'
@@ -275,7 +276,7 @@ export function InvestmentFlow({ onBack, onComplete }: InvestmentFlowProps) {
       payload.nextPaymentDate = new Date(nextPaymentDate);
     }
 
-    void onComplete(payload as CreateIncomeInput);
+    void onComplete(removeUndefined(payload) as CreateIncomeInput);
   };
 
   return (

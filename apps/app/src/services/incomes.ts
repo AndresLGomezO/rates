@@ -191,6 +191,23 @@ export async function createIncome(
           rental.expectedVacancyDate
         ) as unknown as typeof rental.expectedVacancyDate;
       }
+    } else if (income.type === 'other') {
+      const other = income;
+      if (other.incomeDate instanceof Date) {
+        other.incomeDate = Timestamp.fromDate(
+          other.incomeDate
+        ) as unknown as typeof other.incomeDate;
+      }
+      if (other.nextPaymentDate instanceof Date) {
+        other.nextPaymentDate = Timestamp.fromDate(
+          other.nextPaymentDate
+        ) as unknown as typeof other.nextPaymentDate;
+      }
+      if (other.endDate instanceof Date) {
+        other.endDate = Timestamp.fromDate(
+          other.endDate
+        ) as unknown as typeof other.endDate;
+      }
     }
 
     const incomeId = `income-${Date.now()}`;

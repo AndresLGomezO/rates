@@ -150,6 +150,26 @@ export type SSPaymentSchedule =
   | 'third_of_month'; // For those receiving before May 1997
 
 /**
+ * Other Income subtypes
+ */
+export type OtherIncomeSubtype =
+  | 'gift' // Cash gift from family/friends
+  | 'inheritance' // Inherited money
+  | 'prize_lottery' // Lottery, contest, sweepstakes
+  | 'sale_personal_items' // Selling personal belongings
+  | 'insurance_settlement' // Insurance payout
+  | 'legal_settlement' // Legal award or settlement
+  | 'tax_refund' // Tax refund
+  | 'rebate_cashback' // Rebates, cash back rewards
+  | 'odd_jobs' // Informal work, odd jobs
+  | 'crypto_airdrop' // Cryptocurrency airdrops/rewards
+  | 'found_money' // Found money, unclaimed property
+  | 'stipend' // Stipend (non-employment)
+  | 'allowance' // Allowance from family
+  | 'reimbursement' // Reimbursement received
+  | 'other'; // Anything else
+
+/**
  * Base income interface
  */
 export interface BaseIncome {
@@ -531,6 +551,66 @@ export interface BenefitsIncome extends BaseIncome {
 }
 
 /**
+ * Other Income specific fields
+ */
+export interface OtherIncome extends BaseIncome {
+  type: 'other';
+  subtype: OtherIncomeSubtype;
+
+  // ===== IDENTIFICATION =====
+
+  /** Source of the income (e.g., "Grandma", "IRS", "Apartment Sale") */
+  incomeSource?: string;
+
+  // ===== INCOME DETAILS =====
+
+  /** Income amount */
+  incomeAmount: CurrencyAmount;
+
+  /** Is this a one-time or recurring income? */
+  isOneTime: boolean;
+
+  /** For recurring: payment frequency */
+  paymentFrequency?: PaymentFrequency | 'irregular';
+
+  /** For one-time: date received or expected */
+  incomeDate?: Timestamp | Date;
+
+  /** For recurring: expected next payment */
+  nextPaymentDate?: Timestamp | Date;
+
+  // ===== PREDICTABILITY =====
+
+  /** How predictable is this income? (for recurring) */
+  predictability?: IncomePredictability;
+
+  /** For variable recurring: typical range */
+  incomeRangeLow?: CurrencyAmount;
+  incomeRangeHigh?: CurrencyAmount;
+
+  // ===== DURATION =====
+
+  /** For recurring: does it have an end date? */
+  hasEndDate?: boolean;
+
+  /** End date if applicable */
+  endDate?: Timestamp | Date;
+
+  // ===== TAX =====
+
+  /** Is this income taxable? */
+  isTaxable?: boolean;
+
+  // ===== FLAGS =====
+
+  /** Is this income already received? (for one-time) */
+  isReceived?: boolean;
+
+  /** Should this be included in regular projections? */
+  includeInProjections: boolean;
+}
+
+/**
  * Discriminated union of all income types
  */
 export type Income =
@@ -538,7 +618,8 @@ export type Income =
   | FreelanceGigIncome
   | RentalIncome
   | InvestmentIncome
-  | BenefitsIncome;
+  | BenefitsIncome
+  | OtherIncome;
 
 /**
  * Helper to omit properties from a union type distributively
@@ -694,6 +775,20 @@ export function validateIncome(income: Partial<Income>): string[] {
       errors.push(
         'End date or weeks remaining is required for temporary benefits'
       );
+    }
+  }
+
+  if (income.type === 'other') {
+    const other = income as OtherIncome;
+    if (!other.subtype) errors.push('Subtype is required');
+    if (!other.incomeAmount) errors.push('Income amount is required');
+
+    if (other.isOneTime) {
+      if (!other.incomeDate) errors.push('Income date is required');
+    } else {
+      if (!other.paymentFrequency) errors.push('Payment frequency is required');
+      if (!other.predictability)
+        errors.push('Predictability level is required');
     }
   }
 

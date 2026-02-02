@@ -153,6 +153,8 @@ export type {
   InvestmentIncomeSubtype,
   InvestmentAccountType,
   BenefitsIncome,
+  OtherIncome,
+  OtherIncomeSubtype,
   Income,
   CreateIncomeInput,
   UpdateIncomeInput,
