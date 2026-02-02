@@ -4,6 +4,7 @@ import { createIncome } from '../services/incomes';
 import { SalaryFlow } from './SalaryFlow';
 import { FreelanceGigFlow } from './FreelanceGigFlow';
 import { RentalFlow } from './RentalFlow';
+import { InvestmentFlow } from './InvestmentFlow';
 import { Modal } from './Modal';
 
 interface NewIncomeWizardProps {
@@ -42,7 +43,6 @@ const INCOME_TYPE_OPTIONS: {
     label: 'Investments',
     icon: '📈',
     help: 'Dividends, interest, or capital gains.',
-    disabled: true,
   },
   {
     type: 'benefits',
@@ -79,7 +79,13 @@ export function NewIncomeWizard({
   }, [isOpen]);
 
   const handleTypeSelect = (type: IncomeType) => {
-    if (type !== 'salary' && type !== 'freelance' && type !== 'rental') return;
+    if (
+      type !== 'salary' &&
+      type !== 'freelance' &&
+      type !== 'rental' &&
+      type !== 'investments'
+    )
+      return;
     setSelectedType(type);
     setStep('flow');
   };
@@ -166,6 +172,13 @@ export function NewIncomeWizard({
 
         {step === 'flow' && selectedType === 'rental' && (
           <RentalFlow
+            onBack={() => setStep('type')}
+            onComplete={handleCreate}
+          />
+        )}
+
+        {step === 'flow' && selectedType === 'investments' && (
+          <InvestmentFlow
             onBack={() => setStep('type')}
             onComplete={handleCreate}
           />

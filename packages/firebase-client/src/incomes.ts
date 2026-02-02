@@ -17,6 +17,31 @@ export type IncomeType =
   | 'other';
 
 /**
+ * Investment income subtypes
+ */
+export type InvestmentIncomeSubtype =
+  | 'dividends'
+  | 'interest'
+  | 'capital_gains'
+  | 'distributions'
+  | 'royalties'
+  | 'reit'
+  | 'other';
+
+/**
+ * Investment account types
+ */
+export type InvestmentAccountType =
+  | 'taxable'
+  | 'traditional_ira'
+  | 'roth_ira'
+  | '401k'
+  | 'hsa'
+  | 'savings'
+  | 'cd'
+  | 'other';
+
+/**
  * Salary/Wages subtypes
  */
 export type SalarySubtype =
@@ -339,9 +364,62 @@ export type RentalPlatformType =
   | 'other';
 
 /**
+ * Investment Income specific fields
+ */
+export interface InvestmentIncome extends BaseIncome {
+  type: 'investments';
+  investmentSubtype: InvestmentIncomeSubtype;
+
+  // ===== ACCOUNT IDENTIFICATION =====
+  accountName?: string;
+  institutionName?: string;
+  accountType?: InvestmentAccountType;
+  holdings?: string;
+
+  // ===== INCOME DETAILS =====
+  predictability: IncomePredictability;
+  incomeAmount?: CurrencyAmount;
+  paymentFrequency: PaymentFrequency | 'irregular';
+
+  /** For interest: Annual rate (%) */
+  annualRate?: number;
+  /** For interest: Principal/balance amount */
+  principalAmount?: CurrencyAmount;
+
+  /** For dividends: Annual yield (%) */
+  dividendYield?: number;
+  /** For dividends: Portfolio value */
+  portfolioValue?: CurrencyAmount;
+
+  /** For capital gains: Is this one-time or recurring? */
+  isOneTime?: boolean;
+
+  // ===== CASH FLOW =====
+  isReinvested: boolean;
+  cashPercentage?: number;
+
+  // ===== TIMING =====
+  nextPaymentDate?: Timestamp | Date;
+  paymentMonths?: number[];
+
+  // ===== VARIABILITY =====
+  incomeRangeLow?: CurrencyAmount;
+  incomeRangeHigh?: CurrencyAmount;
+  expectedGrowthRate?: number;
+
+  // ===== FLAGS =====
+  isTaxAdvantaged?: boolean;
+  isRMD?: boolean;
+}
+
+/**
  * Discriminated union of all income types
  */
-export type Income = SalaryIncome | FreelanceGigIncome | RentalIncome;
+export type Income =
+  | SalaryIncome
+  | FreelanceGigIncome
+  | RentalIncome
+  | InvestmentIncome;
 
 /**
  * Helper to omit properties from a union type distributively
@@ -447,6 +525,33 @@ export function validateIncome(income: Partial<Income>): string[] {
 
     if (rental.rentalSubtype === 'short_term') {
       if (!rental.platformType) errors.push('Platform type is required');
+    }
+  }
+
+  if (income.type === 'investments') {
+    const investment = income as InvestmentIncome;
+    if (!investment.investmentSubtype)
+      errors.push('Investment subtype is required');
+    if (!investment.paymentFrequency)
+      errors.push('Payment frequency is required');
+    if (!investment.predictability)
+      errors.push('Predictability level is required');
+
+    if (investment.isReinvested === undefined) {
+      errors.push('Reinvestment status is required');
+    }
+
+    const hasAmount = !!(
+      investment.incomeAmount ||
+      (investment.annualRate && investment.principalAmount) ||
+      (investment.dividendYield && investment.portfolioValue) ||
+      (investment.incomeRangeLow && investment.incomeRangeHigh)
+    );
+
+    if (!hasAmount) {
+      errors.push(
+        'At least one income amount, rate/principal, yield/portfolio, or range is required'
+      );
     }
   }
 
