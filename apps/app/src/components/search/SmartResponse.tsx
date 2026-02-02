@@ -4,12 +4,14 @@ interface SmartResponseProps {
   content: string;
   isLoading: boolean;
   onFollowUp?: (question: string) => void;
+  onDismiss?: () => void;
 }
 
 export const SmartResponse: React.FC<SmartResponseProps> = ({
   content,
   isLoading,
   onFollowUp,
+  onDismiss,
 }) => {
   if (isLoading) {
     return (
@@ -30,9 +32,20 @@ export const SmartResponse: React.FC<SmartResponseProps> = ({
 
   return (
     <div className="animate-in fade-in slide-in-from-top-2 mt-4 rounded-xl border border-white/20 bg-slate-900/80 p-6 shadow-xl backdrop-blur-xl duration-300">
-      <div className="mb-4 flex items-center gap-2">
-        <span className="text-xl">🤖</span>
-        <h3 className="text-sm font-bold text-white">AI INSIGHT</h3>
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xl">🤖</span>
+          <h3 className="text-sm font-bold text-white">AI INSIGHT</h3>
+        </div>
+        {onDismiss && (
+          <button
+            onClick={onDismiss}
+            className="-mr-2 -mt-2 rounded-full p-2 text-white/40 transition-colors hover:bg-white/10 hover:text-white"
+            aria-label="Dismiss"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       <div className="prose prose-invert prose-sm max-w-none leading-relaxed text-white/90">

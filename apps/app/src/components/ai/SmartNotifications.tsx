@@ -46,8 +46,28 @@ export const SmartNotifications: React.FC = () => {
     void generateNotifications();
   }, []);
 
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-white/70 transition-colors hover:text-white"
@@ -60,7 +80,7 @@ export const SmartNotifications: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="animate-in slide-in-from-top-2 absolute right-0 z-[100] mt-3 w-80 rounded-2xl border border-white/10 bg-neutral-900/90 p-4 shadow-2xl backdrop-blur-xl duration-300">
+        <div className="animate-in slide-in-from-top-2 absolute right-0 z-[100] mt-3 w-80 max-w-[240px] rounded-2xl border border-white/10 bg-neutral-900/90 p-4 shadow-2xl backdrop-blur-xl duration-300">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-widest text-white/50">
               AI Insights

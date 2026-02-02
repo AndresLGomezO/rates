@@ -51,7 +51,9 @@ export async function sendMessage(
     const errorData = (await response.json().catch(() => ({}))) as {
       error?: string;
     };
-    throw new Error(errorData.error || 'Failed to generate content');
+    throw new Error(
+      errorData.error || `Request failed with status ${response.status}`
+    );
   }
 
   return response.json() as Promise<GenerateResponse>;

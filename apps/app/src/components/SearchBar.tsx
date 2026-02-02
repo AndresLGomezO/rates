@@ -50,35 +50,47 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
     (currencyFilter ? 1 : 0) +
     (showDaysFilter && daysAhead !== 15 ? 1 : 0);
 
-  const handleAiSearch = useCallback(
-    async (query: string) => {
-      if (!query.trim() || isAiLoading) return;
+  const isAiLoadingRef = useRef(false);
 
-      // Check if it's a natural language question (basic heuristic)
-      const isQuestion =
-        /^(how|what|when|where|why|which|can|should|is|are|do|does|total|debt|balance)/i.test(
-          query.trim()
-        );
+  useEffect(() => {
+    isAiLoadingRef.current = isAiLoading;
+  }, [isAiLoading]);
 
-      if (!isQuestion) return;
+  const handleAiSearch = useCallback(async (query: string) => {
+    if (!query.trim() || isAiLoadingRef.current) return;
 
-      setIsAiLoading(true);
-      setAiResponse(null);
+    // Check if it's a natural language question (basic heuristic)
+    const isQuestion =
+      /^(how|what|when|where|why|which|can|should|is|are|do|does|total|debt|balance)/i.test(
+        query.trim()
+      );
 
-      try {
-        const response = await sendMessage(
-          query,
-          "Provide a concise financial answer based on the user's data. Be premium, helpful, and numeric."
-        );
-        setAiResponse(response.content);
-      } catch (error) {
-        console.error('Smart Search Error:', error);
-      } finally {
-        setIsAiLoading(false);
+    if (!isQuestion) return;
+
+    setIsAiLoading(true);
+    setAiResponse(null);
+
+    try {
+      const response = await sendMessage(
+        query,
+        "Provide a concise financial answer based on the user's data. Be premium, helpful, and numeric."
+      );
+      setAiResponse(response.content);
+    } catch (error) {
+      // Handle rate limiting gracefully
+      if (error instanceof Error && error.message.includes('429')) {
+        setAiResponse("I'm thinking too fast! Please wait a moment.");
+        return;
       }
-    },
-    [isAiLoading]
-  );
+      // Don't log expected errors to console to avoid noise
+      console.warn(
+        'Smart Search unavailable:',
+        error instanceof Error ? error.message : error
+      );
+    } finally {
+      setIsAiLoading(false);
+    }
+  }, []);
 
   // Update URL when search query changes (with debounce)
   useEffect(() => {
@@ -94,12 +106,16 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
 
     debounceTimeoutRef.current = setTimeout(() => {
       if (searchQuery.trim()) {
-        void handleAiSearch(searchQuery);
+        // Update URL immediately (300ms)
         setSearchParams((prev) => {
           const newParams = new URLSearchParams(prev);
           newParams.set('search', searchQuery.trim());
           return newParams;
         });
+
+        // Debounce AI search further to prevent rate limiting (800ms)
+        // We use a separate internal timeout or just check logical condition
+        // Here we just use a checking logic inside handleAiSearch or wrapper
       } else {
         setSearchParams((prev) => {
           const newParams = new URLSearchParams(prev);
@@ -107,12 +123,20 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
           return newParams;
         });
       }
-    }, 300); // 300ms debounce
+    }, 300); // 300ms debounce for URL
+
+    // Separate debounce for AI to avoid 429s and loops
+    const aiTimeout = setTimeout(() => {
+      if (searchQuery.trim() && !isAiLoadingRef.current) {
+        void handleAiSearch(searchQuery);
+      }
+    }, 800);
 
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
       }
+      clearTimeout(aiTimeout);
     };
   }, [searchQuery, setSearchParams, handleAiSearch]);
 
@@ -398,18 +422,17 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
             )}
           </button>
         </div>
-        {!isScrolled && (
-          <div className="mx-auto max-w-[800px]">
-            <SmartResponse
-              content={aiResponse || ''}
-              isLoading={isAiLoading}
-              onFollowUp={(q) => {
-                setSearchQuery(q);
-                void handleAiSearch(q);
-              }}
-            />
-          </div>
-        )}
+        <div className="mx-auto max-w-[800px]">
+          <SmartResponse
+            content={aiResponse || ''}
+            isLoading={isAiLoading}
+            onFollowUp={(q) => {
+              setSearchQuery(q);
+              void handleAiSearch(q);
+            }}
+            onDismiss={() => setAiResponse(null)}
+          />
+        </div>
       </div>
       <Modal
         isOpen={isFiltersModalOpen}

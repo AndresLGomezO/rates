@@ -47,6 +47,7 @@ import { BillStatsWidget } from '../components/BillInsights/BillStatsWidget';
 import { BillTrendAnalysisWidget } from '../components/BillInsights/BillTrendAnalysisWidget';
 import { isBill, isOther } from '@rates/firebase-client';
 import { OtherAccountDetail } from '../components/OtherAccountInsights/OtherAccountDetail';
+import { LogPaymentModal } from '../components/LogPaymentModal';
 
 // Helper functions to safely extract type-specific fields
 function getAccountRemainingBalance(account: FinancialAccount): number {
@@ -288,6 +289,7 @@ export default function AccountDetail() {
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
   const [isBatchPaymentModalOpen, setIsBatchPaymentModalOpen] = useState(false);
+  const [isLogPaymentOpen, setIsLogPaymentOpen] = useState(false);
 
   const loadAccountData = useCallback(async () => {
     if (!accountNumber) return;
@@ -492,33 +494,43 @@ export default function AccountDetail() {
       {/* Header */}
       <div className="mb-10 flex flex-wrap items-start justify-between gap-8 border-b border-neutral-700/30 pb-6 md:flex-col">
         <div className="min-w-0 flex-1">
-          <button
-            onClick={() => {
-              if (account?.accountType) {
-                void navigate(`/accounts/${account.accountType}`);
-              } else {
-                void navigate('/dashboard');
-              }
-            }}
-            className="mb-6 flex cursor-pointer items-center gap-2 rounded-md border border-neutral-600/40 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-[10px] transition-all duration-300 ease-in-out hover:-translate-x-1 hover:bg-white/15"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+          {/* Action Buttons */}
+          <div className="mb-6 flex gap-3">
+            <button
+              onClick={() => {
+                if (account?.accountType) {
+                  void navigate(`/accounts/${account.accountType}`);
+                } else {
+                  void navigate('/dashboard');
+                }
+              }}
+              className="flex cursor-pointer items-center gap-2 rounded-md border border-neutral-600/40 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-[10px] transition-all duration-300 ease-in-out hover:-translate-x-1 hover:bg-white/15"
             >
-              <path
-                d="M12.5 15L7.5 10L12.5 5"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Back
-          </button>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12.5 15L7.5 10L12.5 5"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Back
+            </button>
+
+            <button
+              onClick={() => setIsLogPaymentOpen(true)}
+              className="flex cursor-pointer items-center gap-2 rounded-md bg-white px-5 py-3 text-sm font-bold text-primary-900 shadow-lg shadow-white/10 transition-all duration-300 ease-in-out hover:scale-105 hover:bg-white/90"
+            >
+              💳 Log Payment
+            </button>
+          </div>
           <div>
             <h1 className="m-0 mb-2 bg-gradient-to-br from-white to-white/80 bg-clip-text text-xl font-bold -tracking-[0.5px] text-transparent text-white md:text-3xl">
               {account.accountName}
@@ -1198,6 +1210,16 @@ export default function AccountDetail() {
         onPaymentsLogged={() => {
           // Reload account data to reflect updated payment status
           void loadAccountData();
+        }}
+      />
+      <LogPaymentModal
+        isOpen={isLogPaymentOpen}
+        onClose={() => setIsLogPaymentOpen(false)}
+        account={account}
+        period={null}
+        onPaymentLogged={() => {
+          setIsLogPaymentOpen(false);
+          void loadAccountData(); // Reload to show new payment
         }}
       />
     </div>

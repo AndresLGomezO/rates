@@ -5,6 +5,7 @@ import { DebugIndicator } from './DebugIndicator';
 import { SearchBar } from './SearchBar';
 import { AIAssistant } from './ai/AIAssistant';
 import { SmartNotifications } from './ai/SmartNotifications';
+import { LogPaymentModal } from './LogPaymentModal';
 
 interface Category {
   readonly type: string;
@@ -74,6 +75,7 @@ export function PrivateLayout({ children }: PropsWithChildren) {
   const [expandedCategories, setExpandedCategories] = useState<
     Record<string, boolean>
   >({});
+  const [isLogPaymentOpen, setIsLogPaymentOpen] = useState(false);
 
   // Auto-open accounts menu when on accounts route
   useEffect(() => {
@@ -117,6 +119,14 @@ export function PrivateLayout({ children }: PropsWithChildren) {
     setIsMobileMenuOpen(false);
   };
 
+  const [isFabOpen, setIsFabOpen] = useState(false);
+  const [isAiOpen, setIsAiOpen] = useState(false);
+
+  // Close FAB when route changes
+  useEffect(() => {
+    setIsFabOpen(false);
+  }, [location.pathname]);
+
   return (
     <div className="relative flex h-screen max-h-screen min-h-screen w-full animate-gradient-shift overflow-hidden bg-[linear-gradient(135deg,#1e40af_0%,#334155_25%,#1e3a8a_50%,#475569_75%,#0f172a_100%)] bg-[length:400%_400%] before:pointer-events-none before:fixed before:inset-0 before:z-0 before:bg-[radial-gradient(circle_at_20%_50%,rgba(30,58,138,0.3)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(217,119,6,0.2)_0%,transparent_50%),radial-gradient(circle_at_40%_20%,rgba(37,99,235,0.25)_0%,transparent_50%)] before:content-['']">
       {/* Mobile backdrop overlay */}
@@ -127,6 +137,16 @@ export function PrivateLayout({ children }: PropsWithChildren) {
           aria-hidden="true"
         />
       )}
+
+      {/* FAB Backdrop */}
+      {isFabOpen && (
+        <div
+          className="fixed inset-0 z-[95] bg-black/40 backdrop-blur-[2px] transition-all duration-300"
+          onClick={() => setIsFabOpen(false)}
+        />
+      )}
+
+      {/* ... sidebar ... */}
       <aside
         className={`duration-400 glass-sidebar fixed left-0 top-0 z-sidebar flex h-screen max-h-screen flex-col overflow-hidden text-white transition-all ease-[cubic-bezier(0.4,0,0.2,1)] ${
           isMobileMenuOpen
@@ -138,6 +158,7 @@ export function PrivateLayout({ children }: PropsWithChildren) {
             : 'md:w-[80px] lg:w-[80px]'
         } md:w-[240px]`}
       >
+        {/* ... existing sidebar content ... */}
         <div className="relative flex items-center gap-4 border-b border-neutral-700/30 px-6 pb-8 pt-8 after:absolute after:bottom-0 after:left-6 after:right-6 after:h-px after:bg-gradient-to-r after:from-transparent after:via-neutral-600/40 after:to-transparent after:content-['']">
           <button
             className="hidden h-11 min-w-[44px] cursor-pointer items-center justify-center rounded-lg border border-neutral-600/40 bg-white/10 p-2.5 text-xl text-white shadow-[0_4px_12px_rgba(10,14,26,0.3)] backdrop-blur-[10px] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:scale-105 hover:border-neutral-500/50 hover:bg-white/20 hover:shadow-[0_6px_20px_rgba(10,14,26,0.4)] active:scale-95 md:flex"
@@ -373,7 +394,7 @@ export function PrivateLayout({ children }: PropsWithChildren) {
             : 'ml-0 w-full md:ml-20 md:w-[calc(100%-80px)] lg:ml-20 lg:w-[calc(100%-80px)]'
         }`}
       >
-        {/* Mobile header with hamburger and search */}
+        {/* ... header ... */}
         <div className="sticky top-0 z-[80] md:hidden">
           <div className="flex items-center gap-3 border-b border-neutral-700/30 bg-white/5 px-4 py-3 backdrop-blur-[10px]">
             <button
@@ -402,11 +423,78 @@ export function PrivateLayout({ children }: PropsWithChildren) {
           </div>
           <SmartNotifications />
         </div>
-        <div className="main-scrollbar mx-auto box-border min-h-0 w-full min-w-0 max-w-full flex-1 overflow-y-auto overflow-x-hidden px-6 py-5 md:p-6">
+        <div className="main-content-scrollable main-scrollbar mx-auto box-border min-h-0 w-full min-w-0 max-w-full flex-1 overflow-y-auto overflow-x-hidden px-6 py-5 md:p-6">
           {children}
         </div>
-        <AIAssistant />
       </main>
+
+      <AIAssistant isOpen={isAiOpen} onClose={() => setIsAiOpen(false)} />
+
+      {/* Unified Speed Dial FAB */}
+      <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-3">
+        {/* Action Options (Shown when open) */}
+        <div
+          className={`flex flex-col gap-3 transition-opacity duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isFabOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+        >
+          {/* Log Payment Option */}
+          <div
+            className={`flex items-center gap-3 transition-transform duration-300 ${isFabOpen ? 'translate-y-0' : 'translate-y-10'}`}
+          >
+            <span className="navbar-tooltip rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white shadow backdrop-blur-md">
+              Log Payment
+            </span>
+            <button
+              onClick={() => {
+                setIsLogPaymentOpen(true);
+                setIsFabOpen(false);
+              }}
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-xl text-primary-600 shadow-lg shadow-black/20 transition-transform hover:scale-110 active:scale-95"
+              aria-label="Log Payment"
+            >
+              💳
+            </button>
+          </div>
+
+          {/* AI Assistant Option */}
+          <div
+            className={`flex items-center gap-3 transition-transform delay-[50ms] duration-300 ${isFabOpen ? 'translate-y-0' : 'translate-y-10'}`}
+          >
+            <span className="navbar-tooltip rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white shadow backdrop-blur-md">
+              AI Assistant
+            </span>
+            <button
+              onClick={() => {
+                setIsAiOpen(true);
+                setIsFabOpen(false);
+              }}
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-xl text-white shadow-lg shadow-blue-500/30 transition-transform hover:scale-110 active:scale-95"
+              aria-label="AI Assistant"
+            >
+              🤖
+            </button>
+          </div>
+        </div>
+
+        {/* Main Toggle Button */}
+        <button
+          onClick={() => setIsFabOpen(!isFabOpen)}
+          className={`flex h-14 w-14 items-center justify-center rounded-full bg-primary-600 text-3xl text-white shadow-lg shadow-primary-600/30 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:scale-110 hover:shadow-primary-600/40 active:scale-95 ${isFabOpen ? 'rotate-[135deg] bg-red-500 shadow-red-500/30' : ''}`}
+          aria-label={isFabOpen ? 'Close Actions' : 'Open Actions'}
+        >
+          +
+        </button>
+      </div>
+
+      <LogPaymentModal
+        isOpen={isLogPaymentOpen}
+        onClose={() => setIsLogPaymentOpen(false)}
+        account={null}
+        period={null}
+        onPaymentLogged={() => {
+          // Optional: Refresh global data if needed
+          setIsLogPaymentOpen(false);
+        }}
+      />
     </div>
   );
 }

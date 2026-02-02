@@ -507,7 +507,7 @@ export function createPaymentLogEntry(
     datePaid,
     valuePaid,
     currency,
-    notes,
+    ...(notes ? { notes } : {}),
     createdAt: new Date(),
   };
 }
