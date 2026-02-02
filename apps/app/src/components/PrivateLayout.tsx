@@ -7,6 +7,7 @@ import { AIAssistant } from './ai/AIAssistant';
 import { SmartNotifications } from './ai/SmartNotifications';
 import { LogPaymentModal } from './LogPaymentModal';
 import { NewAccountWizard } from './NewAccountWizard';
+import { NewIncomeWizard } from './NewIncomeWizard';
 
 interface Category {
   readonly type: string;
@@ -78,6 +79,7 @@ export function PrivateLayout({ children }: PropsWithChildren) {
   >({});
   const [isLogPaymentOpen, setIsLogPaymentOpen] = useState(false);
   const [isNewAccountSetupOpen, setIsNewAccountSetupOpen] = useState(false);
+  const [isNewIncomeSetupOpen, setIsNewIncomeSetupOpen] = useState(false);
 
   // Auto-open accounts menu when on accounts route
   useEffect(() => {
@@ -463,6 +465,27 @@ export function PrivateLayout({ children }: PropsWithChildren) {
             </button>
           </div>
 
+          {/* Add Income Option */}
+          <div
+            className={`flex items-center gap-3 transition-transform delay-[25ms] duration-300 ${
+              isFabOpen ? 'translate-y-0' : 'translate-y-10'
+            }`}
+          >
+            <span className="navbar-tooltip rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white shadow backdrop-blur-md">
+              Add Income
+            </span>
+            <button
+              onClick={() => {
+                setIsNewIncomeSetupOpen(true);
+                setIsFabOpen(false);
+              }}
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-xl text-primary-600 shadow-lg shadow-black/20 transition-transform hover:scale-110 active:scale-95"
+              aria-label="Add Income"
+            >
+              💰
+            </button>
+          </div>
+
           {/* Log Payment Option */}
           <div
             className={`flex items-center gap-3 transition-transform delay-[50ms] duration-300 ${
@@ -534,6 +557,16 @@ export function PrivateLayout({ children }: PropsWithChildren) {
         onClose={() => setIsNewAccountSetupOpen(false)}
         onCreated={() => {
           setIsNewAccountSetupOpen(false);
+          // Optional: Force reload or rely on user navigation
+          window.location.reload();
+        }}
+      />
+
+      <NewIncomeWizard
+        isOpen={isNewIncomeSetupOpen}
+        onClose={() => setIsNewIncomeSetupOpen(false)}
+        onCreated={() => {
+          setIsNewIncomeSetupOpen(false);
           // Optional: Force reload or rely on user navigation
           window.location.reload();
         }}

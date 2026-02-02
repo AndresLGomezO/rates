@@ -130,3 +130,17 @@ export type {
   ProgressMetrics,
   QuickAction,
 } from './logic/dashboard-insights.js';
+// Incomes
+export type {
+  IncomeType,
+  SalarySubtype,
+  IncomeStatus,
+  PayDayPattern,
+  BaseIncome,
+  SalaryIncome,
+  Income,
+  CreateIncomeInput,
+  UpdateIncomeInput,
+} from './incomes.js';
+
+export { validateIncome } from './incomes.js';
