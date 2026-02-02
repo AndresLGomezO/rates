@@ -6,6 +6,7 @@ import type {
   CurrencyCode,
   PaymentPeriodStatus,
   AccountStatus,
+  IncomeStatus,
 } from '@rates/firebase-client';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -141,6 +142,29 @@ export function getAccountStatusColor(status: AccountStatus): string {
  */
 export function formatAccountStatus(status: AccountStatus): string {
   return status.replace('_', ' ').toUpperCase();
+}
+
+/**
+ * Format income status for display
+ */
+export function formatIncomeStatus(status: IncomeStatus): string {
+  return status.replace('_', ' ').toUpperCase();
+}
+
+/**
+ * Get color for income status
+ */
+export function getIncomeStatusColor(status: IncomeStatus): string {
+  switch (status) {
+    case 'active':
+      return '#4caf50';
+    case 'inactive':
+      return '#f44336';
+    case 'one_time':
+      return '#2196f3';
+    default:
+      return '#757575';
+  }
 }
 
 /**
