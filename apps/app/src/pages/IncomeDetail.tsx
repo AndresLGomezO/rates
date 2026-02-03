@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import type { Income, FinancialAccount } from '@rates/firebase-client';
+import type {
+  Income,
+  FinancialAccount,
+  InvestmentIncome,
+} from '@rates/firebase-client';
 import { getUserIncomes } from '../services/incomes';
 import { getUserFinancialAccounts } from '../services/financialAccounts';
 import {
@@ -28,6 +32,12 @@ import { VacancyCostWidget } from '../components/RentalInsights/VacancyCostWidge
 import { WealthBuildingWidget } from '../components/RentalInsights/WealthBuildingWidget';
 import { InvestmentPerformanceWidget } from '../components/RentalInsights/InvestmentPerformanceWidget';
 import { ExpenseHealthWidget } from '../components/RentalInsights/ExpenseHealthWidget';
+
+// Investment Insights
+import { InvestmentReliabilityWidget } from '../components/InvestmentInsights/InvestmentReliabilityWidget';
+import { DividendCalendarWidget } from '../components/InvestmentInsights/DividendCalendarWidget';
+import { TaxAdjustedIncomeWidget } from '../components/InvestmentInsights/TaxAdjustedIncomeWidget';
+import { FinancialIndependenceWidget } from '../components/InvestmentInsights/FinancialIndependenceWidget';
 
 export default function IncomeDetail() {
   const { incomeId } = useParams<{ incomeId: string }>();
@@ -189,7 +199,9 @@ export default function IncomeDetail() {
                 ? 'Monthly Estimate'
                 : income.type === 'rental'
                   ? income.rentalFrequency
-                  : ''}
+                  : income.type === 'investments'
+                    ? income.paymentFrequency
+                    : ''}
           </div>
         </div>
       </div>
@@ -305,10 +317,68 @@ export default function IncomeDetail() {
         </div>
       )}
 
+      {/* Investment Insights */}
+      {income.type === 'investments' && (
+        <div className="space-y-8">
+          <div className="flex items-center justify-between">
+            <h2 className="m-0 text-2xl font-bold text-white">
+              Investment Insights
+            </h2>
+            <div className="flex gap-2">
+              <span className="rounded-full bg-primary-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-primary-400 ring-1 ring-primary-500/20">
+                Portfolio Analysis
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            <InvestmentReliabilityWidget
+              investments={allIncomes.filter(
+                (inc): inc is InvestmentIncome => inc.type === 'investments'
+              )}
+            />
+            <DividendCalendarWidget
+              investments={allIncomes.filter(
+                (inc): inc is InvestmentIncome => inc.type === 'investments'
+              )}
+              currency={income.currency}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <FinancialIndependenceWidget
+                investments={allIncomes.filter(
+                  (inc): inc is InvestmentIncome => inc.type === 'investments'
+                )}
+                currency={income.currency}
+              />
+            </div>
+            <div className="lg:col-span-1">
+              <TaxAdjustedIncomeWidget
+                investments={allIncomes.filter(
+                  (inc): inc is InvestmentIncome => inc.type === 'investments'
+                )}
+                currency={income.currency}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/5 bg-white/5 p-8 text-center italic">
+            <p className="text-white/40">
+              Insights are calculated based on your entire investment portfolio
+              to provide a comprehensive view of your financial stability and
+              tax efficiency.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Fallback for other types (Future) */}
       {income.type !== 'salary' &&
         income.type !== 'freelance' &&
-        income.type !== 'rental' && (
+        income.type !== 'rental' &&
+        income.type !== 'investments' && (
           <div className="rounded-2xl border border-white/10 bg-white/5 p-12 text-center">
             <p className="text-xl text-white/60">
               Insights for {income.type} income are coming soon!
