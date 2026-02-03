@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "dev:hybrid": "VERTEX_AI_MOCK=false tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint . --ext .ts",
@@ -19,17 +20,21 @@
     "@google-cloud/firestore": "^7.5.0",
     "@google-cloud/pubsub": "^4.3.3",
     "@rates/vertex-ai-client": "workspace:*",
+    "@rates/firebase-client": "workspace:*",
     "dotenv": "^16.4.5",
     "fastify": "^4.26.2",
     "fastify-plugin": "^4.5.1",
     "fastify-type-provider-zod": "^1.1.9",
     "firebase-admin": "^12.0.0",
+    "long": "^5.2.3",
     "pino": "^9.6.0",
     "pino-pretty": "^11.0.0",
+    "protobufjs": "^7.5.4",
     "tiktoken": "^1.0.14",
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@types/long": "^4.0.2",
     "@types/node": "^20.11.30",
     "tsx": "^4.7.1",
     "typescript": "^5.4.3"

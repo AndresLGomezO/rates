@@ -38,7 +38,7 @@ import type {
 } from '@rates/firebase-client';
 
 // Collection name constant
-export const FINANCIAL_ACCOUNTS_COLLECTION = 'financialAccounts';
+import { FINANCIAL_ACCOUNTS_COLLECTION } from './financialAccounts';
 export const PAYMENT_PERIODS_SUBCOLLECTION = 'paymentPeriods';
 
 /**

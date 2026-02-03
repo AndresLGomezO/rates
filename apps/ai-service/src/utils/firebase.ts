@@ -9,4 +9,15 @@ if (!admin.apps.length) {
   });
 }
 
+if (process.env.FIREBASE_AUTH_EMULATOR_HOST) {
+  console.log(
+    '🔥 [Firebase Admin] Using Auth Emulator:',
+    process.env.FIREBASE_AUTH_EMULATOR_HOST
+  );
+} else {
+  console.log(
+    '⚠️ [Firebase Admin] NOT using Auth Emulator (Expect Real Tokens)'
+  );
+}
+
 export const firebaseAuth = admin.auth();

@@ -1,5 +1,7 @@
 // Main client
 export { VertexAIClient } from './client/vertex-client';
+// Mock exports (for development/testing)
+export { MockVertexAIClient, type MockOptions } from './mock/mock-client';
 export { GenerationClient } from './client/generation-client';
 export { EmbeddingClient } from './client/embedding-client';
 

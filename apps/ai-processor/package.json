@@ -7,9 +7,12 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "dev:hybrid": "VERTEX_AI_MOCK=false tsx watch src/index.ts",
+    "build": "tsup",
     "start": "node dist/index.js",
-    "lint": "eslint .",
+    "test:local": "tsx scripts/run-local.ts",
+    "test:hybrid": "VERTEX_AI_MOCK=false tsx scripts/run-local.ts",
+    "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
     "type-check": "tsc --noEmit"
@@ -17,10 +20,11 @@
   "dependencies": {
     "@google-cloud/pubsub": "^4.3.3",
     "@google-cloud/secret-manager": "^6.1.1",
-    "@rates/vertex-ai-client": "workspace:*",
     "@rates/firebase-client": "workspace:*",
+    "@rates/vertex-ai-client": "workspace:*",
     "dotenv": "^16.4.5",
     "firebase-admin": "^13.0.1",
+    "long": "^5.2.3",
     "pino": "^9.1.0",
     "zod": "^3.23.8"
   },
@@ -30,6 +34,7 @@
     "eslint": "^9.17.0",
     "globals": "^15.14.0",
     "prettier": "^3.4.2",
+    "tsup": "^8.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.18.0"

@@ -59,12 +59,26 @@ module "cloud_run_ai_service" {
   service_account_email = local.ai_service_sa
   container_image       = local.ai_service_image
   
-  # Internal Ingress Only
+  # Internal Ingress Only (Critical Security Requirement)
   ingress = "internal"
   allow_unauthenticated = false
 
   # Fallback image (hello-app) uses /, real app uses /health
   probe_path = var.use_fallback_image ? "/" : "/health"
+
+  # Environment Variables
+  environment_variables = {
+    GCP_PROJECT_ID              = var.project_id
+    VERTEX_AI_LOCATION          = var.region
+    FIRESTORE_COLLECTION_PREFIX = var.environment
+    ENV                         = var.environment
+    LOG_LEVEL                   = "info"
+    RATE_LIMIT_REQUESTS_PER_MIN = "60"
+    RATE_LIMIT_TOKENS_PER_DAY   = "100000"
+    VERTEX_AI_MOCK              = "false"
+    FIREBASE_AUTH_EMULATOR_HOST = ""
+    FIRESTORE_EMULATOR_HOST     = ""
+  }
 
   # VPC Configuration
   vpc_connector_name = module.ai_vpc_connector.connector_id
@@ -83,6 +97,15 @@ module "cloud_run_ai_service" {
     data.terraform_remote_state.foundation,
     module.ai_vpc_connector
   ]
+}
+
+# Allow Main App to invoke AI Service (Service-to-Service IAM)
+resource "google_cloud_run_v2_service_iam_member" "main_app_invoker" {
+  project  = var.project_id
+  location = var.region
+  name     = module.cloud_run_ai_service.service_name
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${data.terraform_remote_state.foundation.outputs.dev_cloud_run_sa_email}"
 }
 
 # ----------------------------------------------------------------------------
@@ -110,6 +133,25 @@ resource "google_cloud_run_v2_job" "ai_processor" {
           }
         }
 
+        # Static Environment Variables
+        env {
+          name  = "GCP_PROJECT_ID"
+          value = var.project_id
+        }
+        env {
+          name  = "VERTEX_AI_LOCATION"
+          value = var.region
+        }
+        env {
+          name  = "FIRESTORE_COLLECTION_PREFIX"
+          value = var.environment
+        }
+        env {
+          name  = "ENV"
+          value = var.environment
+        }
+
+        # Secret Environment Variables
         dynamic "env" {
           for_each = var.include_secrets ? [1] : []
           content {

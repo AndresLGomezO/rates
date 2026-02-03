@@ -6,68 +6,152 @@ import {
   isBill,
 } from '@rates/firebase-client';
 import { Modal } from './Modal';
-import { logPayment } from '../services/financialAccounts';
+import {
+  logPayment,
+  getUserFinancialAccounts,
+} from '../services/financialAccounts';
 import { logPaymentToPeriod } from '../services/paymentPeriods';
+import { PaymentSuggestions } from './PaymentSuggestions';
+import { formatCurrency, formatDate } from '../utils/formatters';
 
 interface LogPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  account: FinancialAccount | null;
+  account: FinancialAccount | null; // Can be null if opened from global FAB
   period: PaymentPeriod | null;
   onPaymentLogged: () => void;
 }
 
+type ViewState = 'suggestions' | 'form' | 'confirmation';
+
 export function LogPaymentModal({
   isOpen,
   onClose,
-  account,
+  account: initialAccount,
   period,
   onPaymentLogged,
 }: LogPaymentModalProps) {
+  // State
+  const [view, setView] = useState<ViewState>('suggestions');
+  const [selectedAccount, setSelectedAccount] =
+    useState<FinancialAccount | null>(null);
+  const [allAccounts, setAllAccounts] = useState<FinancialAccount[]>([]);
+  const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
+
+  // Form State
   const [paymentDate, setPaymentDate] = useState<string>('');
   const [paymentAmount, setPaymentAmount] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successInfo, setSuccessInfo] = useState<{
+    amount: number;
+    date: Date;
+    accountName: string;
+  } | null>(null);
 
-  // Initialize form with default values when account or period changes
+  // Derived State
+  const activeAccount = selectedAccount || initialAccount;
+
+  // Initialize
   useEffect(() => {
-    if (account && isOpen) {
-      // Set default payment date to today
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      setPaymentDate(today.toISOString().split('T')[0]);
-
-      // Set default amount based on period if available, otherwise use account-specific payment
-      if (period) {
-        // Use remaining amount for this period, or the period amount if nothing paid yet
-        const defaultAmount =
-          Math.max(0, period.amount - period.amountPaid) || period.amount;
-        setPaymentAmount(defaultAmount.toString());
+    if (isOpen) {
+      if (initialAccount) {
+        setView('form');
+        setSelectedAccount(initialAccount);
+        initializeForm(initialAccount, period);
       } else {
-        // Get default payment amount based on account type
-        let defaultAmount = 0;
-        if (isInstallmentLoan(account)) {
-          defaultAmount = account.scheduledPayment?.amount ?? 0;
-        } else if (isRevolvingCredit(account)) {
-          defaultAmount =
-            account.userPlannedPayment?.amount ??
-            account.currentMinimumPayment?.amount ??
-            0;
-        } else if (isBill(account)) {
-          defaultAmount = account.recurringAmount?.amount ?? 0;
-        }
-        setPaymentAmount(defaultAmount.toString());
+        setView('suggestions');
+        void loadAllAccounts();
       }
-      setNotes('');
-      setError(null);
+    } else {
+      // Reset view when closed
+      setTimeout(() => {
+        setView('suggestions');
+        setSelectedAccount(null);
+        setSuccessInfo(null);
+      }, 300);
     }
-  }, [account, period, isOpen]);
+  }, [isOpen, initialAccount, period]);
+
+  const loadAllAccounts = async () => {
+    setIsLoadingAccounts(true);
+    try {
+      const accounts = await getUserFinancialAccounts();
+      setAllAccounts(accounts);
+    } catch (err) {
+      console.error('Failed to load accounts', err);
+      setError('Failed to load accounts. Please try again.');
+    } finally {
+      setIsLoadingAccounts(false);
+    }
+  };
+
+  const initializeForm = (
+    acc: FinancialAccount,
+    p: PaymentPeriod | null,
+    defaultAmount?: number
+  ) => {
+    // Set default payment date to today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    setPaymentDate(today.toISOString().split('T')[0]);
+    setNotes('');
+    setError(null);
+
+    // Determines default amount
+    if (defaultAmount !== undefined) {
+      setPaymentAmount(defaultAmount.toString());
+      return;
+    }
+
+    if (p) {
+      const amt = Math.max(0, p.amount - p.amountPaid) || p.amount;
+      setPaymentAmount(amt.toString());
+    } else {
+      let amt = 0;
+      if (isInstallmentLoan(acc)) amt = acc.scheduledPayment?.amount ?? 0;
+      else if (isRevolvingCredit(acc))
+        amt =
+          acc.userPlannedPayment?.amount ??
+          acc.currentMinimumPayment?.amount ??
+          0;
+      else if (isBill(acc)) amt = acc.recurringAmount?.amount ?? 0;
+      setPaymentAmount(amt.toString());
+    }
+  };
+
+  const handleSelectAccount = (
+    acc: FinancialAccount,
+    _suggestionType?: string,
+    suggestedAmount?: number
+  ) => {
+    setSelectedAccount(acc);
+    initializeForm(acc, null, suggestedAmount);
+    setView('form');
+  };
+
+  // Smart Warnings
+  const getAmountWarning = (): string | null => {
+    if (!activeAccount || !paymentAmount) return null;
+    const amount = parseFloat(paymentAmount);
+    if (isNaN(amount)) return null;
+
+    if (isRevolvingCredit(activeAccount)) {
+      const balance = activeAccount.currentBalance.amount;
+      if (amount > balance)
+        return `⚠️ Exceeds current balance of ${formatCurrency(balance, activeAccount.currency)}`;
+
+      const minPayment = activeAccount.currentMinimumPayment?.amount ?? 0;
+      if (amount < minPayment && amount > 0)
+        return `⚠️ Below minimum payment of ${formatCurrency(minPayment, activeAccount.currency)}`;
+    }
+    return null;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!account) return;
+    if (!activeAccount) return;
 
     const amount = parseFloat(paymentAmount);
     if (isNaN(amount) || amount < 0) {
@@ -75,16 +159,9 @@ export function LogPaymentModal({
       return;
     }
 
-    // Allow 0 value payments for bills (e.g., when bill is 0 due to credit)
-    // For loans, warn but allow if user wants to log 0
-    if (amount === 0 && account.accountType !== 'bill') {
-      if (
-        !confirm(
-          'Are you sure you want to log a payment of 0? This will not reduce the loan balance.'
-        )
-      ) {
+    if (amount === 0 && activeAccount.accountType !== 'bill') {
+      if (!confirm('Log a payment of 0? This will not reduce the balance.'))
         return;
-      }
     }
 
     if (!paymentDate) {
@@ -97,276 +174,415 @@ export function LogPaymentModal({
 
     try {
       const date = new Date(paymentDate);
-      date.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+      date.setHours(12, 0, 0, 0);
 
-      // If we have a specific period, log directly to that period
       if (period) {
         await logPaymentToPeriod(
-          account.accountNumber ?? '',
+          activeAccount.accountNumber ?? '',
           period.periodNumber,
           {
             datePaid: date,
-            amount: amount,
-            currency: account.currency,
+            amount,
+            currency: activeAccount.currency,
             notes: notes?.trim() || undefined,
           }
         );
       } else {
-        // Fallback to general account payment logging
-        await logPayment(account.accountNumber ?? '', {
+        await logPayment(activeAccount.accountNumber ?? '', {
           valuePaid: amount,
-          currency: account.currency,
+          currency: activeAccount.currency,
           datePaid: date,
           notes: notes?.trim() || undefined,
         });
       }
 
-      // Reset form
-      setPaymentDate('');
-      setPaymentAmount('');
-      setNotes('');
-
-      // Notify parent and close
+      setSuccessInfo({
+        amount,
+        date,
+        accountName: activeAccount.accountName,
+      });
+      setView('confirmation');
       onPaymentLogged();
-      onClose();
     } catch (err) {
       console.error('Error logging payment:', err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to log payment. Please try again.'
-      );
+      setError(err instanceof Error ? err.message : 'Failed to log payment.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!account) return null;
-
-  const formatCurrency = (amount: number, currency: string): string => {
-    if (currency === 'COP') {
-      return new Intl.NumberFormat('es-CO', {
-        style: 'currency',
-        currency: 'COP',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(amount);
+  const handleBack = () => {
+    if (initialAccount) {
+      onClose(); // Can't go back if opened for specific account
+    } else {
+      setView('suggestions');
+      setSelectedAccount(null);
     }
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
   };
 
-  // Use period-specific information if available, otherwise use account info
-  // Get type-specific fields
-  let accountNextDueDate: Date | undefined;
-  let accountPaymentAmount = 0;
-  let accountRemainingBalance = 0;
+  // Render Helpers
+  const renderSuggestions = () => (
+    <div className="flex flex-col gap-4 py-2">
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="🔍 Search accounts..."
+          className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white transition-all focus:border-primary-500/50 focus:bg-white/10 focus:outline-none"
+          onChange={(_e) => {
+            // Simple client-side search for now
+            // In a full impl, we'd filter `allAccounts` and show a list
+          }}
+        />
+      </div>
 
-  if (isInstallmentLoan(account)) {
-    accountNextDueDate =
-      account.nextDueDate instanceof Date
-        ? account.nextDueDate
-        : account.nextDueDate?.toDate();
-    accountPaymentAmount = account.scheduledPayment?.amount ?? 0;
-    accountRemainingBalance = account.currentPrincipal?.amount ?? 0;
-  } else if (isRevolvingCredit(account)) {
-    accountNextDueDate =
-      account.nextDueDate instanceof Date
-        ? account.nextDueDate
-        : account.nextDueDate?.toDate();
-    accountPaymentAmount =
-      account.userPlannedPayment?.amount ??
-      account.currentMinimumPayment?.amount ??
-      0;
-    accountRemainingBalance = account.currentBalance.amount;
-  } else if (isBill(account)) {
-    accountNextDueDate =
-      account.nextDueDate instanceof Date
-        ? account.nextDueDate
-        : account.nextDueDate?.toDate();
-    accountPaymentAmount = account.recurringAmount?.amount ?? 0;
-    accountRemainingBalance = 0; // Bills don't have a remaining balance
-  }
+      <div className="custom-scrollbar max-h-[60vh] overflow-y-auto pr-2">
+        {isLoadingAccounts ? (
+          <div className="py-8 text-center text-white/50">
+            Loading accounts...
+          </div>
+        ) : (
+          <>
+            <PaymentSuggestions
+              accounts={allAccounts}
+              onSelectAccount={handleSelectAccount}
+            />
 
-  const periodDueDate = period
-    ? period.dueDate instanceof Date
-      ? period.dueDate
-      : period.dueDate.toDate()
-    : (accountNextDueDate ?? new Date());
+            <div className="mt-8 border-t border-white/10 pt-6">
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white/40">
+                All Accounts
+              </h3>
+              <div className="space-y-2">
+                {allAccounts.map((acc) => (
+                  <div
+                    key={acc.accountNumber}
+                    onClick={() => handleSelectAccount(acc)}
+                    className="flex cursor-pointer items-center justify-between rounded-lg border border-transparent p-3 transition-colors hover:border-white/5 hover:bg-white/5"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-sm">
+                        {acc.accountType === 'revolving_credit'
+                          ? '💳'
+                          : acc.accountType === 'installment_loan'
+                            ? '🏦'
+                            : '💡'}
+                      </div>
+                      <div>
+                        <div className="font-medium text-white">
+                          {acc.accountName}
+                        </div>
+                        <div className="text-xs text-white/50">
+                          {acc.accountNumber}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-sm text-white/40">Log Payment →</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
 
-  const periodAmount = period ? period.amount : accountPaymentAmount;
-  const periodAmountPaid = period ? period.amountPaid : 0;
-  const periodAmountRemaining = period
-    ? Math.max(0, period.amount - period.amountPaid)
-    : accountRemainingBalance;
-  const currency = period ? period.currency : account.currency;
+  const renderForm = () => {
+    if (!activeAccount) return null;
 
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={`Log Payment - ${account.accountName}${period ? ` (Period #${period.periodNumber})` : ''}`}
-    >
+    const currency = activeAccount.currency;
+    const warning = getAmountWarning();
+
+    // Quick amount chips
+    const getQuickAmounts = () => {
+      const chips: { label: string; value: number }[] = [];
+
+      if (isRevolvingCredit(activeAccount)) {
+        if (activeAccount.currentMinimumPayment?.amount) {
+          chips.push({
+            label: 'Minimum',
+            value: activeAccount.currentMinimumPayment.amount,
+          });
+        }
+        if (activeAccount.userPlannedPayment?.amount) {
+          chips.push({
+            label: 'Usual',
+            value: activeAccount.userPlannedPayment.amount,
+          });
+        }
+        // Balance
+        chips.push({
+          label: 'Full Balance',
+          value: activeAccount.currentBalance.amount,
+        });
+      } else if (isInstallmentLoan(activeAccount)) {
+        if (activeAccount.scheduledPayment?.amount) {
+          chips.push({
+            label: 'Regular',
+            value: activeAccount.scheduledPayment.amount,
+          });
+        }
+        // Payoff
+        if (activeAccount.currentPrincipal?.amount) {
+          chips.push({
+            label: 'Pay Off',
+            value: activeAccount.currentPrincipal.amount,
+          });
+        }
+      } else if (isBill(activeAccount)) {
+        if (activeAccount.recurringAmount?.amount) {
+          chips.push({
+            label: 'Recurring',
+            value: activeAccount.recurringAmount.amount,
+          });
+        }
+      }
+
+      // Dedupe by value
+      return chips.filter(
+        (chip, index, self) =>
+          index === self.findIndex((t) => t.value === chip.value)
+      );
+    };
+
+    const quickAmounts = getQuickAmounts();
+
+    return (
       <form
-        onSubmit={(e) => {
-          void handleSubmit(e);
-        }}
-        className="flex flex-col gap-6 py-4"
+        onSubmit={(e) => void handleSubmit(e)}
+        className="flex flex-col gap-6 py-2"
       >
-        <div className="rounded-lg border border-white/10 bg-white/5 p-5">
-          <div className="flex items-center justify-between border-b border-white/5 py-3 last:border-b-0">
-            <span className="text-sm font-medium text-white/70">
-              Account Number:
-            </span>
-            <span className="text-base font-semibold text-white/95">
-              {account.accountNumber}
+        {!initialAccount && (
+          <button
+            type="button"
+            onClick={handleBack}
+            className="mb-2 flex w-fit items-center gap-1 text-sm text-white/60 transition-colors hover:text-white"
+          >
+            ← Select different account
+          </button>
+        )}
+
+        <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+          <div className="mb-2 flex items-center gap-3">
+            <h3 className="text-lg font-bold text-white">
+              {activeAccount.accountName}
+            </h3>
+            <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs uppercase text-white/70">
+              {activeAccount.accountType.replace('_', ' ')}
             </span>
           </div>
-          {period && (
-            <div className="flex items-center justify-between border-b border-white/5 py-3 last:border-b-0">
-              <span className="text-sm font-medium text-white/70">
-                Period Number:
+          {/* Context Info */}
+          <div className="flex gap-4 text-sm text-white/60">
+            {isRevolvingCredit(activeAccount) && (
+              <span>
+                Balance:{' '}
+                {formatCurrency(activeAccount.currentBalance.amount, currency)}
               </span>
-              <span className="text-base font-semibold text-white/95">
-                #{period.periodNumber}
+            )}
+            {isInstallmentLoan(activeAccount) && (
+              <span>
+                Balance:{' '}
+                {formatCurrency(
+                  activeAccount.currentPrincipal?.amount ?? 0,
+                  currency
+                )}
               </span>
+            )}
+            {(isInstallmentLoan(activeAccount) ||
+              isRevolvingCredit(activeAccount) ||
+              isBill(activeAccount)) &&
+              activeAccount.nextDueDate && (
+                <span>Due: {formatDate(activeAccount.nextDueDate)}</span>
+              )}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {/* Amount Input */}
+          <div className="space-y-2">
+            <label
+              htmlFor="amount"
+              className="block text-sm font-semibold text-white/90"
+            >
+              Payment Amount ({currency}){' '}
+              <span className="text-danger-500">*</span>
+            </label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg text-white/50">
+                $
+              </span>
+              <input
+                id="amount"
+                type="number"
+                step="0.01"
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+                className="bg-white/8 focus:bg-white/12 w-full rounded-xl border border-white/15 px-4 py-3 pl-8 text-2xl font-bold text-white transition-all focus:border-primary-500/50 focus:outline-none"
+                placeholder="0.00"
+                autoFocus
+              />
             </div>
-          )}
-          <div className="flex items-center justify-between border-b border-white/5 py-3 last:border-b-0">
-            <span className="text-sm font-medium text-white/70">
-              {period ? 'Period Amount:' : 'Expected Payment:'}
-            </span>
-            <span className="text-base font-semibold text-white/95">
-              {formatCurrency(periodAmount, currency)}
-            </span>
-          </div>
-          <div className="flex items-center justify-between border-b border-white/5 py-3 last:border-b-0">
-            <span className="text-sm font-medium text-white/70">Due Date:</span>
-            <span className="text-base font-semibold text-white/95">
-              {periodDueDate.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-              })}
-            </span>
-          </div>
-          {period && (
-            <div className="flex items-center justify-between border-b border-white/5 py-3 last:border-b-0">
-              <span className="text-sm font-medium text-white/70">
-                Amount Paid:
-              </span>
-              <span className="text-base font-semibold text-white/95">
-                {formatCurrency(periodAmountPaid, currency)}
-              </span>
+            {/* Quick Chips */}
+            <div className="mt-2 flex flex-wrap gap-2">
+              {quickAmounts.map((chip) => (
+                <button
+                  key={chip.label}
+                  type="button"
+                  onClick={() => setPaymentAmount(chip.value.toString())}
+                  className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/80 transition-all hover:border-primary-500/30 hover:bg-white/10"
+                >
+                  {chip.label} {formatCurrency(chip.value, currency)}
+                </button>
+              ))}
             </div>
-          )}
-          <div className="flex items-center justify-between border-b border-white/5 py-3 last:border-b-0">
-            <span className="text-sm font-medium text-white/70">
-              {period ? 'Amount Remaining:' : 'Remaining Balance:'}
-            </span>
-            <span className="text-base font-semibold text-white/95">
-              {formatCurrency(periodAmountRemaining, currency)}
-            </span>
+            {/* Warning */}
+            {warning && (
+              <div className="mt-1 flex items-center gap-2 text-sm text-warning-400">
+                <span>{warning}</span>
+              </div>
+            )}
           </div>
-        </div>
 
-        <div className="flex flex-col gap-2">
-          <label
-            htmlFor="payment-date"
-            className="flex items-center gap-1 text-[0.95rem] font-semibold text-white/90"
-          >
-            Payment Date <span className="text-danger-500">*</span>
-          </label>
-          <input
-            id="payment-date"
-            type="date"
-            value={paymentDate}
-            onChange={(e) => setPaymentDate(e.target.value)}
-            required
-            max={new Date().toISOString().split('T')[0]}
-            disabled={isSubmitting}
-            className="bg-white/8 font-inherit ease focus:bg-white/12 rounded-lg border border-white/15 px-4 py-3 text-base text-white/95 transition-all duration-200 focus:border-primary-500/50 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-          />
-        </div>
+          {/* Date Input */}
+          <div className="space-y-2">
+            <label
+              htmlFor="date"
+              className="block text-sm font-semibold text-white/90"
+            >
+              Payment Date <span className="text-danger-500">*</span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="date"
+                type="date"
+                value={paymentDate}
+                onChange={(e) => setPaymentDate(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+                className="bg-white/8 focus:bg-white/12 flex-1 rounded-lg border border-white/15 px-4 py-3 text-white transition-all focus:border-primary-500/50 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const y = new Date();
+                  y.setDate(y.getDate() - 1);
+                  setPaymentDate(y.toISOString().split('T')[0]);
+                }}
+                className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition-all hover:bg-white/10"
+              >
+                Yesterday
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPaymentDate(new Date().toISOString().split('T')[0]);
+                }}
+                className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition-all hover:bg-white/10"
+              >
+                Today
+              </button>
+            </div>
+          </div>
 
-        <div className="flex flex-col gap-2">
-          <label
-            htmlFor="payment-amount"
-            className="flex items-center gap-1 text-[0.95rem] font-semibold text-white/90"
-          >
-            Payment Amount ({currency}){' '}
-            <span className="text-danger-500">*</span>
-          </label>
-          <input
-            id="payment-amount"
-            type="number"
-            value={paymentAmount}
-            onChange={(e) => setPaymentAmount(e.target.value)}
-            required
-            min="0"
-            step="0.01"
-            placeholder={
-              periodAmountRemaining > 0
-                ? periodAmountRemaining.toString()
-                : periodAmount.toString()
-            }
-            disabled={isSubmitting}
-            className="bg-white/8 font-inherit ease focus:bg-white/12 rounded-lg border border-white/15 px-4 py-3 text-base text-white/95 transition-all duration-200 focus:border-primary-500/50 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-          />
-          <small className="-mt-1 text-[0.85rem] text-white/60">
-            {period
-              ? `Remaining: ${formatCurrency(periodAmountRemaining, currency)} (You can enter 0 to mark as paid when bill is 0)`
-              : `Default: ${formatCurrency(periodAmount, currency)}${account.accountType === 'bill' ? ' (You can enter 0 to mark as paid when bill is 0)' : ''}`}
-          </small>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <label
-            htmlFor="payment-notes"
-            className="flex items-center gap-1 text-[0.95rem] font-semibold text-white/90"
-          >
-            Notes (Optional)
-          </label>
-          <textarea
-            id="payment-notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-            placeholder="Add any notes about this payment..."
-            disabled={isSubmitting}
-            className="bg-white/8 font-inherit ease focus:bg-white/12 min-h-[80px] resize-y rounded-lg border border-white/15 px-4 py-3 text-base text-white/95 transition-all duration-200 focus:border-primary-500/50 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.1)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-          />
+          {/* Notes */}
+          <div className="space-y-2">
+            <label
+              htmlFor="notes"
+              className="block text-sm font-semibold text-white/90"
+            >
+              Notes (Optional)
+            </label>
+            <textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add details..."
+              rows={2}
+              className="bg-white/8 focus:bg-white/12 w-full resize-none rounded-lg border border-white/15 px-4 py-3 text-white transition-all focus:border-primary-500/50 focus:outline-none"
+            />
+          </div>
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 rounded-lg border border-danger-500/30 bg-danger-500/15 px-4 py-3 text-sm text-danger-500">
-            <span className="text-xl">⚠️</span>
+          <div className="rounded-lg border border-danger-500/20 bg-danger-500/10 p-3 text-sm text-danger-400">
             {error}
           </div>
         )}
 
-        <div className="mt-2 flex justify-end gap-4">
+        <div className="flex gap-3 pt-2">
           <button
             type="button"
             onClick={onClose}
-            className="ease font-inherit cursor-pointer rounded-lg border border-none border-white/20 bg-white/10 px-6 py-3 text-base font-semibold text-white/90 transition-all duration-200 hover:border-white/30 hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={isSubmitting}
+            className="flex-1 rounded-lg border border-white/10 bg-white/5 px-4 py-3 font-semibold text-white transition-all hover:bg-white/10"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="ease font-inherit cursor-pointer rounded-lg border-none bg-gradient-to-br from-primary-500 to-purple-500 px-6 py-3 text-base font-semibold text-white shadow-[0_4px_12px_rgba(99,102,241,0.3)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(99,102,241,0.4)] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isSubmitting}
+            className="flex-[2] rounded-lg bg-gradient-to-r from-primary-600 to-purple-600 px-4 py-3 font-bold text-white shadow-lg shadow-primary-500/20 transition-all hover:from-primary-500 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isSubmitting ? 'Logging Payment...' : 'Log Payment'}
+            {isSubmitting ? 'Logging...' : '✓ Log Payment'}
           </button>
         </div>
       </form>
+    );
+  };
+
+  const renderConfirmation = () => {
+    if (!successInfo || !activeAccount) return null;
+
+    return (
+      <div className="flex animate-fadeIn flex-col items-center justify-center py-8 text-center">
+        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-success-css/20 text-3xl">
+          ✓
+        </div>
+        <h2 className="mb-2 text-2xl font-bold text-white">Payment Logged</h2>
+        <p className="mb-8 max-w-[250px] text-white/60">
+          Successfully logged{' '}
+          {formatCurrency(successInfo.amount, activeAccount.currency)} for{' '}
+          {successInfo.accountName}
+        </p>
+
+        <div className="flex w-full flex-col gap-3">
+          <button
+            onClick={() => {
+              // "Log Another"
+              setSuccessInfo(null);
+              setSelectedAccount(null);
+              setPaymentAmount('');
+              setNotes('');
+              setView('suggestions');
+              void loadAllAccounts();
+            }}
+            className="w-full rounded-lg bg-white/10 px-4 py-3 font-semibold text-white transition-all hover:bg-white/15"
+          >
+            Log Another Payment
+          </button>
+          <button
+            onClick={onClose}
+            className="w-full rounded-lg bg-white/5 px-4 py-3 text-white/60 transition-all hover:bg-white/10 hover:text-white"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={
+        view === 'confirmation'
+          ? ''
+          : view === 'suggestions'
+            ? 'Log Payment'
+            : `Log Payment`
+      }
+    >
+      {view === 'suggestions' && renderSuggestions()}
+      {view === 'form' && renderForm()}
+      {view === 'confirmation' && renderConfirmation()}
     </Modal>
   );
 }

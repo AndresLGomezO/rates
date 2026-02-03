@@ -14,6 +14,9 @@ const configSchema = z.object({
   CLOUD_RUN_EXECUTION: z.string().optional(),
   CLOUD_RUN_TASK_INDEX: z.coerce.number().optional(),
   CLOUD_RUN_TASK_COUNT: z.coerce.number().optional(),
+  // Mock Settings
+  VERTEX_AI_MOCK: z.string().optional(),
+  VERTEX_AI_MOCK_DELAY: z.string().optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;

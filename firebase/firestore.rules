@@ -10,30 +10,39 @@ service cloud.firestore {
       return request.auth == null;
     }
     
-    // Financial Accounts Collection
-    match /financialAccounts/{accountId} {
+    // Generic Financial Accounts Collection (supports prefixes like dev_financialAccounts)
+    match /{collectionName}/{accountId} {
+      // Helper function to validate collection name
+      function isFinancialAccountsCollection() {
+        return collectionName == 'financialAccounts' || 
+               collectionName.matches('.*_financialAccounts');
+      }
+
+      // Only apply these rules if it is a financial accounts collection
+      // otherwise fall through to other rules
+      
       // Allow all operations in emulator mode (for development)
-      allow read, write, create, update, delete: if isEmulatorMode();
+      allow read, write, create, update, delete: if isFinancialAccountsCollection() && isEmulatorMode();
       
       // Production rules: Users can only read/write their own accounts
-      // For queries: Firestore evaluates this rule for each document
-      // Only documents where userId matches request.auth.uid will be returned
-      allow read: if request.auth != null && 
+      allow read: if isFinancialAccountsCollection() && 
+                    request.auth != null && 
                     request.auth.uid == resource.data.userId;
-      allow write, update, delete: if request.auth != null && 
+      allow write, update, delete: if isFinancialAccountsCollection() && 
+                                      request.auth != null && 
                                       request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && 
+      allow create: if isFinancialAccountsCollection() && 
+                      request.auth != null && 
                       request.auth.uid == request.resource.data.userId;
       
-      // Payment Periods subcollection: financialAccounts/{accountId}/paymentPeriods/{periodId}
-      // Only the owner of the parent account can read/write periods
+      // Payment Periods subcollection
       match /paymentPeriods/{periodId} {
         // Allow all operations in emulator mode
         allow read, write, create, update, delete: if isEmulatorMode();
         
         // Production rules: Check parent account's userId matches auth.uid
         allow read, write, create, update, delete: if request.auth != null &&
-          request.auth.uid == get(/databases/$(database)/documents/financialAccounts/$(accountId)).data.userId;
+          request.auth.uid == get(/databases/$(database)/documents/$(collectionName)/$(accountId)).data.userId;
       }
     }
     

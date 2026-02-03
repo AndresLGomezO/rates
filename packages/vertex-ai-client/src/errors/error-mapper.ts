@@ -114,6 +114,16 @@ export class ErrorMapper {
       return new PermissionDeniedError(message, { cause: error as Error });
     }
 
+    // Treat 404 / Publisher Model not found as ValidationError (Configuration error) - Non-retryable
+    if (
+      code === 404 ||
+      code === 'NOT_FOUND' ||
+      message.includes('Publisher Model') ||
+      message.includes('not found')
+    ) {
+      return new ValidationError(message, { cause: error as Error });
+    }
+
     if (code === 'INTERNAL' || code === 13) {
       return new InternalError(message, { cause: error as Error });
     }

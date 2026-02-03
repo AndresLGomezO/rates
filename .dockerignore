@@ -13,6 +13,9 @@ out
 .env
 .env.local
 .env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
 
 # Git
 .git
@@ -58,6 +61,7 @@ docker-compose.override.yml
 apps/app/
 # Exception: include dist directory for app Docker build
 !apps/app/dist
+!apps/app/server.js
 apps/auth-app/node_modules
 apps/auth-app/dist
 apps/auth-app/.vite

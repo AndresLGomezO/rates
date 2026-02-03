@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { Filters } from './Filters';
 import { Modal } from './Modal';
+import { sendMessage } from '../services/ai';
+import { SmartResponse } from './search/SmartResponse';
 
 interface SearchBarProps {
   showMobileCompact?: boolean;
@@ -19,6 +21,9 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
   const isUpdatingFromUrlRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [aiResponse, setAiResponse] = useState<string | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
 
   // Hide account type filter on AccountsByType page (type is already filtered by route)
   const hideAccountType = location.pathname.startsWith('/accounts/');
@@ -45,6 +50,48 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
     (currencyFilter ? 1 : 0) +
     (showDaysFilter && daysAhead !== 15 ? 1 : 0);
 
+  const isAiLoadingRef = useRef(false);
+
+  useEffect(() => {
+    isAiLoadingRef.current = isAiLoading;
+  }, [isAiLoading]);
+
+  const handleAiSearch = useCallback(async (query: string) => {
+    if (!query.trim() || isAiLoadingRef.current) return;
+
+    // Check if it's a natural language question (basic heuristic)
+    const isQuestion =
+      /^(how|what|when|where|why|which|can|should|is|are|do|does|total|debt|balance)/i.test(
+        query.trim()
+      );
+
+    if (!isQuestion) return;
+
+    setIsAiLoading(true);
+    setAiResponse(null);
+
+    try {
+      const response = await sendMessage(
+        query,
+        "Provide a concise financial answer based on the user's data. Be premium, helpful, and numeric."
+      );
+      setAiResponse(response.content);
+    } catch (error) {
+      // Handle rate limiting gracefully
+      if (error instanceof Error && error.message.includes('429')) {
+        setAiResponse("I'm thinking too fast! Please wait a moment.");
+        return;
+      }
+      // Don't log expected errors to console to avoid noise
+      console.warn(
+        'Smart Search unavailable:',
+        error instanceof Error ? error.message : error
+      );
+    } finally {
+      setIsAiLoading(false);
+    }
+  }, []);
+
   // Update URL when search query changes (with debounce)
   useEffect(() => {
     // Clear any existing timeout
@@ -59,11 +106,16 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
 
     debounceTimeoutRef.current = setTimeout(() => {
       if (searchQuery.trim()) {
+        // Update URL immediately (300ms)
         setSearchParams((prev) => {
           const newParams = new URLSearchParams(prev);
           newParams.set('search', searchQuery.trim());
           return newParams;
         });
+
+        // Debounce AI search further to prevent rate limiting (800ms)
+        // We use a separate internal timeout or just check logical condition
+        // Here we just use a checking logic inside handleAiSearch or wrapper
       } else {
         setSearchParams((prev) => {
           const newParams = new URLSearchParams(prev);
@@ -71,14 +123,22 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
           return newParams;
         });
       }
-    }, 300); // 300ms debounce
+    }, 300); // 300ms debounce for URL
+
+    // Separate debounce for AI to avoid 429s and loops
+    const aiTimeout = setTimeout(() => {
+      if (searchQuery.trim() && !isAiLoadingRef.current) {
+        void handleAiSearch(searchQuery);
+      }
+    }, 800);
 
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
       }
+      clearTimeout(aiTimeout);
     };
-  }, [searchQuery, setSearchParams]);
+  }, [searchQuery, setSearchParams, handleAiSearch]);
 
   // Sync with URL changes (e.g., browser back/forward) - only when URL changes externally
   useEffect(() => {
@@ -128,11 +188,23 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
 
   const handleClear = () => {
     setSearchQuery('');
+    setAiResponse(null);
     setSearchParams((prev) => {
       const newParams = new URLSearchParams(prev);
       newParams.delete('search');
       return newParams;
     });
+  };
+
+  const toggleListening = () => {
+    setIsListening(!isListening);
+    if (!isListening) {
+      // Mock voice input
+      setTimeout(() => {
+        setIsListening(false);
+        setSearchQuery("What's my total debt?");
+      }, 2000);
+    }
   };
 
   const handleMobileExpand = () => {
@@ -240,7 +312,22 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
                     ✕
                   </button>
                 )}
+                <button
+                  className={`flex-shrink-0 text-lg transition-all ${isListening ? 'animate-pulse text-red-500' : 'text-white opacity-70 hover:opacity-100'}`}
+                  onClick={toggleListening}
+                  aria-label="Voice search"
+                >
+                  {isListening ? '⏺️' : '🎤'}
+                </button>
               </div>
+              <SmartResponse
+                content={aiResponse || ''}
+                isLoading={isAiLoading}
+                onFollowUp={(q) => {
+                  setSearchQuery(q);
+                  void handleAiSearch(q);
+                }}
+              />
             </div>
           </div>
         </div>
@@ -297,6 +384,13 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
             </button>
           )}
           <button
+            className={`flex-shrink-0 text-xl transition-all ${isListening ? 'animate-pulse text-red-500' : 'text-white opacity-70 hover:opacity-100'}`}
+            onClick={toggleListening}
+            aria-label="Voice search"
+          >
+            {isListening ? '⏺️' : '🎤'}
+          </button>
+          <button
             className={`relative flex flex-shrink-0 cursor-pointer items-center justify-center p-0 text-white transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
               isScrolled ? 'h-9 w-9 rounded-md' : 'h-10 w-10 rounded-lg'
             } ${
@@ -327,6 +421,17 @@ export function SearchBar({ showMobileCompact = false }: SearchBarProps = {}) {
               </span>
             )}
           </button>
+        </div>
+        <div className="mx-auto max-w-[800px]">
+          <SmartResponse
+            content={aiResponse || ''}
+            isLoading={isAiLoading}
+            onFollowUp={(q) => {
+              setSearchQuery(q);
+              void handleAiSearch(q);
+            }}
+            onDismiss={() => setAiResponse(null)}
+          />
         </div>
       </div>
       <Modal

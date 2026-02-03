@@ -284,6 +284,13 @@ module "cloud_run_app" {
   # Container Image
   container_image = local.container_image_app
 
+  # Health Check Probe
+  probe_path = "/health"
+
+  # VPC Configuration (Required for Internal Ingress Access)
+  vpc_connector_name = module.ai_vpc_connector.connector_id
+  vpc_egress         = "all-traffic"
+
   # Resource Limits (HARD LIMITS from docs/COST_GUARDRAILS.md §2.1)
   max_instances   = 2       # HARD LIMIT - DO NOT EXCEED
   min_instances   = 0       # REQUIRED - Scale to zero
@@ -319,6 +326,7 @@ module "cloud_run_app" {
     REGION                  = var.region
     FIREBASE_PROJECT_ID     = var.project_id
     VITE_FIREBASE_PROJECT_ID = var.project_id
+    VITE_AI_SERVICE_URL      = "https://${local.resource_prefix}-ai-service-${var.region}-${data.google_project.current.number}.${var.region}.run.app"
   }
 
   # Ingress Configuration

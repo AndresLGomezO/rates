@@ -1,7 +1,10 @@
-import { VertexAIClient } from '@rates/vertex-ai-client';
+import { createVertexClient } from '../services/vertex.factory.js';
 import { config } from './index.js';
 
-export const vertexAIClient = new VertexAIClient({
-  projectId: config.gcp.projectId,
-  location: config.gcp.location,
+export const vertexAIClient = createVertexClient({
+  ...config,
+  gcp: {
+    ...config.gcp,
+    projectId: config.vertexAI.projectId,
+  },
 });

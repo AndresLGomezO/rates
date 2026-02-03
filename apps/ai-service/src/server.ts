@@ -1,4 +1,13 @@
 import Fastify from 'fastify';
+import protobuf from 'protobufjs';
+import Long from 'long';
+
+// Fix for "util.Long.fromValue is not a function"
+// This ensures that protobufjs correctly utilizes the long library
+// for 64-bit integer support in Google Cloud libraries.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(protobuf.util as any).Long = Long;
+protobuf.configure();
 import { logger } from './utils/logger.js';
 import { authMiddleware } from './middleware/auth.middleware.js';
 import { rateLimitMiddleware } from './middleware/rate-limit.middleware.js';
@@ -7,16 +16,30 @@ import {
   serializerCompiler,
   validatorCompiler,
 } from 'fastify-type-provider-zod';
+import cors from '@fastify/cors';
 import { registerRoutes } from './routes/index.js';
 
 export async function createServer() {
   const fastify = Fastify({
     logger: true,
     disableRequestLogging: true,
+    bodyLimit: 30 * 1024 * 1024, // 30MB
   });
 
   fastify.setValidatorCompiler(validatorCompiler);
   fastify.setSerializerCompiler(serializerCompiler);
+
+  await fastify.register(cors, {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'x-forwarded-authorization',
+      'x-user-id',
+      'x-request-id',
+    ],
+  });
 
   // 1. Error Handler
   fastify.setErrorHandler(errorHandler);

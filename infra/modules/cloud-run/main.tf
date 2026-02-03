@@ -113,16 +113,16 @@ resource "google_cloud_run_v2_service" "this" {
       }
 
       # Health check / startup probe (optional)
-      startup_probe {
-        http_get {
-          path = var.probe_path
-          port = 8080
+        startup_probe {
+          http_get {
+            path = var.probe_path
+            port = 8080
+          }
+          initial_delay_seconds = 5
+          timeout_seconds       = 5
+          period_seconds        = 10
+          failure_threshold     = 5
         }
-        initial_delay_seconds = 0
-        timeout_seconds       = 3
-        period_seconds        = 10
-        failure_threshold     = 3
-      }
     }
 
 

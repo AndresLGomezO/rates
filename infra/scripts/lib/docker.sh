@@ -121,6 +121,18 @@ docker_build_and_push() {
     else
         print_warning "Could not retrieve auth app URL (API service might not be deployed yet)"
     fi
+
+    # AI Service URL (for AI features)
+    local cloud_run_ai_service_name="rates-${env}-ai-service-${region}"
+    local ai_service_url=""
+    if ai_service_url=$(gcloud run services describe "${cloud_run_ai_service_name}" \
+        --region="${region}" \
+        --project="${project_id}" \
+        --format="value(status.url)" 2>/dev/null); then
+        print_success "Retrieved AI service URL: ${ai_service_url}"
+    else
+        print_warning "Could not retrieve AI service URL (Service might not be deployed yet)"
+    fi
     
     # -------------------------------------------------------------------------
     # Build Images
@@ -147,7 +159,7 @@ docker_build_and_push() {
     
     # Build App Assets (Static files)
     if ! build_app_assets "${project_root}" "${env}" "${firebase_config_json}" \
-        "${nonce_secret}" "${auth_app_url}" "${LOG_FILE}"; then
+        "${nonce_secret}" "${auth_app_url}" "${ai_service_url}" "${LOG_FILE}"; then  
         return 1
     fi
     

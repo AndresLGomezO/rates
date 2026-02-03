@@ -10,8 +10,10 @@ import { EmbeddingClient } from './embedding-client';
 import { RetryHandler } from '../retry/retry-handler';
 import { getModelConfig } from '../config/model-config';
 import { MODELS } from '../constants/models';
+import { createClientConfig } from '../config/client-config';
 
 export class VertexAIClient {
+  public readonly config: VertexClientConfig;
   private vertexAI: VertexAI;
   private retryHandler: RetryHandler;
 
@@ -21,23 +23,25 @@ export class VertexAIClient {
   /**
    * Create a new Vertex AI client
    */
-  constructor(public readonly config: VertexClientConfig) {
+  constructor(config: VertexClientConfig) {
+    const fullConfig = createClientConfig(config);
+    this.config = fullConfig;
+
     this.vertexAI = new VertexAI({
-      project: config.projectId,
-      location: config.location,
-      // googleAuthOptions: can be passed if needed, assuming default credentials
+      project: fullConfig.projectId,
+      location: fullConfig.location,
     });
 
-    this.retryHandler = new RetryHandler(config.retry!);
+    this.retryHandler = new RetryHandler(fullConfig.retry!);
 
     this.generation = new GenerationClient(
       this.vertexAI,
-      config,
+      fullConfig,
       this.retryHandler
     );
     this.embedding = new EmbeddingClient(
       this.vertexAI,
-      config,
+      fullConfig,
       this.retryHandler
     );
   }

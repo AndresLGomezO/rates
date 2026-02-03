@@ -23,6 +23,12 @@ export interface GenerationRequest {
 
   /** Request metadata for tracing */
   metadata?: RequestMetadata;
+
+  /** Optional images for multimodal generation */
+  images?: {
+    mimeType: string;
+    data: string; // Base64 encoded
+  }[];
 }
 
 /**

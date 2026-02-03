@@ -23,6 +23,12 @@ export interface GenerateRequest {
   model?: string;
   parameters?: GenerationParams;
   responseFormat?: GenerationFormat;
+
+  /** Optional images for multimodal generation */
+  images?: {
+    mimeType: string;
+    data: string;
+  }[];
   safetySettings?: unknown; // Keeping unknown here for now as safety settings are complex
 }
 

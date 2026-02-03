@@ -12,6 +12,7 @@ import { QuickActionsWidget } from '../components/Dashboard/QuickActionsWidget';
 // Keeping the imports to not break the build if we want to render charts below
 // But for this step focusing on the top section
 import { NewAccountWizard } from '../components/NewAccountWizard';
+import { InlineInsights } from '../components/ai/InlineInsights';
 
 export default function Dashboard() {
   const [accounts, setAccounts] = useState<FinancialAccount[]>([]);
@@ -63,23 +64,20 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 pb-32">
+    <div className="mx-auto max-w-7xl px-4 py-4 pb-32">
       {/* Header */}
-      <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+      <div className="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white">
-            Financial Command Center
-          </h1>
+          <h1 className="text-3xl font-bold text-white">Financial Center</h1>
           <p className="text-neutral-400">
             Your complete financial picture, analyzed.
           </p>
         </div>
-        <button
-          onClick={() => setIsNewAccountWizardOpen(true)}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500"
-        >
-          + New Account
-        </button>
+      </div>
+
+      {/* AI Inline Insights */}
+      <div className="mb-5">
+        <InlineInsights context="Dashboard" />
       </div>
 
       {/* Top Row: Health & Attention */}

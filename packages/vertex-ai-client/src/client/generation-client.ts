@@ -4,6 +4,7 @@ import {
   HarmCategory,
   HarmBlockThreshold,
   SafetySetting,
+  Part,
 } from '@google-cloud/vertexai';
 import {
   GenerationRequest,
@@ -62,8 +63,47 @@ export class GenerationClient {
       const startTime = Date.now();
 
       try {
+        console.log('[VertexClient] FULL PROMPT:', request.prompt);
+        const parts: Part[] = [];
+        if (request.images && request.images.length > 0) {
+          request.images.forEach((img) => {
+            // Defensive cleanup: Ensure raw base64
+            const cleanedData = img.data.replace(/^data:.*;base64,/, '');
+
+            console.log(
+              `[VertexClient] Adding image part. Mime: ${img.mimeType}, Data Length: ${cleanedData.length}`
+            );
+            console.log(
+              `[VertexClient] Data Sample: ${cleanedData.substring(0, 50)}...`
+            );
+
+            parts.push({
+              inlineData: {
+                mimeType: img.mimeType,
+                data: cleanedData,
+              },
+            });
+          });
+        } else {
+          console.log('[VertexClient] No images found in request.');
+        }
+
+        // Add text prompt AFTER images (best practice for many vision models)
+        parts.push({ text: request.prompt });
+
+        console.log(
+          `[VertexClient] Sending request with ${parts.length} parts to model.`
+        );
+
         const result = await model.generateContent({
-          contents: [{ role: 'user', parts: [{ text: request.prompt }] }],
+          contents: [{ role: 'user', parts }],
+          // Map systemContext to systemInstruction
+          ...(request.systemContext && {
+            systemInstruction: {
+              role: 'system',
+              parts: [{ text: request.systemContext }],
+            },
+          }),
           generationConfig: {
             temperature: request.parameters?.temperature,
             maxOutputTokens: request.parameters?.maxOutputTokens,

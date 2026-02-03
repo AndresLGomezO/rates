@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import type {
   AccountStatus,
   AccountType,
+  BillAccount,
   BillSubtype,
   CreateFinancialAccountInput,
+  InstallmentLoanAccount,
   InstallmentLoanSubtype,
   PaymentFrequency,
+  RevolvingCreditAccount,
   RevolvingCreditSubtype,
 } from '@rates/firebase-client';
 import { createFinancialAccount } from '../services/financialAccounts';
@@ -14,6 +17,8 @@ import { InstallmentLoanFlow } from './InstallmentLoanFlow';
 import { RevolvingCreditFlow } from './RevolvingCreditFlow';
 import { BillFlow } from './BillFlow';
 import { OtherAccountFlow } from './OtherAccountFlow';
+import { DocumentScanner } from './ai/DocumentScanner';
+import { SmartFormAssist } from './ai/SmartFormAssist';
 import { Modal } from './Modal';
 import { Select } from './Select';
 import { formatCurrency } from '../utils/formatters';
@@ -29,7 +34,8 @@ type WizardStep =
   | 'installment_flow'
   | 'revolving_flow'
   | 'bill_flow'
-  | 'other_flow';
+  | 'other_flow'
+  | 'scan';
 
 interface NewAccountWizardProps {
   isOpen: boolean;
@@ -139,6 +145,7 @@ const BILL_SUBTYPE_HELP: Record<BillSubtype, string> = {
 };
 
 function buildTitle(step: WizardStep, type: AccountType | null) {
+  if (step === 'scan') return 'Scan Document';
   if (step === 'success') return 'Account created';
   if (step === 'installment_flow') return 'New Installment Loan';
   if (step === 'revolving_flow') return 'New Revolving Account';
@@ -637,6 +644,82 @@ export function NewAccountWizard({
     );
   };
 
+  const handleScanComplete = (data: Partial<CreateFinancialAccountInput>) => {
+    if (!data.accountType) {
+      setError('Could not identify account type from document');
+      return;
+    }
+
+    // 1. Set Type & Subtype
+    setSelectedType(data.accountType);
+
+    if (data.accountType === 'installment_loan') {
+      const loanData = data as unknown as InstallmentLoanAccount;
+      if (loanData.loanSubtype) setSelectedSubtype(loanData.loanSubtype);
+    } else if (data.accountType === 'revolving_credit') {
+      const creditData = data as unknown as RevolvingCreditAccount;
+      if (creditData.creditSubtype)
+        setSelectedSubtype(creditData.creditSubtype);
+    } else if (data.accountType === 'bill') {
+      const billData = data as unknown as BillAccount;
+      if (billData.billSubtype) setSelectedSubtype(billData.billSubtype);
+    }
+
+    // 2. Map fields to formData
+    const loanData = data as unknown as InstallmentLoanAccount;
+    const creditData = data as unknown as RevolvingCreditAccount;
+    const billData = data as unknown as BillAccount;
+
+    setFormData((prev) => ({
+      ...prev,
+      accountName: data.accountName || prev.accountName,
+      accountDescription:
+        data.accountDescription || `Scanned ${data.accountType} account`,
+      status: data.status || 'active',
+      currency: (data.currency as 'COP' | 'USD') || 'COP',
+
+      // Installment Loan fields
+      totalAmountRemaining:
+        data.accountType === 'installment_loan'
+          ? loanData.currentPrincipal?.amount.toString() || ''
+          : data.accountType === 'revolving_credit'
+            ? creditData.currentBalance?.amount.toString() || ''
+            : '',
+
+      originalAmount: loanData.originalPrincipal?.amount.toString() || '',
+      startDate: loanData.contractStartDate
+        ? new Date(loanData.contractStartDate as Date)
+            .toISOString()
+            .split('T')[0]
+        : '',
+      rate:
+        loanData.annualInterestRate?.toString() ||
+        creditData.purchaseApr?.toString() ||
+        '',
+      paymentFrequency: loanData.paymentFrequency || 'monthly',
+
+      // Revolving & Bill fields
+      paymentAmount:
+        loanData.scheduledPayment?.amount.toString() ||
+        billData.recurringAmount?.amount.toString() ||
+        creditData.currentMinimumPayment?.amount.toString() ||
+        '',
+
+      nextDueDate:
+        typeof (data as Record<string, unknown>).nextDueDate === 'string'
+          ? ((data as Record<string, unknown>).nextDueDate as string).split(
+              'T'
+            )[0]
+          : '',
+
+      numberOfPayments: loanData.termInPayments?.toString() || '',
+    }));
+
+    // 3. Move to appropriate step
+    // Skip flow steps since we have data, go straight to details to verify/complete
+    setStep('details');
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -657,9 +740,17 @@ export function NewAccountWizard({
 
         {step === 'type' && (
           <div>
-            <p className="mb-3 text-[0.85rem] opacity-75 sm:mb-4 sm:text-[0.9rem]">
-              Pick the category that best describes this account.
-            </p>
+            <div className="mb-3 flex items-center justify-between">
+              <p className="max-w-[60%] text-[0.85rem] opacity-75 sm:text-[0.9rem]">
+                Pick the category that best describes this account.
+              </p>
+              <button
+                onClick={() => setStep('scan')}
+                className="flex items-center gap-1.5 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-[0.75rem] font-bold text-blue-400 transition-all hover:bg-blue-500/20 hover:text-blue-300"
+              >
+                <span>✨</span> Scan with AI
+              </button>
+            </div>
 
             <div
               className="mt-5 grid grid-cols-2 gap-2 sm:mt-4 sm:gap-2.5"
@@ -719,6 +810,18 @@ export function NewAccountWizard({
                 }
               )}
             </div>
+          </div>
+        )}
+
+        {step === 'scan' && (
+          <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+            <DocumentScanner />
+            <button
+              onClick={() => setStep('type')}
+              className="mt-4 w-full text-sm text-white/40 transition-colors hover:text-white/60"
+            >
+              Back to manual entry
+            </button>
           </div>
         )}
 
@@ -998,6 +1101,13 @@ export function NewAccountWizard({
                       : 'border-neutral-600/40 bg-black/20 focus:border-primary-500/75 focus:bg-black/25 focus:shadow-[0_0_0_6px_rgba(102,126,234,0.18)]'
                   }`}
                   autoFocus
+                />
+                <SmartFormAssist
+                  fieldName="Account Name"
+                  value={formData.accountName}
+                  onSuggestion={(val) =>
+                    setFormData((p) => ({ ...p, accountName: val }))
+                  }
                 />
                 {detailsAttempted && detailsErrors.accountName && (
                   <div className="mt-1.5 text-[0.88rem] text-[#ffb3b3]">
@@ -1545,6 +1655,17 @@ export function NewAccountWizard({
                 <div className="mb-1 text-xs opacity-70">Type</div>
                 <div className="font-[650] -tracking-[0.2px]">
                   {ACCOUNT_TYPE_LABELS[selectedType]}
+                </div>
+              </div>
+              <div className="mt-8 rounded-xl border border-blue-500/20 bg-blue-500/5 p-6 text-center">
+                <h3 className="mb-2 text-lg font-bold text-white">
+                  Scan Document
+                </h3>
+                <p className="mb-6 text-sm text-white/60">
+                  Upload a bill, statement, or contract to auto-fill details.
+                </p>
+                <div className="flex justify-center">
+                  <DocumentScanner onScanComplete={handleScanComplete} />
                 </div>
               </div>
               <div className="bg-white/8 py-3.75 rounded-lg border border-neutral-700/30 px-4">
