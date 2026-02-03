@@ -65,6 +65,7 @@ export * from './logic/freelance-insights.js';
 export * from './logic/rental-insights.js';
 export * from './logic/investment-insights.js';
 export * from './logic/benefits-insights.js';
+export * from './logic/other-insights.js';
 
 // Payment Periods Schema
 export type {

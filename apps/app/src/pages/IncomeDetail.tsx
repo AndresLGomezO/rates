@@ -45,6 +45,14 @@ import { BenefitsTaxRealityWidget } from '../components/BenefitsInsights/Benefit
 import { BenefitTimelineWidget } from '../components/BenefitsInsights/BenefitTimelineWidget';
 import { AnnualAdjustmentWidget } from '../components/BenefitsInsights/AnnualAdjustmentWidget';
 
+// Other Insights
+import {
+  WindfallDecisionWidget,
+  ExpectedIncomeWidget,
+  OtherIncomeTaxWidget,
+  OtherIncomeContextWidget,
+} from '../components/OtherInsights';
+
 export default function IncomeDetail() {
   const { incomeId } = useParams<{ incomeId: string }>();
   const navigate = useNavigate();
@@ -421,18 +429,48 @@ export default function IncomeDetail() {
         </div>
       )}
 
-      {/* Fallback for other types (Future) */}
-      {income.type !== 'salary' &&
-        income.type !== 'freelance' &&
-        income.type !== 'rental' &&
-        income.type !== 'investments' &&
-        income.type !== 'benefits' && (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-12 text-center">
-            <p className="text-xl text-white/60">
-              Insights for {income.type} income are coming soon!
+      {/* Other Income Insights */}
+      {income.type === 'other' && (
+        <div className="space-y-8">
+          <div className="flex items-center justify-between">
+            <h2 className="m-0 text-2xl font-bold text-white">
+              Other Income Insights
+            </h2>
+            <div className="flex gap-2">
+              <span className="rounded-full bg-primary-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-primary-400 ring-1 ring-primary-500/20">
+                Miscellaneous Analysis
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            <WindfallDecisionWidget income={income} accounts={accounts} />
+            <ExpectedIncomeWidget
+              otherIncomes={allIncomes.filter((inc) => inc.type === 'other')}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            <OtherIncomeTaxWidget
+              otherIncomes={allIncomes.filter((inc) => inc.type === 'other')}
+              primaryCurrency={income.currency}
+            />
+            <OtherIncomeContextWidget
+              otherIncomes={allIncomes.filter((inc) => inc.type === 'other')}
+              allIncomes={allIncomes}
+              accounts={accounts}
+            />
+          </div>
+
+          <div className="rounded-2xl border border-white/5 bg-white/5 p-8 text-center italic">
+            <p className="text-white/40">
+              Other income insights focus on tracking expected payments, making
+              intentional decisions about windfalls, and understanding tax
+              implications.
             </p>
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 }
