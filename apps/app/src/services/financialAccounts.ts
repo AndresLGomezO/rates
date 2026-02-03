@@ -113,10 +113,10 @@ export async function createFinancialAccount(
     console.log('🔵 [createFinancialAccount] User ID:', userId);
 
     // Add userId to account data
-    const accountDataWithUserId: CreateFinancialAccountInput = {
+    const accountDataWithUserId = {
       ...accountData,
       userId,
-    };
+    } as CreateFinancialAccountInput;
     console.log(
       '🔵 [createFinancialAccount] Account data with userId:',
       accountDataWithUserId

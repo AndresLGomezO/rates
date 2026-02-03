@@ -8,6 +8,7 @@ import { WizardProgressBar } from './WizardProgressBar';
 import { Select } from './Select';
 import { CurrencyInput } from './CurrencyInput';
 import { formatCurrency } from '../utils/formatters';
+import { removeUndefined } from '../utils/data';
 
 type CategoryType =
   | 'money_owed'
@@ -83,7 +84,9 @@ type OtherAccountWizardStep =
 
 interface OtherAccountFlowProps {
   onBack: () => void;
-  onComplete: (data: Omit<CreateFinancialAccountInput, 'userId'>) => void;
+  onComplete: (
+    data: Omit<CreateFinancialAccountInput, 'userId'>
+  ) => void | Promise<void>;
   initialData?: Partial<CreateFinancialAccountInput>;
 }
 
@@ -219,23 +222,7 @@ export function OtherAccountFlow({
       paymentLog: [],
     } as unknown as Omit<CreateFinancialAccountInput, 'userId'>;
 
-    // Helper to recursively remove undefined values
-    const removeUndefined = <T,>(obj: T): T => {
-      if (obj === null || typeof obj !== 'object') return obj;
-      if (obj instanceof Date) return obj;
-
-      const result = (Array.isArray(obj) ? [] : {}) as T;
-
-      Object.keys(obj).forEach((key) => {
-        const value = (obj as Record<string, unknown>)[key];
-        if (value !== undefined) {
-          (result as Record<string, unknown>)[key] = removeUndefined(value);
-        }
-      });
-      return result;
-    };
-
-    onComplete(removeUndefined(rawPayload));
+    void onComplete(removeUndefined(rawPayload));
   };
 
   const stepsList: OtherAccountWizardStep[] = [

@@ -7,6 +7,7 @@ import { AIAssistant } from './ai/AIAssistant';
 import { SmartNotifications } from './ai/SmartNotifications';
 import { LogPaymentModal } from './LogPaymentModal';
 import { NewAccountWizard } from './NewAccountWizard';
+import { NewIncomeWizard } from './NewIncomeWizard';
 
 interface Category {
   readonly type: string;
@@ -65,6 +66,45 @@ const ACCOUNT_CATEGORIES: readonly Category[] = [
   },
 ] as const;
 
+const INCOME_CATEGORIES: readonly Category[] = [
+  {
+    type: 'salary',
+    label: 'Salary & Wages',
+    icon: '💼',
+    subcategories: [],
+  },
+  {
+    type: 'freelance',
+    label: 'Freelance & Gig',
+    icon: '🚀',
+    subcategories: [],
+  },
+  {
+    type: 'rental',
+    label: 'Rental Income',
+    icon: '🏠',
+    subcategories: [],
+  },
+  {
+    type: 'investments',
+    label: 'Investments',
+    icon: '📈',
+    subcategories: [],
+  },
+  {
+    type: 'benefits',
+    label: 'Benefits',
+    icon: '🛡️',
+    subcategories: [],
+  },
+  {
+    type: 'other',
+    label: 'Other',
+    icon: '📋',
+    subcategories: [],
+  },
+] as const;
+
 export function PrivateLayout({ children }: PropsWithChildren) {
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -72,19 +112,28 @@ export function PrivateLayout({ children }: PropsWithChildren) {
   const location = useLocation();
 
   const isAccountsRoute = location.pathname.startsWith('/accounts/');
+  const isIncomesRoute = location.pathname.startsWith('/incomes/');
   const [accountsMenuOpen, setAccountsMenuOpen] = useState(isAccountsRoute);
+  const [incomesMenuOpen, setIncomesMenuOpen] = useState(isIncomesRoute);
   const [expandedCategories, setExpandedCategories] = useState<
     Record<string, boolean>
   >({});
   const [isLogPaymentOpen, setIsLogPaymentOpen] = useState(false);
   const [isNewAccountSetupOpen, setIsNewAccountSetupOpen] = useState(false);
+  const [isNewIncomeSetupOpen, setIsNewIncomeSetupOpen] = useState(false);
 
-  // Auto-open accounts menu when on accounts route
+  // Auto-open menus when on relevant route
   useEffect(() => {
     if (isAccountsRoute) {
       setAccountsMenuOpen(true);
     }
   }, [isAccountsRoute]);
+
+  useEffect(() => {
+    if (isIncomesRoute) {
+      setIncomesMenuOpen(true);
+    }
+  }, [isIncomesRoute]);
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -105,6 +154,12 @@ export function PrivateLayout({ children }: PropsWithChildren) {
 
   const toggleAccountsMenu = () => {
     setAccountsMenuOpen(!accountsMenuOpen);
+    if (!accountsMenuOpen) setIncomesMenuOpen(false);
+  };
+
+  const toggleIncomesMenu = () => {
+    setIncomesMenuOpen(!incomesMenuOpen);
+    if (!incomesMenuOpen) setAccountsMenuOpen(false);
   };
 
   const toggleCategory = (categoryType: string) => {
@@ -333,6 +388,64 @@ export function PrivateLayout({ children }: PropsWithChildren) {
               </div>
             </li>
             <li
+              className={`relative my-2 ${sidebarExpanded || isMobileMenuOpen ? 'px-4' : 'px-3'}`}
+            >
+              <div>
+                <button
+                  className={`before:ease relative flex w-full cursor-pointer items-center gap-4 overflow-hidden rounded-lg border-0 bg-transparent text-left text-[0.95rem] font-medium text-white/85 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-br before:from-white/15 before:to-white/5 before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:translate-x-1 hover:text-white hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:before:opacity-100 ${
+                    sidebarExpanded || isMobileMenuOpen
+                      ? 'justify-start px-5 py-4'
+                      : 'justify-center p-4'
+                  } ${
+                    isIncomesRoute
+                      ? 'bg-white/20 text-white shadow-[0_4px_16px_rgba(10,14,26,0.4),inset_0_1px_0_rgba(255,255,255,0.2)] before:opacity-100'
+                      : ''
+                  }`}
+                  onClick={toggleIncomesMenu}
+                  title="Incomes"
+                >
+                  <span className="flex min-w-6 items-center justify-center text-xl">
+                    💰
+                  </span>
+                  {(sidebarExpanded || isMobileMenuOpen) && (
+                    <>
+                      <span>Incomes</span>
+                      <span
+                        className={`ml-auto text-sm opacity-70 transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                          incomesMenuOpen ? 'rotate-180' : ''
+                        }`}
+                      >
+                        ▼
+                      </span>
+                    </>
+                  )}
+                </button>
+                {(sidebarExpanded || isMobileMenuOpen) && incomesMenuOpen && (
+                  <ul className="mt-2 animate-slideDown list-none p-0 pl-6">
+                    {INCOME_CATEGORIES.map((category) => (
+                      <li key={category.type} className="my-1 p-0">
+                        <Link
+                          to={`/incomes/${category.type}`}
+                          onClick={handleMobileLinkClick}
+                          className={`before:ease relative flex items-center gap-3 overflow-hidden rounded-md px-4 py-3 text-sm font-medium text-white/70 no-underline transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] before:absolute before:inset-0 before:rounded-md before:bg-gradient-to-br before:from-white/10 before:to-white/5 before:opacity-0 before:transition-opacity before:duration-300 before:content-[''] hover:translate-x-1 hover:text-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:before:opacity-100 ${
+                            isActive(`/incomes/${category.type}`)
+                              ? 'bg-white/15 text-white shadow-[0_2px_8px_rgba(10,14,26,0.3),inset_0_1px_0_rgba(255,255,255,0.15)] before:opacity-100'
+                              : ''
+                          }`}
+                          title={category.label}
+                        >
+                          <span className="flex min-w-6 items-center justify-center text-base">
+                            {category.icon}
+                          </span>
+                          <span>{category.label}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </li>
+            <li
               className={`my-2 ${sidebarExpanded || isMobileMenuOpen ? 'px-4' : 'px-3'}`}
             >
               <Link
@@ -463,6 +576,27 @@ export function PrivateLayout({ children }: PropsWithChildren) {
             </button>
           </div>
 
+          {/* Add Income Option */}
+          <div
+            className={`flex items-center gap-3 transition-transform delay-[25ms] duration-300 ${
+              isFabOpen ? 'translate-y-0' : 'translate-y-10'
+            }`}
+          >
+            <span className="navbar-tooltip rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white shadow backdrop-blur-md">
+              Add Income
+            </span>
+            <button
+              onClick={() => {
+                setIsNewIncomeSetupOpen(true);
+                setIsFabOpen(false);
+              }}
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-xl text-primary-600 shadow-lg shadow-black/20 transition-transform hover:scale-110 active:scale-95"
+              aria-label="Add Income"
+            >
+              💰
+            </button>
+          </div>
+
           {/* Log Payment Option */}
           <div
             className={`flex items-center gap-3 transition-transform delay-[50ms] duration-300 ${
@@ -534,6 +668,16 @@ export function PrivateLayout({ children }: PropsWithChildren) {
         onClose={() => setIsNewAccountSetupOpen(false)}
         onCreated={() => {
           setIsNewAccountSetupOpen(false);
+          // Optional: Force reload or rely on user navigation
+          window.location.reload();
+        }}
+      />
+
+      <NewIncomeWizard
+        isOpen={isNewIncomeSetupOpen}
+        onClose={() => setIsNewIncomeSetupOpen(false)}
+        onCreated={() => {
+          setIsNewIncomeSetupOpen(false);
           // Optional: Force reload or rely on user navigation
           window.location.reload();
         }}

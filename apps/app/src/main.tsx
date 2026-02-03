@@ -13,6 +13,8 @@ import Login from './pages/Login.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import AccountsByType from './pages/AccountsByType.tsx';
 import AccountDetail from './pages/AccountDetail.tsx';
+import IncomesByType from './pages/IncomesByType.tsx';
+import IncomeDetail from './pages/IncomeDetail.tsx';
 import MigrateAccounts from './pages/MigrateAccounts.tsx';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -64,6 +66,26 @@ const router = createBrowserRouter([
           <ProtectedRoute>
             <PrivateLayout>
               <AccountDetail />
+            </PrivateLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'incomes/:type',
+        element: (
+          <ProtectedRoute>
+            <PrivateLayout>
+              <IncomesByType />
+            </PrivateLayout>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'income/:incomeId',
+        element: (
+          <ProtectedRoute>
+            <PrivateLayout>
+              <IncomeDetail />
             </PrivateLayout>
           </ProtectedRoute>
         ),

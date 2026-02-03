@@ -59,6 +59,13 @@ export {
 
 // AI Task Schemas
 export * from './ai-tasks.js';
+export * from './incomes.js';
+export * from './logic/salary-insights.js';
+export * from './logic/freelance-insights.js';
+export * from './logic/rental-insights.js';
+export * from './logic/investment-insights.js';
+export * from './logic/benefits-insights.js';
+export * from './logic/other-insights.js';
 
 // Payment Periods Schema
 export type {
@@ -130,3 +137,34 @@ export type {
   ProgressMetrics,
   QuickAction,
 } from './logic/dashboard-insights.js';
+// Incomes
+export type {
+  IncomeType,
+  SalarySubtype,
+  FreelanceGigSubtype,
+  RateType,
+  IncomePredictability,
+  GigPlatformType,
+  IncomeStatus,
+  PayDayPattern,
+  BenefitSubtype,
+  BeneficiaryType,
+  SSPaymentSchedule,
+  BaseIncome,
+  SalaryIncome,
+  FreelanceGigIncome,
+  RentalIncome,
+  RentalSubtype,
+  RentalPlatformType,
+  InvestmentIncome,
+  InvestmentIncomeSubtype,
+  InvestmentAccountType,
+  BenefitsIncome,
+  OtherIncome,
+  OtherIncomeSubtype,
+  Income,
+  CreateIncomeInput,
+  UpdateIncomeInput,
+} from './incomes.js';
+
+export { validateIncome } from './incomes.js';
