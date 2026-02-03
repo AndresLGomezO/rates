@@ -61,6 +61,7 @@ export {
 export * from './ai-tasks.js';
 export * from './incomes.js';
 export * from './logic/salary-insights.js';
+export * from './logic/freelance-insights.js';
 
 // Payment Periods Schema
 export type {

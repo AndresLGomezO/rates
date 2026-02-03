@@ -170,6 +170,30 @@ export type OtherIncomeSubtype =
   | 'other'; // Anything else
 
 /**
+ * Income log entry for tracking received payments
+ */
+export interface IncomeLogEntry {
+  /** Month when income was received (YYYY-MM format) */
+  monthReceived: string;
+  /** Exact date when income was received */
+  dateReceived: Timestamp | Date;
+  /** Amount received in the income's currency */
+  valueReceived: number;
+  /** Currency of the payment */
+  currency: CurrencyCode;
+  /** Client or source name (especially for freelance) */
+  sourceName?: string;
+  /** Invoice reference if applicable */
+  invoiceId?: string;
+  /** Date when invoice was sent (for lag analysis) */
+  invoiceSentDate?: Timestamp | Date;
+  /** Optional notes about this income entry */
+  notes?: string;
+  /** Timestamp when this log entry was created */
+  createdAt: Timestamp | Date;
+}
+
+/**
  * Base income interface
  */
 export interface BaseIncome {
@@ -180,6 +204,8 @@ export interface BaseIncome {
   status: IncomeStatus;
   currency: CurrencyCode;
   notes?: string;
+  /** Historical log of received payments */
+  incomeLog?: IncomeLogEntry[];
   createdAt: Timestamp | Date;
   updatedAt: Timestamp | Date;
 }

@@ -16,6 +16,12 @@ import { PaycheckBillsAlignmentWidget } from '../components/SalaryInsights/Paych
 import { RaiseImpactWidget } from '../components/SalaryInsights/RaiseImpactWidget';
 import { SalaryYTDWidget } from '../components/SalaryInsights/SalaryYTDWidget';
 
+// Freelance Insights
+import { IncomeVolatilityWidget } from '../components/FreelanceInsights/IncomeVolatilityWidget';
+import { TaxSetAsideWidget } from '../components/FreelanceInsights/TaxSetAsideWidget';
+import { ClientConcentrationWidget } from '../components/FreelanceInsights/ClientConcentrationWidget';
+import { FreelanceStabilityScoreWidget } from '../components/FreelanceInsights/FreelanceStabilityScoreWidget';
+
 export default function IncomeDetail() {
   const { incomeId } = useParams<{ incomeId: string }>();
   const navigate = useNavigate();
@@ -157,12 +163,22 @@ export default function IncomeDetail() {
           </div>
           <div className="text-4xl font-black text-white">
             {formatCurrency(
-              income.type === 'salary' ? income.takeHomePay?.amount || 0 : 0,
+              income.type === 'salary'
+                ? income.takeHomePay?.amount || 0
+                : income.type === 'freelance'
+                  ? income.estimatedMonthlyIncome?.amount ||
+                    income.retainerAmount?.amount ||
+                    0
+                  : 0,
               income.currency
             )}
           </div>
           <div className="text-xs font-bold text-primary-400">
-            {income.type === 'salary' ? income.paymentFrequency : ''}
+            {income.type === 'salary'
+              ? income.paymentFrequency
+              : income.type === 'freelance'
+                ? 'Monthly Estimate'
+                : ''}
           </div>
         </div>
       </div>
@@ -202,8 +218,45 @@ export default function IncomeDetail() {
         </div>
       )}
 
+      {/* Freelance Insights */}
+      {income.type === 'freelance' && (
+        <div className="space-y-8">
+          <div className="flex items-center justify-between">
+            <h2 className="m-0 text-2xl font-bold text-white">
+              Freelance Insights
+            </h2>
+            <div className="flex gap-2">
+              <span className="rounded-full bg-primary-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-primary-400 ring-1 ring-primary-500/20">
+                Live Analysis
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="lg:col-span-1">
+              <FreelanceStabilityScoreWidget income={income} />
+            </div>
+            <div className="lg:col-span-2">
+              <IncomeVolatilityWidget income={income} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            <TaxSetAsideWidget income={income} />
+            <ClientConcentrationWidget income={income} />
+          </div>
+
+          <div className="rounded-2xl border border-white/5 bg-white/5 p-8 text-center italic">
+            <p className="text-white/40">
+              Insights are calculated based on your historical payment logs and
+              estimated income setup.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Fallback for other types (Future) */}
-      {income.type !== 'salary' && (
+      {income.type !== 'salary' && income.type !== 'freelance' && (
         <div className="rounded-2xl border border-white/10 bg-white/5 p-12 text-center">
           <p className="text-xl text-white/60">
             Insights for {income.type} income are coming soon!
