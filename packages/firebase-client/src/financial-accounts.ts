@@ -122,6 +122,9 @@ export interface PaymentBreakdown {
  * Base account interface with fields common to all account types
  */
 export interface BaseAccount {
+  /** Firestore document ID */
+  id?: string;
+
   /** Unique account identifier/number (user or institution) */
   accountNumber?: string;
 

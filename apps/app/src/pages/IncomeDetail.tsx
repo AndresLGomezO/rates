@@ -22,6 +22,13 @@ import { TaxSetAsideWidget } from '../components/FreelanceInsights/TaxSetAsideWi
 import { ClientConcentrationWidget } from '../components/FreelanceInsights/ClientConcentrationWidget';
 import { FreelanceStabilityScoreWidget } from '../components/FreelanceInsights/FreelanceStabilityScoreWidget';
 
+// Rental Insights
+import { TrueCashFlowWidget } from '../components/RentalInsights/TrueCashFlowWidget';
+import { VacancyCostWidget } from '../components/RentalInsights/VacancyCostWidget';
+import { WealthBuildingWidget } from '../components/RentalInsights/WealthBuildingWidget';
+import { InvestmentPerformanceWidget } from '../components/RentalInsights/InvestmentPerformanceWidget';
+import { ExpenseHealthWidget } from '../components/RentalInsights/ExpenseHealthWidget';
+
 export default function IncomeDetail() {
   const { incomeId } = useParams<{ incomeId: string }>();
   const navigate = useNavigate();
@@ -169,7 +176,9 @@ export default function IncomeDetail() {
                   ? income.estimatedMonthlyIncome?.amount ||
                     income.retainerAmount?.amount ||
                     0
-                  : 0,
+                  : income.type === 'rental'
+                    ? income.rentalAmount?.amount || 0
+                    : 0,
               income.currency
             )}
           </div>
@@ -178,7 +187,9 @@ export default function IncomeDetail() {
               ? income.paymentFrequency
               : income.type === 'freelance'
                 ? 'Monthly Estimate'
-                : ''}
+                : income.type === 'rental'
+                  ? income.rentalFrequency
+                  : ''}
           </div>
         </div>
       </div>
@@ -255,14 +266,55 @@ export default function IncomeDetail() {
         </div>
       )}
 
-      {/* Fallback for other types (Future) */}
-      {income.type !== 'salary' && income.type !== 'freelance' && (
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-12 text-center">
-          <p className="text-xl text-white/60">
-            Insights for {income.type} income are coming soon!
-          </p>
+      {/* Rental Insights */}
+      {income.type === 'rental' && (
+        <div className="space-y-8">
+          <div className="flex items-center justify-between">
+            <h2 className="m-0 text-2xl font-bold text-white">
+              Rental Performance Insights
+            </h2>
+            <div className="flex gap-2">
+              <span className="rounded-full bg-primary-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-primary-400 ring-1 ring-primary-500/20">
+                Property Analysis
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            <TrueCashFlowWidget rental={income} accounts={accounts} />
+            {income.isCurrentlyVacant && <VacancyCostWidget rental={income} />}
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <WealthBuildingWidget rental={income} accounts={accounts} />
+            </div>
+            <div className="lg:col-span-1">
+              <ExpenseHealthWidget rental={income} />
+            </div>
+          </div>
+
+          <InvestmentPerformanceWidget rental={income} accounts={accounts} />
+
+          <div className="rounded-2xl border border-white/5 bg-white/5 p-8 text-center italic">
+            <p className="text-white/40">
+              Insights are calculated based on your property configuration and
+              linked financial accounts.
+            </p>
+          </div>
         </div>
       )}
+
+      {/* Fallback for other types (Future) */}
+      {income.type !== 'salary' &&
+        income.type !== 'freelance' &&
+        income.type !== 'rental' && (
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-12 text-center">
+            <p className="text-xl text-white/60">
+              Insights for {income.type} income are coming soon!
+            </p>
+          </div>
+        )}
     </div>
   );
 }

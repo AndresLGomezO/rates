@@ -338,6 +338,9 @@ export interface RentalIncome extends BaseIncome {
   /** Number of units (for multi-family) */
   numberOfUnits?: number;
 
+  /** Estimated market value of the property */
+  propertyValue?: CurrencyAmount;
+
   // ===== RENTAL DETAILS =====
 
   /** Rental amount per period */
