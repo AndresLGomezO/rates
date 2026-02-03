@@ -39,6 +39,12 @@ import { DividendCalendarWidget } from '../components/InvestmentInsights/Dividen
 import { TaxAdjustedIncomeWidget } from '../components/InvestmentInsights/TaxAdjustedIncomeWidget';
 import { FinancialIndependenceWidget } from '../components/InvestmentInsights/FinancialIndependenceWidget';
 
+// Benefits Insights
+import { IncomeCliffWarningWidget } from '../components/BenefitsInsights/IncomeCliffWarningWidget';
+import { BenefitsTaxRealityWidget } from '../components/BenefitsInsights/BenefitsTaxRealityWidget';
+import { BenefitTimelineWidget } from '../components/BenefitsInsights/BenefitTimelineWidget';
+import { AnnualAdjustmentWidget } from '../components/BenefitsInsights/AnnualAdjustmentWidget';
+
 export default function IncomeDetail() {
   const { incomeId } = useParams<{ incomeId: string }>();
   const navigate = useNavigate();
@@ -188,7 +194,9 @@ export default function IncomeDetail() {
                     0
                   : income.type === 'rental'
                     ? income.rentalAmount?.amount || 0
-                    : 0,
+                    : income.type === 'benefits'
+                      ? income.benefitAmount?.amount || 0
+                      : 0,
               income.currency
             )}
           </div>
@@ -374,11 +382,51 @@ export default function IncomeDetail() {
         </div>
       )}
 
+      {/* Benefits Insights */}
+      {income.type === 'benefits' && (
+        <div className="space-y-8">
+          <div className="flex items-center justify-between">
+            <h2 className="m-0 text-2xl font-bold text-white">
+              Benefits Insights
+            </h2>
+            <div className="flex gap-2">
+              <span className="rounded-full bg-primary-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-primary-400 ring-1 ring-primary-500/20">
+                Benefit Analysis
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            <IncomeCliffWarningWidget
+              benefit={income}
+              otherIncomes={allIncomes}
+            />
+            <BenefitsTaxRealityWidget
+              benefits={[income]}
+              otherIncomes={allIncomes}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            {!income.isPermanent && <BenefitTimelineWidget benefit={income} />}
+            <AnnualAdjustmentWidget benefit={income} />
+          </div>
+
+          <div className="rounded-2xl border border-white/5 bg-white/5 p-8 text-center italic">
+            <p className="text-white/40">
+              Insights are calculated based on your benefit configuration and
+              current {income.benefitSubtype.replace(/_/g, ' ')} rules.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Fallback for other types (Future) */}
       {income.type !== 'salary' &&
         income.type !== 'freelance' &&
         income.type !== 'rental' &&
-        income.type !== 'investments' && (
+        income.type !== 'investments' &&
+        income.type !== 'benefits' && (
           <div className="rounded-2xl border border-white/10 bg-white/5 p-12 text-center">
             <p className="text-xl text-white/60">
               Insights for {income.type} income are coming soon!

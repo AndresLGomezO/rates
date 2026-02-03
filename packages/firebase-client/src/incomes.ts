@@ -567,6 +567,15 @@ export interface BenefitsIncome extends BaseIncome {
   /** Withholding amount (if applicable) */
   withholdingAmount?: CurrencyAmount;
 
+  /** For spousal benefit: divorce date (affects tax) */
+  divorceDate?: Timestamp | Date;
+
+  /** For child support: child's birth date */
+  childBirthDate?: Timestamp | Date;
+
+  /** For child support: age when benefit ends (e.g., 18 or 19) */
+  endAge?: number;
+
   // ===== FLAGS =====
 
   /** Is this benefit means-tested? */
